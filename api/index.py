@@ -114,6 +114,7 @@ def upload_document():
 # ENDPOINT UNTUK WEBHOOK TELEGRAM (TERKUNCI)
 # ==========================================
 
+@app.route('/webhook', methods=['POST'])
 @app.route('/api/webhook', methods=['POST'])
 def telegram_webhook():
     data = request.json
