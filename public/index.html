@@ -8,33 +8,50 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
+  <!-- LAYAR KUNCI (LOGIN OVERLAY) -->
+  <div id="loginScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-8 shadow-2xl text-center">
+      <div class="text-4xl mb-3">🔒</div>
+      <h2 class="text-xl font-bold text-slate-900 mb-1">Akses Terkunci</h2>
+      <p class="text-xs text-slate-500 mb-6">Masukkan PIN / Password untuk membuka CRM</p>
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <input type="password" id="pinInput" placeholder="Masukkan Password..." required class="w-full px-4 py-3 border border-slate-300 rounded-xl text-center focus:outline-none focus:ring-2 focus:ring-blue-600">
+        <p id="loginError" class="text-xs text-red-600 hidden">❌ Password yang Anda masukkan salah!</p>
+        <button type="submit" id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition">
+          Buka Dashboard
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Navbar -->
   <nav class="bg-slate-900 text-white px-6 py-4 shadow-md flex justify-between items-center">
     <div class="flex items-center space-x-3">
       <span class="text-2xl">📁</span>
       <h1 class="text-xl font-bold tracking-wide">Enterprise CRM & Docs</h1>
     </div>
-    <button onclick="openCustomerModal()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium text-sm transition">
-      + Tambah Customer
-    </button>
+    <div class="flex items-center space-x-3">
+      <button onclick="openCustomerModal()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium text-sm transition">
+        + Tambah Customer
+      </button>
+      <button onclick="logout()" title="Kunci Layar" class="bg-slate-800 hover:bg-red-600 px-3 py-2 rounded-lg text-sm transition">
+        🔒 Keluar
+      </button>
+    </div>
   </nav>
 
   <!-- Main Content -->
   <div class="max-w-7xl mx-auto p-6">
-    <!-- Filter & Search -->
     <div class="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
       <input type="text" id="searchInput" oninput="renderCustomers()" placeholder="Cari nama PT, PIC, atau status..." class="w-full sm:w-96 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
       <button onclick="fetchCustomers()" class="text-sm text-slate-600 hover:text-slate-900">🔄 Refresh Data</button>
     </div>
 
-    <!-- Customer Grid -->
-    <div id="customerGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Cards akan di-render oleh JavaScript di sini -->
-    </div>
+    <div id="customerGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </div>
 
   <!-- Modal Tambah Customer -->
-  <div id="customerModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+  <div id="customerModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-40">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
       <h2 class="text-lg font-bold mb-4">Tambah Customer Baru</h2>
       <form id="customerForm" onsubmit="saveCustomer(event)" class="space-y-3">
@@ -59,7 +76,7 @@
   </div>
 
   <!-- Modal Upload File -->
-  <div id="uploadModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+  <div id="uploadModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-40">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
       <h2 class="text-lg font-bold mb-4">Upload Dokumen / Foto</h2>
       <form id="uploadForm" onsubmit="uploadFile(event)" class="space-y-4">
@@ -88,9 +105,66 @@
 
   <script>
     let customers = [];
+    let appPassword = localStorage.getItem('crm_pass') || '';
+
+    // Cek status login saat halaman dibuka
+    window.onload = () => {
+      if (appPassword) {
+        verifyAndLoad();
+      }
+    };
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnLogin');
+      const err = document.getElementById('loginError');
+      appPassword = document.getElementById('pinInput').value;
+      
+      btn.innerText = 'Memeriksa...';
+      err.classList.add('hidden');
+
+      const res = await fetch('/api/verify-auth', {
+        method: 'POST',
+        headers: { 'X-App-Password': appPassword }
+      });
+
+      btn.innerText = 'Buka Dashboard';
+      if (res.ok) {
+        localStorage.setItem('crm_pass', appPassword);
+        document.getElementById('loginScreen').classList.add('hidden');
+        fetchCustomers();
+      } else {
+        err.classList.remove('hidden');
+        localStorage.removeItem('crm_pass');
+      }
+    }
+
+    async function verifyAndLoad() {
+      const res = await fetch('/api/verify-auth', {
+        method: 'POST',
+        headers: { 'X-App-Password': appPassword }
+      });
+      if (res.ok) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        fetchCustomers();
+      } else {
+        localStorage.removeItem('crm_pass');
+        document.getElementById('loginScreen').classList.remove('hidden');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('crm_pass');
+      appPassword = '';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
 
     async function fetchCustomers() {
-      const res = await fetch('/api/customers');
+      const res = await fetch('/api/customers', {
+        headers: { 'X-App-Password': appPassword }
+      });
+      if (res.status === 401) return logout();
       customers = await res.json();
       renderCustomers();
     }
@@ -162,7 +236,7 @@
       };
       await fetch('/api/customers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-App-Password': appPassword },
         body: JSON.stringify(payload)
       });
       closeCustomerModal();
@@ -181,7 +255,11 @@
       formData.append('kategori_file', document.getElementById('kategori_file').value);
       formData.append('file', document.getElementById('file_input').files[0]);
 
-      await fetch('/api/upload', { method: 'POST', body: formData });
+      await fetch('/api/upload', { 
+        method: 'POST', 
+        headers: { 'X-App-Password': appPassword },
+        body: formData 
+      });
       
       btn.innerText = 'Upload';
       btn.disabled = false;
@@ -192,7 +270,10 @@
 
     async function deleteCustomer(id) {
       if (!confirm('Yakin ingin menghapus customer ini beserta seluruh filenya?')) return;
-      await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+      await fetch(`/api/customers/${id}`, { 
+        method: 'DELETE',
+        headers: { 'X-App-Password': appPassword }
+      });
       fetchCustomers();
     }
 
@@ -200,8 +281,6 @@
     function closeCustomerModal() { document.getElementById('customerModal').classList.add('hidden'); document.getElementById('customerModal').classList.remove('flex'); }
     function openUploadModal(id) { document.getElementById('upload_customer_id').value = id; document.getElementById('uploadModal').classList.remove('hidden'); document.getElementById('uploadModal').classList.add('flex'); }
     function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); document.getElementById('uploadModal').classList.remove('flex'); }
-
-    fetchCustomers();
   </script>
 </body>
 </html>
