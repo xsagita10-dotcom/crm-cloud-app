@@ -51,49 +51,47 @@ def send_telegram_message(chat_id, text):
         print(f"Gagal mengirim pesan Telegram: {e}")
 
 # ==========================================
-# 4. RUTE BARU: AMBIL DATA CUSTOMER
+# 4 & 5. RUTE API & WEBHOOK (DIGABUNG UNTUK VERCEL)
 # ==========================================
-@app.route('/api/customers', methods=['GET'])
-def get_customers():
-    # Rute ini bertugas mengambil isi tabel Supabase Anda
-    if not supabase:
-        return jsonify({"error": "Database tidak terhubung"}), 500
-    
-    try:
-        # Ambil semua data pelanggan, urutkan dari yang terbaru diubah
-        response = supabase.table('customers').select('*').order('updated_at', desc=True).execute()
-        return jsonify(response.data), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@app.route('/api/index.py', methods=['GET', 'POST'])
+@app.route('/api/customers', methods=['GET', 'POST'])
+@app.route('/api/webhook', methods=['GET', 'POST'])
+def api_handler():
+    # --- JIKA MENGAMBIL DATA UNTUK WEB (GET) ---
+    if request.method == 'GET':
+        if not supabase:
+            return jsonify({"error": "Database tidak terhubung"}), 500
+        try:
+            response = supabase.table('customers').select('*').order('updated_at', desc=True).execute()
+            return jsonify(response.data), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
-# ==========================================
-# 5. RUTE WEBHOOK UNTUK TELEGRAM BOT
-# ==========================================
-@app.route('/api/webhook', methods=['POST'])
-def telegram_webhook():
-    data = request.get_json()
-    if not data or 'message' not in data:
-        return jsonify({"status": "ok"}), 200
+    # --- JIKA MENERIMA PESAN DARI TELEGRAM (POST) ---
+    elif request.method == 'POST':
+        data = request.get_json()
+        if not data or 'message' not in data:
+            return jsonify({"status": "ok"}), 200
+            
+        chat_id = data['message']['chat']['id']
+        user_id = str(data['message']['from']['id'])
+        text_message = data['message'].get('text', '')
+
+        allowed_ids = [id.strip() for id in ALLOWED_TELEGRAM_IDS.split(',')]
         
-    chat_id = data['message']['chat']['id']
-    user_id = str(data['message']['from']['id'])
-    text_message = data['message'].get('text', '')
+        if user_id not in allowed_ids:
+            send_telegram_message(chat_id, "🔒 Maaf, Anda tidak memiliki akses ke sistem CRM ini.")
+            return jsonify({"status": "forbidden"}), 200
 
-    allowed_ids = [id.strip() for id in ALLOWED_TELEGRAM_IDS.split(',')]
-    
-    if user_id not in allowed_ids:
-        send_telegram_message(chat_id, "🔒 Maaf, Anda tidak memiliki akses ke sistem CRM ini.")
-        return jsonify({"status": "forbidden"}), 200
+        if text_message == '/start':
+            welcome_text = "Halo! Sistem Cloud CRM aktif.\n\nAnda dapat mengirimkan instruksi untuk menambah, mengubah, atau mencari data customer."
+            send_telegram_message(chat_id, welcome_text)
+            return jsonify({"status": "ok"}), 200
 
-    if text_message == '/start':
-        welcome_text = "Halo! Sistem Cloud CRM aktif.\n\nAnda dapat mengirimkan instruksi untuk menambah, mengubah, atau mencari data customer."
-        send_telegram_message(chat_id, welcome_text)
+        reply_text = f"Pesan diterima: '{text_message}'.\nBot sedang dalam tahap penyelesaian konfigurasi dasar."
+        send_telegram_message(chat_id, reply_text)
+
         return jsonify({"status": "ok"}), 200
-
-    reply_text = f"Pesan diterima: '{text_message}'.\nBot sedang dalam tahap penyelesaian konfigurasi dasar."
-    send_telegram_message(chat_id, reply_text)
-
-    return jsonify({"status": "ok"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
