@@ -1,286 +1,137 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cloud CRM & Document Manager</title>
-  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud CRM & Document Manager</title>
+    <!-- Memuat Tailwind CSS langsung dari CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="bg-gray-100 text-gray-800 font-sans antialiased">
 
-  <!-- LAYAR KUNCI (LOGIN OVERLAY) -->
-  <div id="loginScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-8 shadow-2xl text-center">
-      <div class="text-4xl mb-3">🔒</div>
-      <h2 class="text-xl font-bold text-slate-900 mb-1">Akses Terkunci</h2>
-      <p class="text-xs text-slate-500 mb-6">Masukkan PIN / Password untuk membuka CRM</p>
-      <form onsubmit="handleLogin(event)" class="space-y-4">
-        <input type="password" id="pinInput" placeholder="Masukkan Password..." required class="w-full px-4 py-3 border border-slate-300 rounded-xl text-center focus:outline-none focus:ring-2 focus:ring-blue-600">
-        <p id="loginError" class="text-xs text-red-600 hidden">❌ Password yang Anda masukkan salah!</p>
-        <button type="submit" id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition">
-          Buka Dashboard
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Navbar -->
-  <nav class="bg-slate-900 text-white px-6 py-4 shadow-md flex justify-between items-center">
-    <div class="flex items-center space-x-3">
-      <span class="text-2xl">📁</span>
-      <h1 class="text-xl font-bold tracking-wide">Enterprise CRM & Docs</h1>
-    </div>
-    <div class="flex items-center space-x-3">
-      <button onclick="openCustomerModal()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium text-sm transition">
-        + Tambah Customer
-      </button>
-      <button onclick="logout()" title="Kunci Layar" class="bg-slate-800 hover:bg-red-600 px-3 py-2 rounded-lg text-sm transition">
-        🔒 Keluar
-      </button>
-    </div>
-  </nav>
-
-  <!-- Main Content -->
-  <div class="max-w-7xl mx-auto p-6">
-    <div class="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
-      <input type="text" id="searchInput" oninput="renderCustomers()" placeholder="Cari nama PT, PIC, atau status..." class="w-full sm:w-96 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-      <button onclick="fetchCustomers()" class="text-sm text-slate-600 hover:text-slate-900">🔄 Refresh Data</button>
-    </div>
-
-    <div id="customerGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-  </div>
-
-  <!-- Modal Tambah Customer -->
-  <div id="customerModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-40">
-    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-      <h2 class="text-lg font-bold mb-4">Tambah Customer Baru</h2>
-      <form id="customerForm" onsubmit="saveCustomer(event)" class="space-y-3">
-        <input type="text" id="perusahaan" placeholder="Nama Perusahaan (PT) *" required class="w-full px-3 py-2 border rounded-lg">
-        <input type="text" id="nama_customer" placeholder="Nama PIC / Kontak" class="w-full px-3 py-2 border rounded-lg">
-        <input type="text" id="jabatan" placeholder="Jabatan" class="w-full px-3 py-2 border rounded-lg">
-        <input type="text" id="no_telepon" placeholder="No. Telepon / WhatsApp" class="w-full px-3 py-2 border rounded-lg">
-        <input type="text" id="alamat" placeholder="Alamat Lengkap" class="w-full px-3 py-2 border rounded-lg">
-        <select id="status_kerjasama" class="w-full px-3 py-2 border rounded-lg bg-white">
-          <option value="Prospect">Prospect</option>
-          <option value="Negosiasi">Negosiasi</option>
-          <option value="MOU Aktif">MOU Aktif</option>
-          <option value="Selesai">Selesai</option>
-        </select>
-        <textarea id="notes" placeholder="Catatan..." class="w-full px-3 py-2 border rounded-lg"></textarea>
-        <div class="flex justify-end space-x-2 pt-3">
-          <button type="button" onclick="closeCustomerModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Batal</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500">Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal Upload File -->
-  <div id="uploadModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-40">
-    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-      <h2 class="text-lg font-bold mb-4">Upload Dokumen / Foto</h2>
-      <form id="uploadForm" onsubmit="uploadFile(event)" class="space-y-4">
-        <input type="hidden" id="upload_customer_id">
-        <div>
-          <label class="block text-sm font-medium mb-1">Kategori Dokumen</label>
-          <select id="kategori_file" class="w-full px-3 py-2 border rounded-lg bg-white">
-            <option value="MOU">MOU</option>
-            <option value="Adendum">Adendum</option>
-            <option value="Company Profile">Company Profile</option>
-            <option value="Foto Pertemuan">Foto Pertemuan</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Pilih File (PDF, Word, Foto)</label>
-          <input type="file" id="file_input" required class="w-full text-sm">
-        </div>
-        <div class="flex justify-end space-x-2 pt-3">
-          <button type="button" onclick="closeUploadModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Batal</button>
-          <button type="submit" id="btnUpload" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">Upload</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    let customers = [];
-    let appPassword = localStorage.getItem('crm_pass') || '';
-
-    // Cek status login saat halaman dibuka
-    window.onload = () => {
-      if (appPassword) {
-        verifyAndLoad();
-      }
-    };
-
-    async function handleLogin(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btnLogin');
-      const err = document.getElementById('loginError');
-      appPassword = document.getElementById('pinInput').value;
-      
-      btn.innerText = 'Memeriksa...';
-      err.classList.add('hidden');
-
-      const res = await fetch('/api/verify-auth', {
-        method: 'POST',
-        headers: { 'X-App-Password': appPassword }
-      });
-
-      btn.innerText = 'Buka Dashboard';
-      if (res.ok) {
-        localStorage.setItem('crm_pass', appPassword);
-        document.getElementById('loginScreen').classList.add('hidden');
-        fetchCustomers();
-      } else {
-        err.classList.remove('hidden');
-        localStorage.removeItem('crm_pass');
-      }
-    }
-
-    async function verifyAndLoad() {
-      const res = await fetch('/api/verify-auth', {
-        method: 'POST',
-        headers: { 'X-App-Password': appPassword }
-      });
-      if (res.ok) {
-        document.getElementById('loginScreen').classList.add('hidden');
-        fetchCustomers();
-      } else {
-        localStorage.removeItem('crm_pass');
-        document.getElementById('loginScreen').classList.remove('hidden');
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem('crm_pass');
-      appPassword = '';
-      document.getElementById('pinInput').value = '';
-      document.getElementById('loginScreen').classList.remove('hidden');
-    }
-
-    async function fetchCustomers() {
-      const res = await fetch('/api/customers', {
-        headers: { 'X-App-Password': appPassword }
-      });
-      if (res.status === 401) return logout();
-      customers = await res.json();
-      renderCustomers();
-    }
-
-    function renderCustomers() {
-      const grid = document.getElementById('customerGrid');
-      const q = document.getElementById('searchInput').value.toLowerCase();
-      grid.innerHTML = '';
-
-      const filtered = customers.filter(c => 
-        (c.perusahaan || '').toLowerCase().includes(q) ||
-        (c.nama_customer || '').toLowerCase().includes(q) ||
-        (c.status_kerjasama || '').toLowerCase().includes(q)
-      );
-
-      filtered.forEach(c => {
-        const docs = c.documents || [];
-        const docList = docs.map(d => `
-          <a href="${d.file_url}" target="_blank" class="flex items-center justify-between p-2 bg-slate-50 hover:bg-blue-50 rounded border text-xs transition">
-            <span class="truncate font-medium text-blue-700">📄 ${d.nama_file}</span>
-            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded text-[10px] ml-2 shrink-0">${d.kategori_file}</span>
-          </a>
-        `).join('');
-
-        const badgeColor = c.status_kerjasama === 'MOU Aktif' ? 'bg-emerald-100 text-emerald-800' : 
-                           c.status_kerjasama === 'Negosiasi' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
-
-        grid.innerHTML += `
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
-            <div>
-              <div class="flex justify-between items-start mb-2">
-                <h3 class="font-bold text-lg text-slate-900">${c.perusahaan}</h3>
-                <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">${c.status_kerjasama || 'Prospect'}</span>
-              </div>
-              <p class="text-sm text-slate-600 mb-1">👤 <b>${c.nama_customer || '-'}</b> (${c.jabatan || '-'})</p>
-              <p class="text-xs text-slate-500 mb-1">📞 ${c.no_telepon || '-'}</p>
-              <p class="text-xs text-slate-500 mb-3">📍 ${c.alamat || '-'}</p>
-              ${c.notes ? `<div class="p-2.5 bg-amber-50/60 border border-amber-200 rounded-lg text-xs text-slate-700 mb-4">💬 ${c.notes}</div>` : ''}
-              
-              <div class="border-t pt-3 mt-2">
-                <div class="flex justify-between items-center mb-2">
-                  <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Dokumen & Foto (${docs.length})</span>
-                  <button onclick="openUploadModal('${c.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded font-medium">+ Upload File</button>
-                </div>
-                <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                  ${docList || '<p class="text-xs text-slate-400 italic">Belum ada file terlampir</p>'}
-                </div>
-              </div>
+    <!-- ==========================================
+         BAGIAN 1: LAYAR LOGIN PIN
+         ========================================== -->
+    <div id="login-view" class="min-h-screen flex items-center justify-center px-4">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center border border-gray-200">
+            <div class="mb-6">
+                <span class="text-4xl">🔒</span>
+                <h2 class="text-2xl font-bold mt-4 text-gray-900">Akses CRM</h2>
+                <p class="text-gray-500 text-sm mt-1">Masukkan PIN untuk masuk ke sistem</p>
             </div>
-            <div class="flex justify-between items-center border-t mt-4 pt-3 text-[11px] text-slate-400">
-              <span>Update: ${new Date(c.updated_at).toLocaleDateString('id-ID')}</span>
-              <button onclick="deleteCustomer('${c.id}')" class="text-red-500 hover:underline">Hapus</button>
+            
+            <input type="password" id="pin-input" 
+                class="w-full border-2 border-gray-300 p-3 rounded-lg mb-4 text-center text-xl tracking-[0.5em] focus:border-blue-500 focus:outline-none transition-colors" 
+                placeholder="••••••">
+            
+            <button onclick="handleLogin()" 
+                class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md">
+                Buka Dashboard
+            </button>
+            
+            <p id="login-error" class="text-red-500 text-sm mt-4 hidden">PIN yang Anda masukkan salah.</p>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         BAGIAN 2: DASHBOARD UTAMA (Awalnya Disembunyikan)
+         ========================================== -->
+    <div id="dashboard-view" class="hidden min-h-screen flex-col">
+        
+        <!-- Header / Navigasi -->
+        <header class="bg-blue-800 text-white p-4 shadow-md sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">📁</span>
+                    <h1 class="text-xl font-bold tracking-wide">Inla CRM</h1>
+                </div>
+                <button onclick="handleLogout()" 
+                    class="bg-blue-700 hover:bg-red-500 text-sm px-4 py-2 rounded-lg font-medium transition-colors">
+                    Keluar
+                </button>
             </div>
-          </div>
-        `;
-      });
-    }
+        </header>
 
-    async function saveCustomer(e) {
-      e.preventDefault();
-      const payload = {
-        perusahaan: document.getElementById('perusahaan').value,
-        nama_customer: document.getElementById('nama_customer').value,
-        jabatan: document.getElementById('jabatan').value,
-        no_telepon: document.getElementById('no_telepon').value,
-        alamat: document.getElementById('alamat').value,
-        status_kerjasama: document.getElementById('status_kerjasama').value,
-        notes: document.getElementById('notes').value
-      };
-      await fetch('/api/customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-App-Password': appPassword },
-        body: JSON.stringify(payload)
-      });
-      closeCustomerModal();
-      document.getElementById('customerForm').reset();
-      fetchCustomers();
-    }
+        <!-- Area Konten Utama -->
+        <main class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+            
+            <!-- Area Pencarian & Tombol Tambah -->
+            <div class="flex flex-col md:flex-row gap-4 mb-6 justify-between">
+                <input type="text" id="search-input" 
+                    placeholder="Cari perusahaan, nama PIC, atau dokumen..." 
+                    class="flex-1 border border-gray-300 p-3 rounded-lg shadow-sm focus:border-blue-500 focus:outline-none">
+                
+                <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-sm transition-colors flex items-center justify-center gap-2">
+                    <span>+</span> Tambah Customer Baru
+                </button>
+            </div>
 
-    async function uploadFile(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btnUpload');
-      btn.innerText = 'Mengupload...';
-      btn.disabled = true;
+            <!-- Tabel Data Customer -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-sm uppercase">
+                            <th class="p-4 font-semibold">Perusahaan</th>
+                            <th class="p-4 font-semibold">PIC / Kontak</th>
+                            <th class="p-4 font-semibold">Status</th>
+                            <th class="p-4 font-semibold text-center">Dokumen</th>
+                            <th class="p-4 font-semibold text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-table-body" class="divide-y divide-gray-200">
+                        <!-- Contoh Baris Data (Akan diisi dinamis oleh JavaScript nanti) -->
+                        <tr class="hover:bg-blue-50 cursor-pointer transition-colors group">
+                            <td class="p-4">
+                                <div class="font-bold text-gray-900">PT Inovasi Langit</div>
+                                <div class="text-sm text-gray-500">Jakarta Selatan</div>
+                            </td>
+                            <td class="p-4">
+                                <div class="font-medium">Budi Santoso</div>
+                                <div class="text-sm text-gray-500">0812-3456-7890</div>
+                            </td>
+                            <td class="p-4">
+                                <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">Aktif</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">3 File</span>
+                            </td>
+                            <td class="p-4 text-right">
+                                <button class="text-blue-600 hover:text-blue-800 font-medium text-sm">Lihat Detail</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-      const formData = new FormData();
-      formData.append('customer_id', document.getElementById('upload_customer_id').value);
-      formData.append('kategori_file', document.getElementById('kategori_file').value);
-      formData.append('file', document.getElementById('file_input').files[0]);
+        </main>
+    </div>
 
-      await fetch('/api/upload', { 
-        method: 'POST', 
-        headers: { 'X-App-Password': appPassword },
-        body: formData 
-      });
-      
-      btn.innerText = 'Upload';
-      btn.disabled = false;
-      closeUploadModal();
-      document.getElementById('uploadForm').reset();
-      fetchCustomers();
-    }
+    <!-- Script Logika UI Dasar -->
+    <script>
+        // Logika sederhana untuk berpindah dari layar login ke dashboard
+        function handleLogin() {
+            const pin = document.getElementById('pin-input').value;
+            // Nanti kita akan tambahkan logika validasi ke backend Vercel di sini
+            if (pin.length > 3) { // Validasi sementara
+                // Simpan PIN di memori sementara browser untuk digunakan sebagai header API nanti
+                sessionStorage.setItem('app_pin', pin); 
+                
+                // Sembunyikan login, tampilkan dashboard
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                document.getElementById('dashboard-view').classList.add('flex');
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
 
-    async function deleteCustomer(id) {
-      if (!confirm('Yakin ingin menghapus customer ini beserta seluruh filenya?')) return;
-      await fetch(`/api/customers/${id}`, { 
-        method: 'DELETE',
-        headers: { 'X-App-Password': appPassword }
-      });
-      fetchCustomers();
-    }
-
-    function openCustomerModal() { document.getElementById('customerModal').classList.remove('hidden'); document.getElementById('customerModal').classList.add('flex'); }
-    function closeCustomerModal() { document.getElementById('customerModal').classList.add('hidden'); document.getElementById('customerModal').classList.remove('flex'); }
-    function openUploadModal(id) { document.getElementById('upload_customer_id').value = id; document.getElementById('uploadModal').classList.remove('hidden'); document.getElementById('uploadModal').classList.add('flex'); }
-    function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); document.getElementById('uploadModal').classList.remove('flex'); }
-  </script>
+        function handleLogout() {
+            sessionStorage.removeItem('app_pin');
+            document.getElementById('pin-input').value = '';
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('flex');
+        }
+    </script>
 </body>
 </html>
