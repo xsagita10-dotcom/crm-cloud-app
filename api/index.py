@@ -14,19 +14,36 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Inisialisasi Supabase & Gemini
+# PENGAMAN BARU
+APP_PASSWORD = os.environ.get("APP_PASSWORD", "admin123")
+# Bisa menampung banyak ID Telegram (pisahkan dengan koma, misal: 1234567,89101112)
+ALLOWED_IDS_RAW = os.environ.get("ALLOWED_TELEGRAM_IDS", "")
+ALLOWED_TELEGRAM_IDS = [x.strip() for x in ALLOWED_IDS_RAW.split(",") if x.strip()]
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
+# Fungsi Cek Password Web
+def is_web_authorized(req):
+    client_pass = req.headers.get("X-App-Password")
+    return client_pass == APP_PASSWORD
+
 # ==========================================
-# ENDPOINT UNTUK WEB DASHBOARD
+# ENDPOINT UNTUK WEB DASHBOARD (TERKUNCI)
 # ==========================================
+
+@app.route('/api/verify-auth', methods=['POST'])
+def verify_auth():
+    if is_web_authorized(request):
+        return jsonify({"status": "authorized"}), 200
+    return jsonify({"error": "Password salah"}), 401
 
 @app.route('/api/customers', methods=['GET'])
 def get_customers():
+    if not is_web_authorized(request):
+        return jsonify({"error": "Unauthorized"}), 401
     try:
-        # Mengambil semua data customer beserta file dokumen yang terhubung
         res = supabase.table('customers').select('*, documents(*)').order('updated_at', desc=True).execute()
         return jsonify(res.data), 200
     except Exception as e:
@@ -34,6 +51,8 @@ def get_customers():
 
 @app.route('/api/customers', methods=['POST'])
 def add_customer():
+    if not is_web_authorized(request):
+        return jsonify({"error": "Unauthorized"}), 401
     try:
         data = request.json
         res = supabase.table('customers').insert(data).execute()
@@ -43,6 +62,8 @@ def add_customer():
 
 @app.route('/api/customers/<customer_id>', methods=['PUT', 'DELETE'])
 def manage_customer(customer_id):
+    if not is_web_authorized(request):
+        return jsonify({"error": "Unauthorized"}), 401
     try:
         if request.method == 'DELETE':
             supabase.table('customers').delete().eq('id', customer_id).execute()
@@ -57,6 +78,8 @@ def manage_customer(customer_id):
 
 @app.route('/api/upload', methods=['POST'])
 def upload_document():
+    if not is_web_authorized(request):
+        return jsonify({"error": "Unauthorized"}), 401
     try:
         customer_id = request.form.get('customer_id')
         kategori = request.form.get('kategori_file', 'Dokumen')
@@ -68,7 +91,6 @@ def upload_document():
         file_bytes = file.read()
         file_path = f"{customer_id}/{int(time.time())}_{file.filename}"
         
-        # Upload ke Supabase Storage bucket 'crm_files'
         supabase.storage.from_('crm_files').upload(
             path=file_path,
             file=file_bytes,
@@ -77,7 +99,6 @@ def upload_document():
         
         public_url = supabase.storage.from_('crm_files').get_public_url(file_path)
         
-        # Catat ke tabel documents
         doc_data = {
             "customer_id": customer_id,
             "nama_file": file.filename,
@@ -90,7 +111,7 @@ def upload_document():
         return jsonify({"error": str(e)}), 500
 
 # ==========================================
-# ENDPOINT UNTUK WEBHOOK TELEGRAM
+# ENDPOINT UNTUK WEBHOOK TELEGRAM (TERKUNCI)
 # ==========================================
 
 @app.route('/api/webhook', methods=['POST'])
@@ -100,10 +121,20 @@ def telegram_webhook():
         return jsonify({"status": "ok"}), 200
 
     msg = data['message']
-    chat_id = msg['chat']['id']
+    chat_id = str(msg['chat']['id'])
+    user_id = str(msg['from']['id'])
+
+    # CEK KEAMANAN TELEGRAM ID
+    if ALLOWED_TELEGRAM_IDS and user_id not in ALLOWED_TELEGRAM_IDS:
+        send_telegram(chat_id, f"⛔ *Akses Ditolak!*\nAnda tidak terdaftar di sistem CRM ini.\n\nID Telegram Anda adalah: `{user_id}`\n*(Salin angka ID di atas ke pengaturan ALLOWED_TELEGRAM_IDS di Vercel untuk mengizinkan akses)*.")
+        return jsonify({"status": "unauthorized"}), 200
+
+    # Perintah khusus untuk mengecek ID sendiri
+    if 'text' in msg and msg['text'].strip() == '/id':
+        send_telegram(chat_id, f"🆔 ID Telegram Anda adalah: `{user_id}`")
+        return jsonify({"status": "ok"}), 200
 
     try:
-        # 1. JIKA VOICE NOTE
         if 'voice' in msg:
             send_telegram(chat_id, "🎙️ Menganalisis Voice Note...")
             file_bytes, _ = get_telegram_file(msg['voice']['file_id'])
@@ -111,7 +142,6 @@ def telegram_webhook():
             reply = execute_crm_action(ai_res)
             send_telegram(chat_id, reply)
 
-        # 2. JIKA DOKUMEN (PDF, WORD, DLL) ATAU FOTO
         elif 'document' in msg or 'photo' in msg:
             send_telegram(chat_id, "📁 Menyimpan file ke Cloud...")
             caption = msg.get('caption', '')
@@ -121,18 +151,15 @@ def telegram_webhook():
                 file_name = msg['document'].get('file_name', f"doc_{int(time.time())}")
                 mime_type = msg['document'].get('mime_type', 'application/octet-stream')
             else:
-                file_id = msg['photo'][-1]['file_id'] # Ambil resolusi tertinggi
+                file_id = msg['photo'][-1]['file_id']
                 file_name = f"foto_{int(time.time())}.jpg"
                 mime_type = 'image/jpeg'
 
             file_bytes, _ = get_telegram_file(file_id)
-            
-            # Analisis caption dengan Gemini untuk tahu milik PT apa & kategori apa
             ai_res = analyze_with_gemini(text=f"File diupload dengan caption: {caption}")
             reply = execute_crm_action(ai_res, file_bytes=file_bytes, file_name=file_name, mime_type=mime_type)
             send_telegram(chat_id, reply)
 
-        # 3. JIKA TEKS BIASA
         elif 'text' in msg and not msg['text'].startswith('/'):
             send_telegram(chat_id, "🤖 Memproses instruksi...")
             ai_res = analyze_with_gemini(text=msg['text'])
@@ -186,21 +213,16 @@ def execute_crm_action(ai_res, file_bytes=None, file_name=None, mime_type=None):
     action = ai_res.get('action', 'INSERT')
     target_pt = ai_res.get('target_perusahaan') or ai_res.get('data', {}).get('perusahaan')
     raw_data = ai_res.get('data', {})
-    
-    # Bersihkan field yang kosong agar tidak menimpa data lama dengan string kosong saat UPDATE
     clean_data = {k: v for k, v in raw_data.items() if v}
 
     if not target_pt:
         return "❌ Tolong sebutkan nama Perusahaan (PT) dengan jelas."
 
-    # Cari apakah perusahaan sudah ada di database
     existing = supabase.table('customers').select('*').ilike('perusahaan', f"%{target_pt}%").execute()
-    
     customer_id = None
     msg_status = ""
 
     if existing.data:
-        # Jika PT ditemukan, kita UPDATE datanya
         customer_id = existing.data[0]['id']
         nama_pt_asli = existing.data[0]['perusahaan']
         if action == 'DELETE':
@@ -212,14 +234,12 @@ def execute_crm_action(ai_res, file_bytes=None, file_name=None, mime_type=None):
             supabase.table('customers').update(clean_data).eq('id', customer_id).execute()
         msg_status = f"✅ Data *{nama_pt_asli}* berhasil diperbarui!"
     else:
-        # Jika PT belum ada, kita INSERT baru
         if 'perusahaan' not in clean_data:
             clean_data['perusahaan'] = target_pt
         res = supabase.table('customers').insert(clean_data).execute()
         customer_id = res.data[0]['id']
         msg_status = f"✅ Perusahaan baru *{target_pt}* berhasil ditambahkan!"
 
-    # Jika ada pengiriman file/foto bersama instruksi tersebut
     if file_bytes and customer_id:
         path = f"{customer_id}/{int(time.time())}_{file_name}"
         supabase.storage.from_('crm_files').upload(
