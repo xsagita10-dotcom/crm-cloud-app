@@ -106,20 +106,19 @@
         </main>
     </div>
 
-    <!-- Script Logika UI Dasar -->
+        <!-- Script Logika UI Dasar & Integrasi API -->
     <script>
-        // Logika sederhana untuk berpindah dari layar login ke dashboard
+        // Fungsi Login & Navigasi
         function handleLogin() {
             const pin = document.getElementById('pin-input').value;
-            // Nanti kita akan tambahkan logika validasi ke backend Vercel di sini
-            if (pin.length > 3) { // Validasi sementara
-                // Simpan PIN di memori sementara browser untuk digunakan sebagai header API nanti
+            if (pin.length > 3) { 
                 sessionStorage.setItem('app_pin', pin); 
-                
-                // Sembunyikan login, tampilkan dashboard
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('dashboard-view').classList.remove('hidden');
                 document.getElementById('dashboard-view').classList.add('flex');
+                
+                // Setelah berhasil masuk, panggil fungsi untuk mengambil data Supabase
+                fetchCustomers();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
@@ -131,6 +130,64 @@
             document.getElementById('login-view').classList.remove('hidden');
             document.getElementById('dashboard-view').classList.add('hidden');
             document.getElementById('dashboard-view').classList.remove('flex');
+        }
+
+        // Fungsi Baru: Mengambil Data dari API Flask
+        async function fetchCustomers() {
+            const tableBody = document.getElementById('customer-table-body');
+            tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Memuat data...</td></tr>';
+            
+            try {
+                // Memanggil rute yang baru saja kita buat di index.py
+                const response = await fetch('/api/customers');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    renderTable(data);
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Gagal memuat data: ${data.error}</td></tr>`;
+                }
+            } catch (error) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Terjadi kesalahan jaringan.</td></tr>';
+            }
+        }
+
+        // Fungsi Baru: Menampilkan Data ke Tabel
+        function renderTable(customers) {
+            const tableBody = document.getElementById('customer-table-body');
+            tableBody.innerHTML = ''; // Kosongkan tabel dulu
+            
+            if (customers.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada data customer.</td></tr>';
+                return;
+            }
+
+            customers.forEach(cust => {
+                const statusColor = cust.status_kerjasama === 'Aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+                
+                const rowHtml = `
+                    <tr class="hover:bg-blue-50 cursor-pointer transition-colors group">
+                        <td class="p-4">
+                            <div class="font-bold text-gray-900">${cust.perusahaan || '-'}</div>
+                            <div class="text-sm text-gray-500">${cust.alamat || '-'}</div>
+                        </td>
+                        <td class="p-4">
+                            <div class="font-medium">${cust.nama_customer || '-'}</div>
+                            <div class="text-sm text-gray-500">${cust.no_telepon || '-'}</div>
+                        </td>
+                        <td class="p-4">
+                            <span class="${statusColor} text-xs font-bold px-2 py-1 rounded-full">${cust.status_kerjasama || 'Unknown'}</span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <span class="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">Cek Dokumen</span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <button class="text-blue-600 hover:text-blue-800 font-medium text-sm">Lihat Detail</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', rowHtml);
+            });
         }
     </script>
 </body>
