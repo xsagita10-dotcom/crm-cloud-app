@@ -5,7 +5,6 @@ from flask import Flask, request, jsonify
 from supabase import create_client, Client
 from google import genai
 
-# Inisialisasi Aplikasi Flask
 app = Flask(__name__)
 
 # ==========================================
@@ -20,7 +19,6 @@ ALLOWED_TELEGRAM_IDS = str(os.environ.get('ALLOWED_TELEGRAM_IDS', ''))
 # ==========================================
 # 2. INISIALISASI SUPABASE & GEMINI
 # ==========================================
-# Coba hubungkan ke Supabase (Jika env vars tersedia)
 try:
     if SUPABASE_URL and SUPABASE_KEY:
         supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -30,7 +28,6 @@ except Exception as e:
     print(f"Error Supabase: {e}")
     supabase = None
 
-# Coba hubungkan ke Gemini (Paket baru: google-genai)
 try:
     if GEMINI_API_KEY:
         ai_client = genai.Client(api_key=GEMINI_API_KEY)
@@ -54,14 +51,27 @@ def send_telegram_message(chat_id, text):
         print(f"Gagal mengirim pesan Telegram: {e}")
 
 # ==========================================
-# 4. RUTE WEBHOOK UNTUK TELEGRAM BOT
+# 4. RUTE BARU: AMBIL DATA CUSTOMER
+# ==========================================
+@app.route('/api/customers', methods=['GET'])
+def get_customers():
+    # Rute ini bertugas mengambil isi tabel Supabase Anda
+    if not supabase:
+        return jsonify({"error": "Database tidak terhubung"}), 500
+    
+    try:
+        # Ambil semua data pelanggan, urutkan dari yang terbaru diubah
+        response = supabase.table('customers').select('*').order('updated_at', desc=True).execute()
+        return jsonify(response.data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ==========================================
+# 5. RUTE WEBHOOK UNTUK TELEGRAM BOT
 # ==========================================
 @app.route('/api/webhook', methods=['POST'])
 def telegram_webhook():
-    # Ambil data yang dikirim oleh Telegram
     data = request.get_json()
-    
-    # Pastikan data berupa pesan (message)
     if not data or 'message' not in data:
         return jsonify({"status": "ok"}), 200
         
@@ -69,30 +79,21 @@ def telegram_webhook():
     user_id = str(data['message']['from']['id'])
     text_message = data['message'].get('text', '')
 
-    # --- PROTEKSI KEAMANAN ---
-    # Pecah daftar ID yang diizinkan (misal dari "123456,987654" menjadi list)
     allowed_ids = [id.strip() for id in ALLOWED_TELEGRAM_IDS.split(',')]
     
     if user_id not in allowed_ids:
-        # Jika ada orang asing mengirim pesan ke bot Anda
         send_telegram_message(chat_id, "🔒 Maaf, Anda tidak memiliki akses ke sistem CRM ini.")
         return jsonify({"status": "forbidden"}), 200
 
-    # --- LOGIKA RESPON BOT ---
     if text_message == '/start':
         welcome_text = "Halo! Sistem Cloud CRM aktif.\n\nAnda dapat mengirimkan instruksi untuk menambah, mengubah, atau mencari data customer."
         send_telegram_message(chat_id, welcome_text)
         return jsonify({"status": "ok"}), 200
 
-    # Respon default sementara (Sebelum Gemini dan Supabase dirakit penuh)
     reply_text = f"Pesan diterima: '{text_message}'.\nBot sedang dalam tahap penyelesaian konfigurasi dasar."
     send_telegram_message(chat_id, reply_text)
 
     return jsonify({"status": "ok"}), 200
 
-# ==========================================
-# 5. TITIK JALAN SERVER
-# ==========================================
-# Bagian ini wajib ada agar Vercel dapat menjalankan aplikasi Python
 if __name__ == '__main__':
     app.run(debug=True)
