@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud CRM & Document Manager</title>
+  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="bg-slate-900 text-white px-6 py-4 shadow-md flex justify-between items-center">
+    <div class="flex items-center space-x-3">
+      <span class="text-2xl">📁</span>
+      <h1 class="text-xl font-bold tracking-wide">Enterprise CRM & Docs</h1>
+    </div>
+    <button onclick="openCustomerModal()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium text-sm transition">
+      + Tambah Customer
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto p-6">
+    <!-- Filter & Search -->
+    <div class="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <input type="text" id="searchInput" oninput="renderCustomers()" placeholder="Cari nama PT, PIC, atau status..." class="w-full sm:w-96 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <button onclick="fetchCustomers()" class="text-sm text-slate-600 hover:text-slate-900">🔄 Refresh Data</button>
+    </div>
+
+    <!-- Customer Grid -->
+    <div id="customerGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Cards akan di-render oleh JavaScript di sini -->
+    </div>
+  </div>
+
+  <!-- Modal Tambah Customer -->
+  <div id="customerModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+      <h2 class="text-lg font-bold mb-4">Tambah Customer Baru</h2>
+      <form id="customerForm" onsubmit="saveCustomer(event)" class="space-y-3">
+        <input type="text" id="perusahaan" placeholder="Nama Perusahaan (PT) *" required class="w-full px-3 py-2 border rounded-lg">
+        <input type="text" id="nama_customer" placeholder="Nama PIC / Kontak" class="w-full px-3 py-2 border rounded-lg">
+        <input type="text" id="jabatan" placeholder="Jabatan" class="w-full px-3 py-2 border rounded-lg">
+        <input type="text" id="no_telepon" placeholder="No. Telepon / WhatsApp" class="w-full px-3 py-2 border rounded-lg">
+        <input type="text" id="alamat" placeholder="Alamat Lengkap" class="w-full px-3 py-2 border rounded-lg">
+        <select id="status_kerjasama" class="w-full px-3 py-2 border rounded-lg bg-white">
+          <option value="Prospect">Prospect</option>
+          <option value="Negosiasi">Negosiasi</option>
+          <option value="MOU Aktif">MOU Aktif</option>
+          <option value="Selesai">Selesai</option>
+        </select>
+        <textarea id="notes" placeholder="Catatan..." class="w-full px-3 py-2 border rounded-lg"></textarea>
+        <div class="flex justify-end space-x-2 pt-3">
+          <button type="button" onclick="closeCustomerModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Upload File -->
+  <div id="uploadModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+      <h2 class="text-lg font-bold mb-4">Upload Dokumen / Foto</h2>
+      <form id="uploadForm" onsubmit="uploadFile(event)" class="space-y-4">
+        <input type="hidden" id="upload_customer_id">
+        <div>
+          <label class="block text-sm font-medium mb-1">Kategori Dokumen</label>
+          <select id="kategori_file" class="w-full px-3 py-2 border rounded-lg bg-white">
+            <option value="MOU">MOU</option>
+            <option value="Adendum">Adendum</option>
+            <option value="Company Profile">Company Profile</option>
+            <option value="Foto Pertemuan">Foto Pertemuan</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Pilih File (PDF, Word, Foto)</label>
+          <input type="file" id="file_input" required class="w-full text-sm">
+        </div>
+        <div class="flex justify-end space-x-2 pt-3">
+          <button type="button" onclick="closeUploadModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Batal</button>
+          <button type="submit" id="btnUpload" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let customers = [];
+
+    async function fetchCustomers() {
+      const res = await fetch('/api/customers');
+      customers = await res.json();
+      renderCustomers();
+    }
+
+    function renderCustomers() {
+      const grid = document.getElementById('customerGrid');
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      grid.innerHTML = '';
+
+      const filtered = customers.filter(c => 
+        (c.perusahaan || '').toLowerCase().includes(q) ||
+        (c.nama_customer || '').toLowerCase().includes(q) ||
+        (c.status_kerjasama || '').toLowerCase().includes(q)
+      );
+
+      filtered.forEach(c => {
+        const docs = c.documents || [];
+        const docList = docs.map(d => `
+          <a href="${d.file_url}" target="_blank" class="flex items-center justify-between p-2 bg-slate-50 hover:bg-blue-50 rounded border text-xs transition">
+            <span class="truncate font-medium text-blue-700">📄 ${d.nama_file}</span>
+            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded text-[10px] ml-2 shrink-0">${d.kategori_file}</span>
+          </a>
+        `).join('');
+
+        const badgeColor = c.status_kerjasama === 'MOU Aktif' ? 'bg-emerald-100 text-emerald-800' : 
+                           c.status_kerjasama === 'Negosiasi' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
+
+        grid.innerHTML += `
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-lg text-slate-900">${c.perusahaan}</h3>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">${c.status_kerjasama || 'Prospect'}</span>
+              </div>
+              <p class="text-sm text-slate-600 mb-1">👤 <b>${c.nama_customer || '-'}</b> (${c.jabatan || '-'})</p>
+              <p class="text-xs text-slate-500 mb-1">📞 ${c.no_telepon || '-'}</p>
+              <p class="text-xs text-slate-500 mb-3">📍 ${c.alamat || '-'}</p>
+              ${c.notes ? `<div class="p-2.5 bg-amber-50/60 border border-amber-200 rounded-lg text-xs text-slate-700 mb-4">💬 ${c.notes}</div>` : ''}
+              
+              <div class="border-t pt-3 mt-2">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Dokumen & Foto (${docs.length})</span>
+                  <button onclick="openUploadModal('${c.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded font-medium">+ Upload File</button>
+                </div>
+                <div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                  ${docList || '<p class="text-xs text-slate-400 italic">Belum ada file terlampir</p>'}
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-between items-center border-t mt-4 pt-3 text-[11px] text-slate-400">
+              <span>Update: ${new Date(c.updated_at).toLocaleDateString('id-ID')}</span>
+              <button onclick="deleteCustomer('${c.id}')" class="text-red-500 hover:underline">Hapus</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    async function saveCustomer(e) {
+      e.preventDefault();
+      const payload = {
+        perusahaan: document.getElementById('perusahaan').value,
+        nama_customer: document.getElementById('nama_customer').value,
+        jabatan: document.getElementById('jabatan').value,
+        no_telepon: document.getElementById('no_telepon').value,
+        alamat: document.getElementById('alamat').value,
+        status_kerjasama: document.getElementById('status_kerjasama').value,
+        notes: document.getElementById('notes').value
+      };
+      await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      closeCustomerModal();
+      document.getElementById('customerForm').reset();
+      fetchCustomers();
+    }
+
+    async function uploadFile(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnUpload');
+      btn.innerText = 'Mengupload...';
+      btn.disabled = true;
+
+      const formData = new FormData();
+      formData.append('customer_id', document.getElementById('upload_customer_id').value);
+      formData.append('kategori_file', document.getElementById('kategori_file').value);
+      formData.append('file', document.getElementById('file_input').files[0]);
+
+      await fetch('/api/upload', { method: 'POST', body: formData });
+      
+      btn.innerText = 'Upload';
+      btn.disabled = false;
+      closeUploadModal();
+      document.getElementById('uploadForm').reset();
+      fetchCustomers();
+    }
+
+    async function deleteCustomer(id) {
+      if (!confirm('Yakin ingin menghapus customer ini beserta seluruh filenya?')) return;
+      await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+      fetchCustomers();
+    }
+
+    function openCustomerModal() { document.getElementById('customerModal').classList.remove('hidden'); document.getElementById('customerModal').classList.add('flex'); }
+    function closeCustomerModal() { document.getElementById('customerModal').classList.add('hidden'); document.getElementById('customerModal').classList.remove('flex'); }
+    function openUploadModal(id) { document.getElementById('upload_customer_id').value = id; document.getElementById('uploadModal').classList.remove('hidden'); document.getElementById('uploadModal').classList.add('flex'); }
+    function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); document.getElementById('uploadModal').classList.remove('flex'); }
+
+    fetchCustomers();
+  </script>
+</body>
+</html>
