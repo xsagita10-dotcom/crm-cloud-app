@@ -266,7 +266,10 @@ def get_telegram_file(file_id):
     return file_bytes, file_path
 
 def send_telegram(chat_id, text):
-    requests.post(f"[https://api.telegram.org/bot](https://api.telegram.org/bot){TELEGRAM_TOKEN}/sendMessage", json={
+    if not TELEGRAM_TOKEN:
+        return
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    requests.post(url, json={
         "chat_id": chat_id, "text": text, "parse_mode": "Markdown"
     })
 
