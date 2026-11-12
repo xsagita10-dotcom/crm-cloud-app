@@ -8,38 +8,30 @@
 </head>
 <body class="bg-gray-50 font-sans text-gray-900">
 
-    <!-- 1. LAYAR LOGIN PIN -->
+    <!-- LAYAR LOGIN PIN -->
     <div id="login-view" class="min-h-screen flex items-center justify-center bg-gray-100">
         <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm text-center">
             <h2 class="text-2xl font-bold mb-6 text-blue-600">Login CRM</h2>
-            <input type="password" id="pin-input" placeholder="Masukkan PIN Akses" 
-                   class="w-full px-4 py-3 border rounded-lg mb-4 text-center text-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="handleLogin()" 
-                    class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">
-                Masuk
-            </button>
+            <input type="password" id="pin-input" placeholder="Masukkan PIN Akses" class="w-full px-4 py-3 border rounded-lg mb-4 text-center focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700">Masuk</button>
             <p id="login-error" class="text-red-500 text-sm mt-4 hidden">PIN minimal 4 karakter!</p>
         </div>
     </div>
 
-    <!-- 2. LAYAR DASHBOARD (Tersembunyi di awal) -->
+    <!-- LAYAR DASHBOARD -->
     <div id="dashboard-view" class="hidden min-h-screen flex-col">
-        <!-- Header -->
-        <header class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center">
+        <header class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
             <h1 class="text-xl font-bold">Cloud CRM Dashboard</h1>
             <button onclick="handleLogout()" class="bg-blue-800 px-4 py-2 rounded text-sm hover:bg-blue-900">Logout</button>
         </header>
 
-        <!-- Konten Utama -->
         <main class="flex-1 p-4 md:p-8 max-w-6xl mx-auto w-full">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">Data Customer</h2>
-                <button class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700">
-                    + Tambah Data
-                </button>
+                <button onclick="toggleModal(true)" class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700">+ Tambah Data</button>
             </div>
 
-            <!-- Tabel Customer -->
+            <!-- Tabel -->
             <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -48,22 +40,33 @@
                                 <th class="p-4 font-semibold">Perusahaan / Alamat</th>
                                 <th class="p-4 font-semibold">Kontak Utama</th>
                                 <th class="p-4 font-semibold">Status</th>
-                                <th class="p-4 font-semibold text-center">Dokumen</th>
-                                <th class="p-4 font-semibold text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="customer-table-body" class="divide-y divide-gray-100">
-                            <!-- Data akan diisi oleh JavaScript -->
-                        </tbody>
+                        <tbody id="customer-table-body" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- 3. SCRIPT LOGIKA -->
+    <!-- MODAL TAMBAH DATA (Pop-up) -->
+    <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
+            <h3 class="text-xl font-bold mb-4">Tambah Customer Baru</h3>
+            <div class="space-y-4">
+                <input type="text" id="input-perusahaan" placeholder="Nama Perusahaan" class="w-full border p-2 rounded">
+                <input type="text" id="input-nama" placeholder="Nama Kontak Utama" class="w-full border p-2 rounded">
+                <input type="text" id="input-telepon" placeholder="No. Telepon / WA" class="w-full border p-2 rounded">
+                <textarea id="input-alamat" placeholder="Alamat Lengkap" class="w-full border p-2 rounded"></textarea>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button onclick="toggleModal(false)" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Batal</button>
+                <button onclick="saveCustomer()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Fungsi Login & Navigasi
         function handleLogin() {
             const pin = document.getElementById('pin-input').value;
             if (pin.length > 3) { 
@@ -71,7 +74,6 @@
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('dashboard-view').classList.remove('hidden');
                 document.getElementById('dashboard-view').classList.add('flex');
-                
                 fetchCustomers();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
@@ -80,67 +82,74 @@
 
         function handleLogout() {
             sessionStorage.removeItem('app_pin');
-            document.getElementById('pin-input').value = '';
-            document.getElementById('login-view').classList.remove('hidden');
-            document.getElementById('dashboard-view').classList.add('hidden');
-            document.getElementById('dashboard-view').classList.remove('flex');
+            location.reload();
         }
 
-        // Fungsi Mengambil Data dari API Flask
+        function toggleModal(show) {
+            document.getElementById('add-modal').classList.toggle('hidden', !show);
+            if(!show) {
+                document.getElementById('input-perusahaan').value = '';
+                document.getElementById('input-nama').value = '';
+                document.getElementById('input-telepon').value = '';
+                document.getElementById('input-alamat').value = '';
+            }
+        }
+
         async function fetchCustomers() {
-            const tableBody = document.getElementById('customer-table-body');
-            tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Memuat data...</td></tr>';
-            
+            const tbody = document.getElementById('customer-table-body');
+            tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center">Memuat...</td></tr>';
             try {
-                const response = await fetch('/api/customers');
-                const data = await response.json();
+                const res = await fetch('/api/customers');
+                const data = await res.json();
                 
-                if (response.ok) {
-                    renderTable(data);
-                } else {
-                    tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Gagal memuat data: ${data.error}</td></tr>`;
+                if(data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Belum ada data customer.</td></tr>';
+                    return;
                 }
-            } catch (error) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Terjadi kesalahan jaringan.</td></tr>';
+                
+                tbody.innerHTML = data.map(c => `
+                    <tr class="hover:bg-blue-50">
+                        <td class="p-4"><b>${c.perusahaan || '-'}</b><br><span class="text-sm text-gray-500">${c.alamat || '-'}</span></td>
+                        <td class="p-4">${c.nama_customer || '-'}<br><span class="text-sm text-gray-500">${c.no_telepon || '-'}</span></td>
+                        <td class="p-4"><span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">${c.status_kerjasama || 'Aktif'}</span></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500">Error jaringan.</td></tr>';
             }
         }
 
-        // Fungsi Menampilkan Data ke Tabel
-        function renderTable(customers) {
-            const tableBody = document.getElementById('customer-table-body');
-            tableBody.innerHTML = ''; 
-            
-            if (customers.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada data customer.</td></tr>';
-                return;
-            }
+        async function saveCustomer() {
+            const btn = event.target;
+            btn.innerText = 'Menyimpan...';
+            btn.disabled = true;
 
-            customers.forEach(cust => {
-                const statusColor = cust.status_kerjasama === 'Aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+            const payload = {
+                perusahaan: document.getElementById('input-perusahaan').value,
+                nama_customer: document.getElementById('input-nama').value,
+                no_telepon: document.getElementById('input-telepon').value,
+                alamat: document.getElementById('input-alamat').value
+            };
+
+            try {
+                const res = await fetch('/api/customers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
                 
-                const rowHtml = `
-                    <tr class="hover:bg-blue-50 cursor-pointer transition-colors group">
-                        <td class="p-4">
-                            <div class="font-bold text-gray-900">${cust.perusahaan || '-'}</div>
-                            <div class="text-sm text-gray-500">${cust.alamat || '-'}</div>
-                        </td>
-                        <td class="p-4">
-                            <div class="font-medium">${cust.nama_customer || '-'}</div>
-                            <div class="text-sm text-gray-500">${cust.no_telepon || '-'}</div>
-                        </td>
-                        <td class="p-4">
-                            <span class="${statusColor} text-xs font-bold px-2 py-1 rounded-full">${cust.status_kerjasama || 'Unknown'}</span>
-                        </td>
-                        <td class="p-4 text-center">
-                            <span class="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">Cek Dokumen</span>
-                        </td>
-                        <td class="p-4 text-right">
-                            <button class="text-blue-600 hover:text-blue-800 font-medium text-sm">Lihat Detail</button>
-                        </td>
-                    </tr>
-                `;
-                tableBody.insertAdjacentHTML('beforeend', rowHtml);
-            });
+                if(res.ok) {
+                    toggleModal(false);
+                    fetchCustomers();
+                } else {
+                    alert("Gagal menyimpan data ke database.");
+                }
+            } catch (err) {
+                alert("Kesalahan jaringan.");
+            } finally {
+                btn.innerText = 'Simpan Data';
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
