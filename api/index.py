@@ -118,9 +118,9 @@ def process_telegram_webhook(data):
         
         Jawablah pertanyaan tersebut berdasarkan data di atas. Gunakan bahasa Indonesia yang santai tapi sopan."""
 
-        # 3. Minta jawaban dari Gemini
+        # 3. Minta jawaban dari Gemini (Model diperbarui ke 3.8-flash)
         response = ai_client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.8-flash',
             contents=prompt,
         )
         
