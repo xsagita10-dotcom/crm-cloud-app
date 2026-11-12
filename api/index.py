@@ -8,13 +8,19 @@ from google import genai
 app = Flask(__name__)
 
 # ==========================================
-# 1. KONFIGURASI ENVIRONMENT VARIABLES
+# 1. KONFIGURASI ENVIRONMENT VARIABLES (ANTI-ERROR)
 # ==========================================
-TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-SUPABASE_URL = os.environ.get('SUPABASE_URL')
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', '').strip()
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '').strip()
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '').strip()
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '').strip()
 ALLOWED_TELEGRAM_IDS = str(os.environ.get('ALLOWED_TELEGRAM_IDS', ''))
+
+# Bersihkan URL Supabase dari garis miring ekstra atau rute yang salah
+if SUPABASE_URL.endswith('/'):
+    SUPABASE_URL = SUPABASE_URL[:-1]
+if SUPABASE_URL.endswith('/rest/v1'):
+    SUPABASE_URL = SUPABASE_URL.replace('/rest/v1', '')
 
 # ==========================================
 # 2. INISIALISASI SUPABASE & GEMINI
@@ -51,23 +57,21 @@ def send_telegram_message(chat_id, text):
         print(f"Gagal mengirim pesan Telegram: {e}")
 
 # ==========================================
-# 4 & 5. RUTE API & WEBHOOK (DIGABUNG UNTUK VERCEL)
+# 4 & 5. RUTE API & WEBHOOK
 # ==========================================
 @app.route('/api/index.py', methods=['GET', 'POST'])
 @app.route('/api/customers', methods=['GET', 'POST'])
 @app.route('/api/webhook', methods=['GET', 'POST'])
 def api_handler():
-    # --- JIKA MENGAMBIL DATA UNTUK WEB (GET) ---
     if request.method == 'GET':
         if not supabase:
-            return jsonify({"error": "Database tidak terhubung"}), 500
+            return jsonify({"error": "Database tidak terhubung (Cek URL & Key)"}), 500
         try:
             response = supabase.table('customers').select('*').order('updated_at', desc=True).execute()
             return jsonify(response.data), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-    # --- JIKA MENERIMA PESAN DARI TELEGRAM (POST) ---
     elif request.method == 'POST':
         data = request.get_json()
         if not data or 'message' not in data:
