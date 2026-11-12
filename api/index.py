@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import uuid
 from flask import Flask, request, jsonify
 from supabase import create_client, Client
 from google import genai
@@ -21,9 +22,6 @@ if SUPABASE_URL.endswith('/'):
 if SUPABASE_URL.endswith('/rest/v1'):
     SUPABASE_URL = SUPABASE_URL.replace('/rest/v1', '')
 
-# ==========================================
-# 2. INISIALISASI SUPABASE & GEMINI
-# ==========================================
 supabase = None
 if SUPABASE_URL and SUPABASE_KEY:
     try:
@@ -39,7 +37,7 @@ if GEMINI_API_KEY:
         print(f"Error Gemini: {e}")
 
 # ==========================================
-# 3. RUTE API WEB: AMBIL & TAMBAH CUSTOMER
+# 2. RUTE CUSTOMER
 # ==========================================
 @app.route('/api/customers', methods=['GET', 'POST'])
 @app.route('/api/index.py', methods=['GET', 'POST']) 
@@ -58,13 +56,16 @@ def manage_customers():
         data = request.get_json()
         if data and 'message' in data:
             return process_telegram_webhook(data)
-
         try:
             new_customer = {
                 "perusahaan": data.get("perusahaan"),
                 "nama_customer": data.get("nama_customer"),
                 "no_telepon": data.get("no_telepon"),
                 "alamat": data.get("alamat"),
+                "posisi": data.get("posisi"),
+                "nama_projek": data.get("nama_projek"),
+                "status_projek": data.get("status_projek"),
+                "dibawa_oleh": data.get("dibawa_oleh"),
                 "status_kerjasama": "Aktif"
             }
             supabase.table('customers').insert(new_customer).execute()
@@ -73,7 +74,61 @@ def manage_customers():
             return jsonify({"error": str(e)}), 500
 
 # ==========================================
-# 4. RUTE WEBHOOK TELEGRAM DENGAN GEMINI AI
+# 3. RUTE MEETING & DOKUMEN (BARU)
+# ==========================================
+@app.route('/api/meetings', methods=['GET', 'POST'])
+def manage_meetings():
+    if not supabase:
+        return jsonify({"error": "Database tidak terhubung"}), 500
+
+    if request.method == 'GET':
+        projek = request.args.get('projek')
+        try:
+            if projek:
+                res = supabase.table('meetings').select('*').eq('nama_projek', projek).order('tanggal', desc=True).execute()
+            else:
+                res = supabase.table('meetings').select('*').execute()
+            return jsonify(res.data), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    elif request.method == 'POST':
+        try:
+            nama_projek = request.form.get('nama_projek')
+            tanggal = request.form.get('tanggal')
+            judul = request.form.get('judul')
+            mom = request.form.get('mom')
+            file = request.files.get('file')
+
+            foto_url = ""
+            if file and file.filename:
+                # Ambil ekstensi asli (misal: .jpg, .png, .pdf)
+                ext = file.filename.split('.')[-1]
+                filename = f"{uuid.uuid4().hex}.{ext}"
+                file_bytes = file.read()
+                
+                # Upload ke Supabase Bucket 'documents'
+                supabase.storage.from_('documents').upload(
+                    path=filename, 
+                    file=file_bytes, 
+                    file_options={"content-type": file.content_type}
+                )
+                foto_url = f"{SUPABASE_URL}/storage/v1/object/public/documents/{filename}"
+
+            new_meeting = {
+                "nama_projek": nama_projek,
+                "tanggal": tanggal,
+                "judul": judul,
+                "mom": mom,
+                "foto_url": foto_url
+            }
+            supabase.table('meetings').insert(new_meeting).execute()
+            return jsonify({"message": "Meeting berhasil disimpan!"}), 201
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+# ==========================================
+# 4. RUTE WEBHOOK TELEGRAM AI
 # ==========================================
 @app.route('/api/webhook', methods=['POST'])
 def webhook_route():
@@ -83,59 +138,38 @@ def webhook_route():
 def process_telegram_webhook(data):
     if not data or 'message' not in data:
         return jsonify({"status": "ok"}), 200
-        
     chat_id = data['message']['chat']['id']
     user_id = str(data['message']['from']['id'])
     text_message = data['message'].get('text', '')
-
     allowed_ids = [id.strip() for id in ALLOWED_TELEGRAM_IDS.split(',')]
+    
     if user_id not in allowed_ids and ALLOWED_TELEGRAM_IDS:
         send_telegram_message(chat_id, "🔒 Maaf, Anda tidak memiliki akses ke sistem CRM ini.")
         return jsonify({"status": "forbidden"}), 200
-
     if text_message == '/start':
-        send_telegram_message(chat_id, "Halo! Saya adalah Asisten AI CRM Anda. Anda bisa bertanya tentang data pelanggan yang ada di sistem.")
+        send_telegram_message(chat_id, "Halo! Asisten AI CRM aktif. Anda bisa bertanya tentang data pelanggan.")
         return jsonify({"status": "ok"}), 200
 
-    # === LOGIKA GEMINI AI ===
     if not ai_client:
-        send_telegram_message(chat_id, "Sistem AI belum siap. Pastikan GEMINI_API_KEY sudah dipasang di Vercel.")
+        send_telegram_message(chat_id, "Sistem AI belum siap.")
         return jsonify({"status": "ok"}), 200
-
     try:
-        # 1. Ambil konteks data pelanggan dari Supabase
         cust_data_text = "Saat ini belum ada data pelanggan."
         if supabase:
-            res = supabase.table('customers').select('perusahaan, nama_customer, status_kerjasama').execute()
+            res = supabase.table('customers').select('perusahaan, nama_customer, nama_projek, status_projek').execute()
             if res.data:
                 cust_data_text = json.dumps(res.data)
 
-        # 2. Rangkai instruksi (Prompt) untuk Gemini
-        prompt = f"""Kamu adalah asisten CRM yang ramah, profesional, dan ringkas. 
-        Berikut adalah data pelanggan di database saat ini: {cust_data_text}.
-        
-        Pertanyaan pengguna: '{text_message}'
-        
-        Jawablah pertanyaan tersebut berdasarkan data di atas. Gunakan bahasa Indonesia yang santai tapi sopan."""
-
-        # 3. Minta jawaban dari Gemini (Model diperbarui ke 3.8-flash)
-        response = ai_client.models.generate_content(
-            model='gemini-3.8-flash',
-            contents=prompt,
-        )
-        
-        # 4. Kirim balasan AI ke Telegram
+        prompt = f"Berikut data pelanggan & proyek saat ini: {cust_data_text}. Pertanyaan: '{text_message}'. Jawab santai, sopan, dan singkat."
+        response = ai_client.models.generate_content(model='gemini-3.8-flash', contents=prompt)
         send_telegram_message(chat_id, response.text)
-
     except Exception as e:
-        send_telegram_message(chat_id, f"Maaf, AI sedang mengalami kendala teknis: {str(e)}")
-
+        send_telegram_message(chat_id, f"Maaf, AI terkendala teknis: {str(e)}")
     return jsonify({"status": "ok"}), 200
 
 def send_telegram_message(chat_id, text):
     if TELEGRAM_TOKEN:
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        requests.post(url, json={"chat_id": chat_id, "text": text})
+        requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json={"chat_id": chat_id, "text": text})
 
 if __name__ == '__main__':
     app.run(debug=True)
