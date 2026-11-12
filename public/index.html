@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud CRM & Document Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Plugin Kalender -->
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
 </head>
 <body class="bg-gray-50 font-sans text-gray-900">
 
@@ -14,8 +12,9 @@
     <div id="login-view" class="min-h-screen flex items-center justify-center bg-gray-100">
         <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm text-center">
             <h2 class="text-2xl font-bold mb-6 text-blue-600">Login CRM</h2>
-            <input type="password" id="pin-input" placeholder="Masukkan PIN Akses" class="w-full px-4 py-3 border rounded-lg mb-4 text-center focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700">Masuk</button>
+            <input type="password" id="pin-input" placeholder="Masukkan PIN (Min. 4 Karakter)" class="w-full px-4 py-3 border rounded-lg mb-4 text-center focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors">Masuk</button>
+            <p id="login-error" class="text-red-500 text-sm mt-4 hidden">PIN minimal 4 karakter!</p>
         </div>
     </div>
 
@@ -23,30 +22,25 @@
     <div id="dashboard-view" class="hidden min-h-screen flex-col">
         <header class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
             <h1 class="text-xl font-bold">Cloud CRM Dashboard</h1>
-            <button onclick="handleLogout()" class="bg-blue-800 px-4 py-2 rounded text-sm hover:bg-blue-900">Logout</button>
+            <button onclick="handleLogout()" class="bg-red-500 px-4 py-2 rounded text-sm hover:bg-red-600 font-medium">Logout</button>
         </header>
 
         <main class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-gray-800">Manajemen Proyek</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Data Customer & Proyek</h2>
                 <button onclick="toggleModal(true)" class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 shadow-sm">+ Tambah Data</button>
             </div>
 
-            <!-- Tab Navigasi -->
-            <div class="mb-4 border-b flex space-x-4">
-                <button onclick="switchTab('tabel')" id="tab-tabel" class="py-2 px-4 border-b-2 border-blue-600 font-bold text-blue-600">Daftar Proyek</button>
-                <button onclick="switchTab('kalender')" id="tab-kalender" class="py-2 px-4 text-gray-500 font-medium hover:text-blue-600">Jadwal Kalender</button>
-            </div>
-
-            <!-- Konten: Tabel Proyek -->
-            <div id="tabel-view" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 block">
+            <!-- Tabel Data -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-max">
                         <thead>
                             <tr class="bg-gray-50 border-b border-gray-200 text-sm text-gray-600">
                                 <th class="p-4 font-semibold">Perusahaan & Alamat</th>
                                 <th class="p-4 font-semibold">Kontak & Posisi</th>
-                                <th class="p-4 font-semibold">Projek (KLIK DETAIL)</th>
+                                <th class="p-4 font-semibold">Projek & Status</th>
+                                <th class="p-4 font-semibold">Dibawa Oleh</th>
                                 <th class="p-4 font-semibold">Status</th>
                             </tr>
                         </thead>
@@ -54,27 +48,151 @@
                     </table>
                 </div>
             </div>
-
-            <!-- Konten: Kalender -->
-            <div id="kalender-view" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hidden">
-                <div id="calendar" class="w-full h-[600px]"></div>
-            </div>
         </main>
     </div>
 
-    <!-- MODAL: TAMBAH DATA UTAMA -->
+    <!-- MODAL TAMBAH DATA (Pop-up) -->
     <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 my-8">
-            <h3 class="text-xl font-bold mb-4 border-b pb-2">Tambah Klien Baru</h3>
+            <h3 class="text-xl font-bold mb-4 border-b pb-2">Tambah Data Baru</h3>
+            
             <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                <!-- Data Perusahaan & Kontak -->
+                <p class="font-semibold text-sm text-gray-500 uppercase">Informasi Klien</p>
                 <input type="text" id="input-perusahaan" placeholder="Nama Perusahaan" class="w-full border p-2 rounded">
-                <input type="text" id="input-nama" placeholder="Nama Kontak Utama" class="w-full border p-2 rounded">
-                <input type="text" id="input-posisi" placeholder="Posisi / Jabatan" class="w-full border p-2 rounded">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="input-nama" placeholder="Nama Kontak Utama" class="w-full border p-2 rounded">
+                    <input type="text" id="input-posisi" placeholder="Posisi / Jabatan" class="w-full border p-2 rounded">
+                </div>
                 <input type="text" id="input-telepon" placeholder="No. Telepon / WA" class="w-full border p-2 rounded">
                 <textarea id="input-alamat" placeholder="Alamat Lengkap" class="w-full border p-2 rounded text-sm"></textarea>
+                
+                <!-- Data Projek -->
+                <p class="font-semibold text-sm text-gray-500 uppercase mt-4">Informasi Proyek</p>
                 <input type="text" id="input-projek" placeholder="Nama Projek" class="w-full border p-2 rounded">
-                <input type="text" id="input-status-projek" placeholder="Status Projek (Misal: On Progress)" class="w-full border p-2 rounded">
+                <input type="text" id="input-status-projek" placeholder="Status Projek (Misal: On Progress, Selesai)" class="w-full border p-2 rounded">
                 <input type="text" id="input-dibawa-oleh" placeholder="Dibawa Oleh (Referral)" class="w-full border p-2 rounded">
             </div>
-            <div class="mt-6 flex justify-end space-x-3">
-                <button onclick="toggleModal(false)" class="
+
+            <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
+                <button onclick="toggleModal(false)" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded font-medium">Batal</button>
+                <button onclick="saveCustomer(event)" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIKA WEB -->
+    <script>
+        // Fungsi Login PIN
+        function handleLogin() {
+            const pin = document.getElementById('pin-input').value;
+            if (pin.length >= 4) { 
+                sessionStorage.setItem('app_pin', pin); 
+                document.getElementById('login-error').classList.add('hidden');
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                document.getElementById('dashboard-view').classList.add('flex');
+                fetchCustomers();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        // Cek sesi login saat halaman dimuat ulang
+        window.onload = function() {
+            if (sessionStorage.getItem('app_pin')) {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                document.getElementById('dashboard-view').classList.add('flex');
+                fetchCustomers();
+            }
+        };
+
+        // Fungsi Logout
+        function handleLogout() {
+            sessionStorage.removeItem('app_pin');
+            location.reload();
+        }
+
+        // Fungsi Tampilkan/Sembunyikan Modal
+        function toggleModal(show) {
+            document.getElementById('add-modal').classList.toggle('hidden', !show);
+            if(!show) {
+                document.getElementById('input-perusahaan').value = '';
+                document.getElementById('input-nama').value = '';
+                document.getElementById('input-posisi').value = '';
+                document.getElementById('input-telepon').value = '';
+                document.getElementById('input-alamat').value = '';
+                document.getElementById('input-projek').value = '';
+                document.getElementById('input-status-projek').value = '';
+                document.getElementById('input-dibawa-oleh').value = '';
+            }
+        }
+
+        // Fungsi Ambil Data dari API
+        async function fetchCustomers() {
+            const tbody = document.getElementById('customer-table-body');
+            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Memuat data...</td></tr>';
+            try {
+                const res = await fetch('/api/customers');
+                const data = await res.json();
+                
+                if(data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada data customer.</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.map(c => `
+                    <tr class="hover:bg-blue-50 border-b border-gray-100">
+                        <td class="p-4 align-top"><b>${c.perusahaan || '-'}</b><br><span class="text-xs text-gray-500">${c.alamat || '-'}</span></td>
+                        <td class="p-4 align-top"><b>${c.nama_customer || '-'}</b><br><span class="text-xs text-gray-600">${c.posisi || '-'}</span><br><span class="text-xs text-gray-500">${c.no_telepon || '-'}</span></td>
+                        <td class="p-4 align-top"><b>${c.nama_projek || '-'}</b><br><span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full inline-block mt-1">${c.status_projek || '-'}</span></td>
+                        <td class="p-4 align-top text-sm text-gray-700">${c.dibawa_oleh || '-'}</td>
+                        <td class="p-4 align-top"><span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">${c.status_kerjasama || 'Aktif'}</span></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Gagal memuat data dari server.</td></tr>';
+            }
+        }
+
+        // Fungsi Simpan Data Baru
+        async function saveCustomer(event) {
+            const btn = event.target;
+            btn.innerText = 'Menyimpan...';
+            btn.disabled = true;
+
+            const payload = {
+                perusahaan: document.getElementById('input-perusahaan').value,
+                nama_customer: document.getElementById('input-nama').value,
+                posisi: document.getElementById('input-posisi').value,
+                no_telepon: document.getElementById('input-telepon').value,
+                alamat: document.getElementById('input-alamat').value,
+                nama_projek: document.getElementById('input-projek').value,
+                status_projek: document.getElementById('input-status-projek').value,
+                dibawa_oleh: document.getElementById('input-dibawa-oleh').value
+            };
+
+            try {
+                const res = await fetch('/api/customers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if(res.ok) {
+                    toggleModal(false);
+                    fetchCustomers();
+                } else {
+                    alert("Gagal menyimpan data. Pastikan kolom di database sudah sesuai.");
+                }
+            } catch (err) {
+                alert("Kesalahan jaringan saat menyimpan data.");
+            } finally {
+                btn.innerText = 'Simpan Data';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
