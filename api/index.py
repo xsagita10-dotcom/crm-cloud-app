@@ -24,14 +24,19 @@ if SUPABASE_URL.endswith('/rest/v1'):
 # ==========================================
 # 2. INISIALISASI SUPABASE & GEMINI
 # ==========================================
-try:
-    if SUPABASE_URL and SUPABASE_KEY:
-        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    else:
-        supabase = None
-except Exception as e:
-    print(f"Error Supabase: {e}")
-    supabase = None
+supabase = None
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        print(f"Error Supabase: {e}")
+
+ai_client = None
+if GEMINI_API_KEY:
+    try:
+        ai_client = genai.Client(api_key=GEMINI_API_KEY)
+    except Exception as e:
+        print(f"Error Gemini: {e}")
 
 # ==========================================
 # 3. RUTE API WEB: AMBIL & TAMBAH CUSTOMER
@@ -62,13 +67,13 @@ def manage_customers():
                 "alamat": data.get("alamat"),
                 "status_kerjasama": "Aktif"
             }
-            response = supabase.table('customers').insert(new_customer).execute()
+            supabase.table('customers').insert(new_customer).execute()
             return jsonify({"message": "Data berhasil ditambahkan!"}), 201
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
 # ==========================================
-# 4. RUTE WEBHOOK TELEGRAM
+# 4. RUTE WEBHOOK TELEGRAM DENGAN GEMINI AI
 # ==========================================
 @app.route('/api/webhook', methods=['POST'])
 def webhook_route():
@@ -84,16 +89,47 @@ def process_telegram_webhook(data):
     text_message = data['message'].get('text', '')
 
     allowed_ids = [id.strip() for id in ALLOWED_TELEGRAM_IDS.split(',')]
-    
-    if user_id not in allowed_ids:
+    if user_id not in allowed_ids and ALLOWED_TELEGRAM_IDS:
         send_telegram_message(chat_id, "🔒 Maaf, Anda tidak memiliki akses ke sistem CRM ini.")
         return jsonify({"status": "forbidden"}), 200
 
     if text_message == '/start':
-        send_telegram_message(chat_id, "Halo! Sistem Cloud CRM aktif.")
+        send_telegram_message(chat_id, "Halo! Saya adalah Asisten AI CRM Anda. Anda bisa bertanya tentang data pelanggan yang ada di sistem.")
         return jsonify({"status": "ok"}), 200
 
-    send_telegram_message(chat_id, f"Pesan diterima: '{text_message}'.")
+    # === LOGIKA GEMINI AI ===
+    if not ai_client:
+        send_telegram_message(chat_id, "Sistem AI belum siap. Pastikan GEMINI_API_KEY sudah dipasang di Vercel.")
+        return jsonify({"status": "ok"}), 200
+
+    try:
+        # 1. Ambil konteks data pelanggan dari Supabase
+        cust_data_text = "Saat ini belum ada data pelanggan."
+        if supabase:
+            res = supabase.table('customers').select('perusahaan, nama_customer, status_kerjasama').execute()
+            if res.data:
+                cust_data_text = json.dumps(res.data)
+
+        # 2. Rangkai instruksi (Prompt) untuk Gemini
+        prompt = f"""Kamu adalah asisten CRM yang ramah, profesional, dan ringkas. 
+        Berikut adalah data pelanggan di database saat ini: {cust_data_text}.
+        
+        Pertanyaan pengguna: '{text_message}'
+        
+        Jawablah pertanyaan tersebut berdasarkan data di atas. Gunakan bahasa Indonesia yang santai tapi sopan."""
+
+        # 3. Minta jawaban dari Gemini
+        response = ai_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
+        
+        # 4. Kirim balasan AI ke Telegram
+        send_telegram_message(chat_id, response.text)
+
+    except Exception as e:
+        send_telegram_message(chat_id, f"Maaf, AI sedang mengalami kendala teknis: {str(e)}")
+
     return jsonify({"status": "ok"}), 200
 
 def send_telegram_message(chat_id, text):
