@@ -8,6 +8,7 @@
 </head>
 <body class="bg-gray-50 font-sans text-gray-900">
 
+    <!-- LAYAR LOGIN PIN -->
     <div id="login-view" class="min-h-screen flex items-center justify-center bg-gray-100">
         <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm text-center">
             <h2 class="text-2xl font-bold mb-6 text-blue-600">Login CRM</h2>
@@ -17,6 +18,7 @@
         </div>
     </div>
 
+    <!-- LAYAR DASHBOARD -->
     <div id="dashboard-view" class="hidden min-h-screen flex-col">
         <header class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
             <h1 class="text-xl font-bold">Cloud CRM Dashboard</h1>
@@ -48,7 +50,7 @@
     </div>
 
     <!-- MODAL TAMBAH CUSTOMER -->
-    <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 my-8">
             <h3 class="text-xl font-bold mb-4 border-b pb-2">Tambah Data Baru</h3>
             <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -74,26 +76,53 @@
 
     <!-- MODAL DETAIL PROJECT & MEETING -->
     <div id="project-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
             <div class="p-4 border-b flex justify-between items-center bg-blue-50">
                 <h3 class="text-xl font-bold text-blue-800" id="project-title">Detail Proyek</h3>
-                <button onclick="toggleModal(false, 'project-modal')" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+                <button onclick="toggleModal(false, 'project-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
             <div class="p-6 overflow-y-auto flex-1 flex flex-col md:flex-row gap-6">
-                <!-- Kalender & Form Input -->
-                <div class="w-full md:w-1/3 bg-gray-50 p-4 border rounded shadow-inner">
-                    <h4 class="font-bold mb-4 text-blue-700">📅 Jadwal & Progress</h4>
+                <!-- Kiri: Kalender & Form Input -->
+                <div class="w-full md:w-1/3 bg-gray-50 p-5 border rounded-xl shadow-inner h-fit">
+                    <h4 class="font-bold mb-4 text-blue-700 border-b pb-2">📅 Tambah Progress Baru</h4>
                     <input type="date" id="meet-tanggal" class="w-full border p-2 mb-3 rounded text-sm bg-white">
-                    <input type="text" id="meet-judul" placeholder="Cth: Meeting Awal / Survey" class="w-full border p-2 mb-3 rounded text-sm bg-white">
-                    <textarea id="meet-mom" placeholder="Catatan Minutes of Meeting (MoM)..." class="w-full border p-2 mb-3 rounded text-sm h-24 bg-white"></textarea>
+                    <input type="text" id="meet-judul" placeholder="Judul (Cth: Meeting Awal)" class="w-full border p-2 mb-3 rounded text-sm bg-white">
+                    <textarea id="meet-mom" placeholder="Catatan / Minutes of Meeting..." class="w-full border p-2 mb-3 rounded text-sm h-32 bg-white"></textarea>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Unggah Foto Progress (Opsional)</label>
                     <input type="file" id="meet-foto" accept="image/*" class="w-full border p-2 mb-4 rounded text-sm bg-white">
-                    <button onclick="saveMeeting(event)" class="w-full bg-blue-600 text-white font-bold p-2 rounded hover:bg-blue-700">Simpan Progress</button>
+                    <button onclick="saveMeeting(event)" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-700 transition-colors shadow-md">Simpan Progress</button>
                 </div>
-                <!-- Timeline Riwayat -->
+                
+                <!-- Kanan: Timeline Riwayat -->
                 <div class="w-full md:w-2/3">
-                    <h4 class="font-bold mb-4 border-b pb-2">Riwayat Meeting & Dokumen</h4>
-                    <div id="meeting-list" class="space-y-4"></div>
+                    <h4 class="font-bold mb-4 border-b pb-2 text-gray-800">Riwayat Meeting & Dokumen</h4>
+                    <div id="meeting-list" class="space-y-4 pr-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL SATU MEETING (BARU - UNTUK KLIK RIWAYAT) -->
+    <div id="meeting-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[60] overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="text-xl font-bold text-gray-800" id="detail-judul">Detail Meeting</h3>
+                <button onclick="toggleModal(false, 'meeting-detail-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <p class="text-sm text-gray-500 mb-4 font-medium">Tanggal: <span id="detail-tanggal" class="text-gray-900 font-bold"></span></p>
+                
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6 shadow-sm">
+                    <h4 class="font-bold text-blue-800 mb-2">Minutes of Meeting (MoM)</h4>
+                    <p id="detail-mom" class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed"></p>
+                </div>
+                
+                <div id="detail-foto-container" class="hidden flex-col items-center bg-gray-50 p-4 rounded-xl border">
+                    <h4 class="font-bold text-gray-800 mb-3 self-start">Lampiran Foto Progress</h4>
+                    <a id="detail-foto-link" href="#" target="_blank" class="w-full max-w-md mx-auto block overflow-hidden rounded-lg shadow-md border hover:opacity-90 transition-opacity">
+                        <img id="detail-foto-img" src="" alt="Foto Progress" class="w-full object-cover">
+                    </a>
+                    <p class="text-xs text-gray-500 mt-3 text-center bg-gray-200 px-3 py-1 rounded-full">Klik gambar untuk melihat resolusi penuh</p>
                 </div>
             </div>
         </div>
@@ -101,6 +130,7 @@
 
     <script>
         let currentProject = "";
+        let meetingsData = []; // Untuk menyimpan data memori riwayat
 
         window.onload = function() {
             if (sessionStorage.getItem('app_pin')) {
@@ -137,7 +167,7 @@
                         <td class="p-4 align-top"><b>${c.perusahaan || '-'}</b><br><span class="text-xs text-gray-500">${c.alamat || '-'}</span></td>
                         <td class="p-4 align-top"><b>${c.nama_customer || '-'}</b><br><span class="text-xs text-gray-600">${c.posisi || '-'}</span><br><span class="text-xs text-gray-500">${c.no_telepon || '-'}</span></td>
                         <td class="p-4 align-top">
-                            ${c.nama_projek ? `<button onclick="openProject('${c.nama_projek}')" class="font-bold text-blue-600 hover:underline cursor-pointer text-left">${c.nama_projek}</button>` : '-'}
+                            ${c.nama_projek ? `<button onclick="openProject('${c.nama_projek}')" class="font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left transition-colors">${c.nama_projek}</button>` : '-'}
                             <br><span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full inline-block mt-1">${c.status_projek || '-'}</span>
                         </td>
                         <td class="p-4 align-top text-sm text-gray-700">${c.dibawa_oleh || '-'}</td>
@@ -170,26 +200,62 @@
 
         async function fetchMeetings() {
             const list = document.getElementById('meeting-list');
-            list.innerHTML = '<p class="text-sm text-gray-500">Memuat riwayat...</p>';
+            list.innerHTML = '<p class="text-sm text-gray-500 p-4 text-center">Memuat riwayat...</p>';
             try {
                 const res = await fetch('/api/meetings?projek=' + encodeURIComponent(currentProject));
                 const data = await res.json();
-                if(data.length === 0) { list.innerHTML = '<p class="text-sm text-gray-500">Belum ada progress di proyek ini.</p>'; return; }
-                list.innerHTML = data.map(m => `
-                    <div class="border border-gray-200 p-4 rounded-lg bg-white shadow-sm">
+                meetingsData = data; // Simpan data ke memori agar bisa dipanggil ke modal detail
+
+                if(data.length === 0) { 
+                    list.innerHTML = '<div class="bg-gray-50 border p-6 rounded-lg text-center text-gray-500">Belum ada progress atau meeting yang dicatat.</div>'; 
+                    return; 
+                }
+                
+                // Membuat kartu riwayat yang BISA DIKLIK
+                list.innerHTML = data.map((m, index) => `
+                    <div onclick="openMeetingDetail(${index})" class="border border-gray-200 p-4 rounded-xl bg-white shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold text-gray-800">${m.judul}</span>
+                            <span class="font-bold text-gray-800 group-hover:text-blue-600 transition-colors">${m.judul}</span>
                             <span class="text-xs bg-blue-100 text-blue-800 font-bold px-2 py-1 rounded">${m.tanggal}</span>
                         </div>
-                        <p class="text-sm text-gray-700 whitespace-pre-wrap mt-2">${m.mom}</p>
-                        ${m.foto_url ? `<a href="${m.foto_url}" target="_blank"><img src="${m.foto_url}" class="mt-3 rounded border max-h-48 hover:opacity-80 transition-opacity"></a>` : ''}
+                        <p class="text-sm text-gray-600 truncate">${m.mom || 'Tidak ada catatan'}</p>
+                        <div class="mt-3 flex items-center justify-between text-xs font-bold">
+                            <span class="text-blue-600 flex items-center gap-1">Lihat Detail Progress &rarr;</span>
+                            ${m.foto_url ? `<span class="bg-green-100 text-green-800 px-2 py-1 rounded">📷 Ada Lampiran</span>` : ''}
+                        </div>
                     </div>
                 `).join('');
-            } catch (e) { list.innerHTML = '<p class="text-red-500">Error.</p>'; }
+            } catch (e) { list.innerHTML = '<p class="text-red-500">Error mengambil data riwayat.</p>'; }
+        }
+
+        // FUNGSI BARU: Membuka jendela khusus saat riwayat diklik
+        function openMeetingDetail(index) {
+            const m = meetingsData[index];
+            document.getElementById('detail-judul').innerText = m.judul || 'Detail Progress';
+            document.getElementById('detail-tanggal').innerText = m.tanggal || '-';
+            document.getElementById('detail-mom').innerText = m.mom || 'Tidak ada catatan (MoM).';
+            
+            const fotoContainer = document.getElementById('detail-foto-container');
+            const fotoImg = document.getElementById('detail-foto-img');
+            const fotoLink = document.getElementById('detail-foto-link');
+            
+            if (m.foto_url) {
+                fotoImg.src = m.foto_url;
+                fotoLink.href = m.foto_url;
+                fotoContainer.classList.remove('hidden');
+                fotoContainer.classList.add('flex');
+            } else {
+                fotoImg.src = '';
+                fotoLink.href = '#';
+                fotoContainer.classList.add('hidden');
+                fotoContainer.classList.remove('flex');
+            }
+            
+            toggleModal(true, 'meeting-detail-modal');
         }
 
         async function saveMeeting(e) {
-            const btn = e.target; btn.innerText = "Upload..."; btn.disabled = true;
+            const btn = e.target; btn.innerText = "Mengunggah..."; btn.disabled = true;
             const formData = new FormData();
             formData.append('nama_projek', currentProject);
             formData.append('tanggal', document.getElementById('meet-tanggal').value);
@@ -202,7 +268,8 @@
             try {
                 const res = await fetch('/api/meetings', { method: 'POST', body: formData });
                 if(res.ok) {
-                    document.getElementById('meet-judul').value = ''; document.getElementById('meet-mom').value = ''; document.getElementById('meet-foto').value = '';
+                    document.getElementById('meet-tanggal').value = ''; document.getElementById('meet-judul').value = ''; 
+                    document.getElementById('meet-mom').value = ''; document.getElementById('meet-foto').value = '';
                     fetchMeetings();
                 } else alert("Gagal menyimpan data meeting.");
             } catch(err) { alert("Error jaringan."); }
