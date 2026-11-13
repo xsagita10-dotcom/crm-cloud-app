@@ -38,33 +38,27 @@ def master_route(path):
     if not supabase: 
         return jsonify({"error": "Database terputus"}), 500
 
-    # --- JIKA REQUEST GET (MENGAMBIL DATA) ---
     if request.method == 'GET':
         projek = request.args.get('projek')
         if projek:
-            # Jika ada pertanyaan tentang projek, ambil Riwayat Meeting
             try:
-                res = supabase.table('meetings').select('*').eq('nama_projek', projek).order('tanggal', desc=True).execute()
+                res = supabase.table('meetings').select('*').eq('nama_projek', projek).order('tanggal', desc=True).order('jam', desc=True).execute()
                 return jsonify(res.data), 200
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
         else:
-            # Jika tidak, ambil Data Utama Customer
             try:
                 res = supabase.table('customers').select('*').order('updated_at', desc=True).execute()
                 return jsonify(res.data), 200
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
 
-    # --- JIKA REQUEST POST (MENYIMPAN DATA) ---
     elif request.method == 'POST':
-        # 1. Cek apakah ini kiriman dari Bot Telegram (Format JSON)
         if request.is_json:
             data = request.get_json()
             if data and 'message' in data:
                 return process_telegram_webhook(data)
             
-            # 2. Jika JSON tapi bukan Bot, berarti Tambah Customer Baru
             try:
                 supabase.table('customers').insert({
                     "perusahaan": data.get("perusahaan"), "nama_customer": data.get("nama_customer"),
@@ -77,30 +71,42 @@ def master_route(path):
             except Exception as e:
                 return jsonify({"error": str(e)}), 500
         
-        # 3. Cek apakah ini form Upload Meeting (Format Multipart/File)
         else:
+            # === LOGIKA BARU: JADWAL & UPDATE MEETING ===
+            meeting_id = request.form.get('id')
             projek = request.form.get('nama_projek')
             if projek:
                 tanggal = request.form.get('tanggal')
+                jam = request.form.get('jam')
                 judul = request.form.get('judul')
                 mom = request.form.get('mom')
                 foto = request.files.get('foto')
-                foto_url = ""
+                foto_url = None
                 
                 if foto and foto.filename:
-                    # Mengamankan nama file sebelum diunggah
                     file_name = f"{projek.replace(' ', '_')}_{foto.filename.replace(' ', '_')}"
                     file_bytes = foto.read()
                     try:
                         supabase.storage.from_('documents').upload(file_name, file_bytes, {"content-type": foto.content_type})
                         foto_url = f"{SUPABASE_URL}/storage/v1/object/public/documents/{file_name}"
-                    except Exception as e:
-                        pass # Lanjut menyimpan catatan teks meskipun upload foto gagal
+                    except Exception:
+                        foto_url = f"{SUPABASE_URL}/storage/v1/object/public/documents/{file_name}"
                 
                 try:
-                    supabase.table('meetings').insert({
-                        "nama_projek": projek, "tanggal": tanggal, "judul": judul, "mom": mom, "foto_url": foto_url
-                    }).execute()
+                    data_payload = {
+                        "nama_projek": projek, "tanggal": tanggal, 
+                        "jam": jam, "judul": judul, "mom": mom
+                    }
+                    if foto_url:
+                        data_payload["foto_url"] = foto_url
+                        
+                    if meeting_id: 
+                        # UPDATE: Jika ID ada, edit data yang sudah ada (Upload Foto / MoM)
+                        supabase.table('meetings').update(data_payload).eq('id', meeting_id).execute()
+                    else: 
+                        # INSERT: Bikin Jadwal Baru
+                        supabase.table('meetings').insert(data_payload).execute()
+                        
                     return jsonify({"status": "ok"}), 201
                 except Exception as e:
                     return jsonify({"error": str(e)}), 500
@@ -116,21 +122,20 @@ def process_telegram_webhook(data):
     text_message = data['message'].get('text', '')
     
     if text_message == '/start':
-        send_telegram_message(chat_id, "Halo! Asisten CRM siap membantu Anda mengecek progres proyek.")
+        send_telegram_message(chat_id, "Halo! Asisten CRM siap membantu.")
         return jsonify({"status": "ok"}), 200
         
     if not ai_client: return jsonify({"status": "ok"}), 200
-    
     try:
         cust_data = "Kosong."
         if supabase:
             res = supabase.table('customers').select('perusahaan, nama_customer, nama_projek, status_projek').execute()
             if res.data: cust_data = json.dumps(res.data)
-        prompt = f"Data pelanggan: {cust_data}. Pertanyaan: '{text_message}'. Jawab ringkas dan sopan."
+        prompt = f"Data pelanggan: {cust_data}. Pertanyaan: '{text_message}'. Jawab ringkas."
         response = ai_client.models.generate_content(model='gemini-3.8-flash', contents=prompt)
         send_telegram_message(chat_id, response.text)
     except Exception as e:
-        send_telegram_message(chat_id, f"Error: {e}")
+        pass
     return jsonify({"status": "ok"}), 200
 
 def send_telegram_message(chat_id, text):
