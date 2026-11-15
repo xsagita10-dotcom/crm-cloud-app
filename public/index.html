@@ -8,7 +8,6 @@
 </head>
 <body class="bg-gray-50 font-sans text-gray-900">
 
-    <!-- LAYAR LOGIN PIN -->
     <div id="login-view" class="min-h-screen flex items-center justify-center bg-gray-100">
         <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm text-center">
             <h2 class="text-2xl font-bold mb-6 text-blue-600">Login CRM</h2>
@@ -18,7 +17,6 @@
         </div>
     </div>
 
-    <!-- LAYAR DASHBOARD -->
     <div id="dashboard-view" class="hidden min-h-screen flex-col">
         <header class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
             <h1 class="text-xl font-bold">Cloud CRM Dashboard</h1>
@@ -53,12 +51,11 @@
         </main>
     </div>
 
-    <!-- MODAL TAMBAH CUSTOMER -->
+    <!-- MODAL TAMBAH CUSTOMER & JADWAL AWAL -->
     <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 my-8">
             <h3 class="text-xl font-bold mb-4 border-b pb-2">Tambah Data Baru</h3>
             <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                <p class="font-semibold text-sm text-gray-500 uppercase">Informasi Klien</p>
                 <input type="text" id="input-perusahaan" placeholder="Nama Perusahaan" class="w-full border p-2 rounded">
                 <div class="grid grid-cols-2 gap-4">
                     <input type="text" id="input-nama" placeholder="Nama Kontak" class="w-full border p-2 rounded">
@@ -66,68 +63,69 @@
                 </div>
                 <input type="text" id="input-telepon" placeholder="No. Telepon" class="w-full border p-2 rounded">
                 <textarea id="input-alamat" placeholder="Alamat Lengkap" class="w-full border p-2 rounded text-sm"></textarea>
-                <p class="font-semibold text-sm text-gray-500 uppercase mt-4">Informasi Proyek</p>
-                <input type="text" id="input-projek" placeholder="Nama Projek" class="w-full border p-2 rounded">
+                <input type="text" id="input-projek" placeholder="Nama Projek" class="w-full border p-2 rounded mt-4">
                 <input type="text" id="input-status-projek" placeholder="Status Projek" class="w-full border p-2 rounded">
                 <input type="text" id="input-dibawa-oleh" placeholder="Dibawa Oleh" class="w-full border p-2 rounded">
             </div>
             <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
-                <button onclick="toggleModal(false, 'add-modal')" class="px-4 py-2 text-gray-600 bg-gray-100 rounded font-medium">Batal</button>
-                <button onclick="saveCustomer(event)" class="px-4 py-2 bg-blue-600 text-white rounded font-medium">Simpan Data</button>
+                <button onclick="toggleModal(false, 'add-modal')" class="px-4 py-2 bg-gray-100 rounded font-bold text-gray-600">Batal</button>
+                <button onclick="saveCustomer(event)" class="px-4 py-2 bg-blue-600 text-white rounded font-bold">Simpan Data</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL BUAT JADWAL -->
     <div id="schedule-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
             <h3 class="text-xl font-bold mb-4 border-b pb-2 text-yellow-600">📅 Buat Jadwal Baru</h3>
             <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Pilih Perusahaan / Proyek</label>
-                    <select id="sched-projek" class="w-full border p-2 rounded bg-gray-50"></select>
-                </div>
+                <select id="sched-projek" class="w-full border p-2 rounded bg-gray-50"></select>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Tanggal</label>
-                        <input type="date" id="sched-tanggal" class="w-full border p-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Jam</label>
-                        <input type="time" id="sched-jam" class="w-full border p-2 rounded">
-                    </div>
+                    <input type="date" id="sched-tanggal" class="w-full border p-2 rounded">
+                    <input type="time" id="sched-jam" class="w-full border p-2 rounded">
                 </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Judul / Agenda</label>
-                    <input type="text" id="sched-judul" placeholder="Cth: Meeting Awal, Pitching..." class="w-full border p-2 rounded">
-                </div>
+                <input type="text" id="sched-judul" placeholder="Cth: Meeting Awal..." class="w-full border p-2 rounded">
             </div>
             <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
-                <button onclick="toggleModal(false, 'schedule-modal')" class="px-4 py-2 text-gray-600 bg-gray-100 rounded font-medium">Batal</button>
-                <button onclick="saveSchedule(event)" class="px-4 py-2 bg-yellow-500 text-white rounded font-bold hover:bg-yellow-600">Jadwalkan</button>
+                <button onclick="toggleModal(false, 'schedule-modal')" class="px-4 py-2 bg-gray-100 rounded text-gray-600 font-bold">Batal</button>
+                <button onclick="saveSchedule(event)" class="px-4 py-2 bg-yellow-500 text-white rounded font-bold">Jadwalkan</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DETAIL PROJECT & DAFTAR PROGRESS -->
+    <!-- MODAL DETAIL PROJECT (TABS: PROGRESS & DOKUMEN) -->
     <div id="project-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
             <div class="p-4 border-b flex justify-between items-center bg-blue-50">
                 <h3 class="text-xl font-bold text-blue-800" id="project-title">Detail Proyek</h3>
                 <button onclick="toggleModal(false, 'project-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
-            <div class="p-6 overflow-y-auto flex-1 bg-gray-50">
-                <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                    <h4 class="font-bold text-gray-800">Timeline & Riwayat Proyek</h4>
-                    <!-- TOMBOL BARU: TAMBAH PROGRESS LANGSUNG DARI DALAM -->
-                    <button onclick="openAddProgress()" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-blue-700 shadow">+ Tambah Progress</button>
+            
+            <div class="flex border-b bg-gray-50">
+                <button id="tab-btn-progress" onclick="switchTab('progress')" class="flex-1 py-3 font-bold border-b-2 border-blue-600 text-blue-600 bg-white transition-colors">Riwayat Progress</button>
+                <button id="tab-btn-dokumen" onclick="switchTab('dokumen')" class="flex-1 py-3 font-bold border-b-2 border-transparent text-gray-500 hover:bg-gray-100 transition-colors">Dokumen Proyek</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1 bg-gray-50 relative">
+                <div id="tab-progress">
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
+                        <h4 class="font-bold text-gray-800">Timeline Meeting & Laporan</h4>
+                        <button onclick="openAddProgress()" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-blue-700 shadow">+ Tambah Progress</button>
+                    </div>
+                    <div id="meeting-list" class="space-y-4"></div>
                 </div>
-                <div id="meeting-list" class="space-y-4"></div>
+
+                <div id="tab-dokumen" class="hidden">
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
+                        <h4 class="font-bold text-gray-800">Manajemen Dokumen File</h4>
+                        <button onclick="openDocModal()" class="bg-purple-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-purple-700 shadow">+ Upload File</button>
+                    </div>
+                    <div id="document-list" class="space-y-3"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL FORM PROGRESS (DIPAKAI UNTUK EDIT & TAMBAH BARU) -->
+    <!-- MODAL FORM PROGRESS -->
     <div id="meeting-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[95vh] flex flex-col overflow-hidden border-t-8 border-blue-500">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
@@ -135,54 +133,73 @@
                 <button onclick="toggleModal(false, 'meeting-detail-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
             <div class="p-6 overflow-y-auto flex-1 space-y-4">
-                
-                <input type="hidden" id="edit-id">
-                <input type="hidden" id="edit-projek">
-
+                <input type="hidden" id="edit-id"><input type="hidden" id="edit-projek">
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Tanggal</label>
-                        <input type="date" id="edit-tanggal" class="w-full border p-2 rounded text-sm bg-gray-50">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Jam</label>
-                        <input type="time" id="edit-jam" class="w-full border p-2 rounded text-sm bg-gray-50">
-                    </div>
+                    <input type="date" id="edit-tanggal" class="w-full border p-2 rounded text-sm bg-gray-50">
+                    <input type="time" id="edit-jam" class="w-full border p-2 rounded text-sm bg-gray-50">
                 </div>
-                
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Judul / Agenda</label>
-                    <input type="text" id="edit-judul" class="w-full border p-2 rounded text-sm font-bold text-blue-700">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Minutes of Meeting (MoM) / Laporan</label>
-                    <textarea id="edit-mom" placeholder="Ketik hasil meeting atau laporan progress di sini..." class="w-full border p-3 rounded text-sm h-32 leading-relaxed focus:ring-2 focus:ring-blue-200"></textarea>
-                </div>
+                <input type="text" id="edit-judul" placeholder="Judul / Agenda" class="w-full border p-2 rounded text-sm font-bold text-blue-700">
+                <textarea id="edit-mom" placeholder="Ketik hasil meeting atau laporan (MoM)..." class="w-full border p-3 rounded text-sm h-32"></textarea>
                 
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                    <label class="block text-sm font-bold text-blue-800 mb-2">Unggah Foto Progress</label>
+                    <label class="block text-sm font-bold text-blue-800 mb-2">Unggah Lampiran Foto</label>
                     <input type="file" id="edit-foto" accept="image/*" class="w-full border p-2 rounded bg-white text-sm">
-                    
-                    <div id="edit-foto-container" class="mt-4 hidden flex-col items-center bg-white p-2 rounded border">
-                        <span class="text-xs font-bold text-gray-500 mb-2">Foto Saat Ini:</span>
-                        <a id="edit-foto-link" href="#" target="_blank">
-                            <img id="edit-foto-img" src="" class="max-h-32 rounded border hover:opacity-80">
-                        </a>
-                    </div>
                 </div>
-
             </div>
             <div class="p-5 border-t bg-gray-50 flex justify-end">
-                <button onclick="updateMeetingData(event)" class="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md">Simpan Data</button>
+                <button onclick="updateMeetingData(event)" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md">Simpan Progress</button>
             </div>
         </div>
     </div>
 
+    <!-- MODAL FORM DOKUMEN -->
+    <div id="document-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border-t-8 border-purple-500">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="text-xl font-bold text-gray-800" id="modal-doc-title">Upload File Dokumen</h3>
+                <button onclick="toggleModal(false, 'document-detail-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="doc-id"><input type="hidden" id="doc-url-lama">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Nama Dokumen / File</label>
+                    <input type="text" id="doc-nama" placeholder="Cth: Kontrak SPK" class="w-full border p-2 rounded font-bold text-purple-700">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Kategori File</label>
+                    <input type="text" id="doc-kategori" placeholder="Cth: Invoice, Perjanjian, Desain" class="w-full border p-2 rounded">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Pilih File (Biarkan kosong jika hanya ubah nama)</label>
+                    <input type="file" id="doc-file" class="w-full border p-2 rounded bg-gray-50 text-sm">
+                </div>
+            </div>
+            <div class="p-5 border-t bg-gray-50 flex justify-end">
+                <button onclick="saveDocument(event)" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 shadow-md">Simpan File</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX GALERI FOTO INTERAKTIF -->
+    <div id="lightbox-modal" class="hidden fixed inset-0 bg-black bg-opacity-95 z-[70] flex flex-col items-center justify-center">
+        <button onclick="toggleModal(false, 'lightbox-modal')" class="absolute top-4 right-6 text-white text-5xl hover:text-gray-400">&times;</button>
+        <div class="flex items-center justify-center w-full px-4 relative h-full">
+            <button onclick="prevImage()" class="absolute left-4 md:left-10 text-white text-6xl hover:text-blue-400 p-4 select-none drop-shadow-lg">&lt;</button>
+            <img id="lightbox-img" src="" class="max-h-[85vh] max-w-[85vw] object-contain rounded-lg shadow-2xl transition-all">
+            <button onclick="nextImage()" class="absolute right-4 md:right-10 text-white text-6xl hover:text-blue-400 p-4 select-none drop-shadow-lg">&gt;</button>
+        </div>
+        <p id="lightbox-counter" class="absolute bottom-6 text-white font-bold bg-black bg-opacity-50 px-4 py-2 rounded-full"></p>
+    </div>
+
     <script>
         let currentProject = "";
-        let meetingsData = []; 
+        let currentCustomerId = ""; 
         let globalCustomers = []; 
+        let meetingsData = []; 
+        let documentsData = [];
+        
+        let projectImages = [];
+        let currentImageIndex = 0;
 
         window.onload = function() {
             if (sessionStorage.getItem('app_pin')) {
@@ -195,9 +212,8 @@
 
         function handleLogin() {
             const pin = document.getElementById('pin-input').value;
-            if (pin.length >= 4) { 
-                sessionStorage.setItem('app_pin', pin); location.reload();
-            } else { document.getElementById('login-error').classList.remove('hidden'); }
+            if (pin.length >= 4) { sessionStorage.setItem('app_pin', pin); location.reload(); }
+            else { document.getElementById('login-error').classList.remove('hidden'); }
         }
         function handleLogout() { sessionStorage.removeItem('app_pin'); location.reload(); }
         function toggleModal(show, modalId) { document.getElementById(modalId).classList.toggle('hidden', !show); }
@@ -206,22 +222,21 @@
             const tbody = document.getElementById('customer-table-body');
             tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Memuat...</td></tr>';
             try {
-                const res = await fetch('/api/customers');
+                const res = await fetch('/api/index.py');
                 globalCustomers = await res.json();
-                
                 tbody.innerHTML = globalCustomers.map(c => `
                     <tr class="hover:bg-blue-50 border-b border-gray-100">
                         <td class="p-4 align-top"><b>${c.perusahaan || '-'}</b><br><span class="text-xs text-gray-500">${c.alamat || '-'}</span></td>
-                        <td class="p-4 align-top"><b>${c.nama_customer || '-'}</b><br><span class="text-xs text-gray-600">${c.posisi || '-'}</span><br><span class="text-xs text-gray-500">${c.no_telepon || '-'}</span></td>
+                        <td class="p-4 align-top"><b>${c.nama_customer || '-'}</b><br><span class="text-xs text-gray-500">${c.posisi || '-'}</span></td>
                         <td class="p-4 align-top">
-                            ${c.nama_projek ? `<button onclick="openProject('${c.nama_projek}')" class="font-bold text-blue-600 hover:underline text-left">${c.nama_projek}</button>` : '-'}
-                            <br><span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full mt-1">${c.status_projek || '-'}</span>
+                            ${c.nama_projek ? `<button onclick="openProject('${c.nama_projek}', '${c.id}')" class="font-bold text-blue-600 hover:text-blue-800 hover:underline text-left">${c.nama_projek}</button>` : '-'}
+                            <br><span class="text-xs bg-blue-100 text-blue-800 rounded-full px-2 mt-1 inline-block">${c.status_projek || '-'}</span>
                         </td>
                         <td class="p-4 align-top text-sm">${c.dibawa_oleh || '-'}</td>
-                        <td class="p-4 align-top"><span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">${c.status_kerjasama || 'Aktif'}</span></td>
+                        <td class="p-4 align-top"><span class="bg-green-100 text-green-800 text-xs px-2 rounded-full">${c.status_kerjasama || 'Aktif'}</span></td>
                     </tr>
                 `).join('');
-            } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-red-500">Error</td></tr>'; }
+            } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-red-500 text-center p-4">Error Jaringan</td></tr>'; }
         }
 
         async function saveCustomer(e) {
@@ -232,152 +247,226 @@
                 alamat: document.getElementById('input-alamat').value, nama_projek: document.getElementById('input-projek').value,
                 status_projek: document.getElementById('input-status-projek').value, dibawa_oleh: document.getElementById('input-dibawa-oleh').value
             };
-            await fetch('/api/customers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            await fetch('/api/index.py', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             toggleModal(false, 'add-modal'); fetchCustomers(); e.target.disabled = false;
         }
 
-        // ==========================================
-        // FUNGSI BUAT JADWAL DARI LUAR
-        // ==========================================
         function openScheduleModal() {
             const select = document.getElementById('sched-projek');
             const projects = globalCustomers.filter(c => c.nama_projek && c.nama_projek.trim() !== "");
-            if (projects.length === 0) {
-                alert("Belum ada proyek terdaftar."); return;
-            }
-            select.innerHTML = projects.map(c => `<option value="${c.nama_projek}">${c.perusahaan} - ${c.nama_projek}</option>`).join('');
-            document.getElementById('sched-tanggal').value = ''; document.getElementById('sched-jam').value = ''; document.getElementById('sched-judul').value = '';
+            if (projects.length === 0) { alert("Belum ada proyek."); return; }
+            select.innerHTML = projects.map(c => `<option value="${c.nama_projek}">${c.nama_projek} (${c.perusahaan})</option>`).join('');
             toggleModal(true, 'schedule-modal');
         }
 
         async function saveSchedule(e) {
-            const btn = e.target; btn.innerText = "Menyimpan..."; btn.disabled = true;
+            e.target.disabled = true;
             const formData = new FormData();
+            formData.append('action', 'meeting');
             formData.append('nama_projek', document.getElementById('sched-projek').value);
-            formData.append('tanggal', document.getElementById('sched-tanggal').value || '');
-            formData.append('jam', document.getElementById('sched-jam').value || '');
-            formData.append('judul', document.getElementById('sched-judul').value || 'Meeting Baru');
+            formData.append('tanggal', document.getElementById('sched-tanggal').value);
+            formData.append('jam', document.getElementById('sched-jam').value);
+            formData.append('judul', document.getElementById('sched-judul').value);
             formData.append('mom', ''); 
-
-            try {
-                const res = await fetch('/api/meetings', { method: 'POST', body: formData });
-                if(res.ok) { toggleModal(false, 'schedule-modal'); alert("Jadwal dibuat!"); } 
-                else alert("Gagal.");
-            } catch(err) { alert("Error jaringan."); }
-            btn.innerText = "Jadwalkan"; btn.disabled = false;
+            await fetch('/api/index.py', { method: 'POST', body: formData });
+            toggleModal(false, 'schedule-modal'); e.target.disabled = false;
         }
 
         // ==========================================
-        // FUNGSI LIHAT & UPDATE PROGRESS 
+        // FITUR PROYEK: TABS & FETCH
         // ==========================================
-        function openProject(projek) {
+        function openProject(projek, customerId) {
             currentProject = projek;
+            currentCustomerId = customerId; // Menyimpan ID relasi untuk dokumen
             document.getElementById('project-title').innerText = "Proyek: " + projek;
+            switchTab('progress'); 
             toggleModal(true, 'project-modal');
-            fetchMeetings();
         }
 
+        function switchTab(tabName) {
+            const tabProgress = document.getElementById('tab-progress');
+            const tabDokumen = document.getElementById('tab-dokumen');
+            const btnProgress = document.getElementById('tab-btn-progress');
+            const btnDokumen = document.getElementById('tab-btn-dokumen');
+
+            if (tabName === 'progress') {
+                tabProgress.classList.remove('hidden'); tabDokumen.classList.add('hidden');
+                btnProgress.className = "flex-1 py-3 font-bold border-b-2 border-blue-600 text-blue-600 bg-white";
+                btnDokumen.className = "flex-1 py-3 font-bold border-b-2 border-transparent text-gray-500 hover:bg-gray-100";
+                fetchMeetings();
+            } else {
+                tabProgress.classList.add('hidden'); tabDokumen.classList.remove('hidden');
+                btnProgress.className = "flex-1 py-3 font-bold border-b-2 border-transparent text-gray-500 hover:bg-gray-100";
+                btnDokumen.className = "flex-1 py-3 font-bold border-b-2 border-purple-600 text-purple-600 bg-white";
+                fetchDocuments();
+            }
+        }
+
+        // --- MANAJEMEN MEETING & FOTO (LIGHTBOX) ---
         async function fetchMeetings() {
             const list = document.getElementById('meeting-list');
-            list.innerHTML = '<p class="text-sm text-center">Memuat riwayat...</p>';
+            list.innerHTML = '<p class="text-sm text-center">Memuat...</p>';
             try {
-                const res = await fetch('/api/meetings?projek=' + encodeURIComponent(currentProject));
+                const res = await fetch('/api/index.py?tipe=meeting&projek=' + encodeURIComponent(currentProject));
                 meetingsData = await res.json();
-                if(meetingsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500">Belum ada progress.</div>'; return; }
                 
-                list.innerHTML = meetingsData.map((m, idx) => `
-                    <div class="border border-gray-200 p-4 rounded-xl bg-white shadow-sm mb-3">
+                projectImages = meetingsData.filter(m => m.foto_url).map(m => m.foto_url);
+
+                if(meetingsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl">Belum ada progress.</div>'; return; }
+                
+                list.innerHTML = meetingsData.map((m, idx) => {
+                    let imageHtml = "";
+                    if (m.foto_url) {
+                        const imgIndex = projectImages.indexOf(m.foto_url);
+                        imageHtml = `
+                            <div class="mb-4 mt-2 cursor-pointer inline-block" onclick="openLightbox(${imgIndex})" title="Klik untuk perbesar foto">
+                                <img src="${m.foto_url}" class="h-28 w-auto object-cover rounded-lg border-2 border-gray-200 shadow-sm hover:border-blue-400 hover:scale-105 transition-all">
+                            </div>`;
+                    }
+                    
+                    return `
+                    <div class="border p-4 rounded-xl bg-white shadow-sm mb-3">
                         <div class="flex justify-between items-start mb-2">
                             <span class="font-bold text-gray-800 text-lg">${m.judul}</span>
-                            <div class="text-right ml-4 shrink-0">
-                                <span class="block text-xs bg-blue-100 text-blue-800 font-bold px-2 py-1 rounded">${m.tanggal || '-'}</span>
-                                <span class="block text-xs text-gray-500 mt-1">🕒 ${m.jam || '-'}</span>
+                            <div class="text-right text-xs text-gray-500 shrink-0 ml-4">
+                                <span class="bg-blue-100 text-blue-800 font-bold px-2 py-1 rounded block">${m.tanggal || '-'}</span>
+                                <span class="block mt-1">🕒 ${m.jam || '-'}</span>
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 mb-3 whitespace-pre-wrap">${m.mom || 'Belum ada catatan...'}</p>
-                        
-                        <!-- Thumbnail Foto (Klik untuk melihat ukuran asli) -->
-                        ${m.foto_url ? `
-                            <div class="mb-4">
-                                <a href="${m.foto_url}" target="_blank" title="Klik untuk memperbesar">
-                                    <img src="${m.foto_url}" class="h-24 w-auto object-cover rounded-lg border shadow-sm hover:opacity-80 transition-opacity">
-                                </a>
-                            </div>
-                        ` : ''}
-
+                        <p class="text-sm text-gray-600 mb-2 whitespace-pre-wrap">${m.mom || ''}</p>
+                        ${imageHtml}
                         <div class="flex justify-end border-t pt-3">
-                            <button onclick="openEditMeeting(${idx})" class="bg-gray-800 text-white text-xs px-4 py-2 rounded font-bold hover:bg-black transition-colors">✏️ Edit Data</button>
+                            <button onclick="openEditMeeting(${idx})" class="bg-gray-100 text-gray-700 text-xs px-4 py-2 rounded font-bold hover:bg-gray-200 transition-colors">✏️ Edit</button>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`;
+                }).join('');
             } catch (e) { list.innerHTML = '<p class="text-red-500">Error.</p>'; }
         }
 
-        // Fungsi Tombol "Tambah Progress" di dalam Jendela Proyek
+        // FUNGSI LIGHTBOX FOTO
+        function openLightbox(index) {
+            currentImageIndex = index;
+            updateLightboxView();
+            toggleModal(true, 'lightbox-modal');
+        }
+        function updateLightboxView() {
+            document.getElementById('lightbox-img').src = projectImages[currentImageIndex];
+            document.getElementById('lightbox-counter').innerText = `Foto ${currentImageIndex + 1} dari ${projectImages.length}`;
+        }
+        function nextImage() {
+            currentImageIndex = (currentImageIndex + 1) % projectImages.length;
+            updateLightboxView();
+        }
+        function prevImage() {
+            currentImageIndex = (currentImageIndex - 1 + projectImages.length) % projectImages.length;
+            updateLightboxView();
+        }
+
         function openAddProgress() {
             document.getElementById('modal-progress-title').innerText = "Tambah Progress Baru";
-            document.getElementById('edit-id').value = ""; // Dikosongkan agar jadi data baru
-            document.getElementById('edit-projek').value = currentProject;
-            document.getElementById('edit-tanggal').value = "";
-            document.getElementById('edit-jam').value = "";
-            document.getElementById('edit-judul').value = "";
-            document.getElementById('edit-mom').value = "";
+            document.getElementById('edit-id').value = ""; document.getElementById('edit-projek').value = currentProject;
+            document.getElementById('edit-tanggal').value = ""; document.getElementById('edit-jam').value = "";
+            document.getElementById('edit-judul').value = ""; document.getElementById('edit-mom').value = "";
             document.getElementById('edit-foto').value = "";
-            
-            document.getElementById('edit-foto-container').classList.add('hidden');
-            document.getElementById('edit-foto-container').classList.remove('flex');
-            
             toggleModal(true, 'meeting-detail-modal');
         }
 
         function openEditMeeting(index) {
             const m = meetingsData[index];
             document.getElementById('modal-progress-title').innerText = "Perbarui Progress";
-            document.getElementById('edit-id').value = m.id;
-            document.getElementById('edit-projek').value = m.nama_projek;
-            document.getElementById('edit-tanggal').value = m.tanggal || '';
-            document.getElementById('edit-jam').value = m.jam || '';
-            document.getElementById('edit-judul').value = m.judul || '';
-            document.getElementById('edit-mom').value = m.mom || '';
+            document.getElementById('edit-id').value = m.id; document.getElementById('edit-projek').value = m.nama_projek;
+            document.getElementById('edit-tanggal').value = m.tanggal || ''; document.getElementById('edit-jam').value = m.jam || '';
+            document.getElementById('edit-judul').value = m.judul || ''; document.getElementById('edit-mom').value = m.mom || '';
             document.getElementById('edit-foto').value = '';
-            
-            const fotoContainer = document.getElementById('edit-foto-container');
-            if (m.foto_url) {
-                document.getElementById('edit-foto-img').src = m.foto_url;
-                document.getElementById('edit-foto-link').href = m.foto_url;
-                fotoContainer.classList.remove('hidden');
-                fotoContainer.classList.add('flex');
-            } else {
-                fotoContainer.classList.add('hidden');
-                fotoContainer.classList.remove('flex');
-            }
             toggleModal(true, 'meeting-detail-modal');
         }
 
         async function updateMeetingData(e) {
-            const btn = e.target; btn.innerText = "Menyimpan..."; btn.disabled = true;
+            e.target.disabled = true;
             const formData = new FormData();
-            
-            const editId = document.getElementById('edit-id').value;
-            if (editId) formData.append('id', editId); // Kirim ID hanya jika mode edit
-
+            formData.append('action', 'meeting');
+            if (document.getElementById('edit-id').value) formData.append('id', document.getElementById('edit-id').value);
             formData.append('nama_projek', document.getElementById('edit-projek').value);
-            formData.append('tanggal', document.getElementById('edit-tanggal').value || '');
-            formData.append('jam', document.getElementById('edit-jam').value || '');
-            formData.append('judul', document.getElementById('edit-judul').value || '');
-            formData.append('mom', document.getElementById('edit-mom').value || '');
-            
+            formData.append('tanggal', document.getElementById('edit-tanggal').value);
+            formData.append('jam', document.getElementById('edit-jam').value);
+            formData.append('judul', document.getElementById('edit-judul').value);
+            formData.append('mom', document.getElementById('edit-mom').value);
             const foto = document.getElementById('edit-foto').files[0];
             if(foto) formData.append('foto', foto);
+            
+            await fetch('/api/index.py', { method: 'POST', body: formData });
+            toggleModal(false, 'meeting-detail-modal'); fetchMeetings(); e.target.disabled = false;
+        }
 
+        // --- MANAJEMEN DOKUMEN ---
+        async function fetchDocuments() {
+            const list = document.getElementById('document-list');
+            list.innerHTML = '<p class="text-sm text-center">Memuat dokumen...</p>';
             try {
-                const res = await fetch('/api/meetings', { method: 'POST', body: formData });
-                if(res.ok) {
-                    toggleModal(false, 'meeting-detail-modal');
-                    fetchMeetings(); // Otomatis perbarui daftar
-                } else alert("Gagal memperbarui data.");
-            } catch(err) { alert("Error jaringan."); }
-            btn.innerText = "Simpan Data"; btn.disabled = false;
+                const res = await fetch('/api/index.py?tipe=dokumen&projek=' + encodeURIComponent(currentProject) + '&customer_id=' + encodeURIComponent(currentCustomerId));
+                documentsData = await res.json();
+                
+                if(documentsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500 border rounded-lg border-dashed">Belum ada dokumen yang diunggah.</div>'; return; }
+                
+                list.innerHTML = documentsData.map((d, idx) => `
+                    <div class="border p-4 rounded-xl bg-white shadow-sm flex items-center justify-between hover:border-purple-300 transition-colors">
+                        <div class="flex items-center gap-4 overflow-hidden">
+                            <div class="text-3xl bg-purple-50 p-3 rounded-lg text-purple-600">📄</div>
+                            <div class="truncate">
+                                <p class="font-bold text-purple-900 truncate">${d.nama_file}</p>
+                                <div class="flex gap-2 items-center mt-1">
+                                    <span class="text-xs bg-gray-100 px-2 py-0.5 rounded font-medium text-gray-600">${d.kategori_file || 'Umum'}</span>
+                                    <span class="text-xs text-gray-400">${d.uploaded_at ? new Date(d.uploaded_at).toLocaleDateString() : ''}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0 ml-4">
+                            ${d.file_url ? `<a href="${d.file_url}" target="_blank" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded font-bold text-xs hover:bg-blue-200 shadow-sm">📥 Buka / Unduh</a>` : ''}
+                            <button onclick="openEditDocument(${idx})" class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded font-bold text-xs hover:bg-gray-200">✏️ Edit</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { list.innerHTML = '<p class="text-red-500">Error memuat dokumen.</p>'; }
+        }
+
+        function openDocModal() {
+            document.getElementById('modal-doc-title').innerText = "Upload Dokumen Baru";
+            document.getElementById('doc-id').value = ""; 
+            document.getElementById('doc-url-lama').value = "";
+            document.getElementById('doc-nama').value = ""; 
+            document.getElementById('doc-kategori').value = ""; 
+            document.getElementById('doc-file').value = "";
+            toggleModal(true, 'document-detail-modal');
+        }
+
+        function openEditDocument(index) {
+            const d = documentsData[index];
+            document.getElementById('modal-doc-title').innerText = "Edit Dokumen";
+            document.getElementById('doc-id').value = d.id; 
+            document.getElementById('doc-url-lama').value = d.file_url || "";
+            document.getElementById('doc-nama').value = d.nama_file; 
+            document.getElementById('doc-kategori').value = d.kategori_file || ""; 
+            document.getElementById('doc-file').value = "";
+            toggleModal(true, 'document-detail-modal');
+        }
+
+        async function saveDocument(e) {
+            e.target.disabled = true;
+            const formData = new FormData();
+            formData.append('action', 'dokumen');
+            formData.append('customer_id', currentCustomerId); 
+            formData.append('nama_projek', currentProject); 
+            
+            if (document.getElementById('doc-id').value) formData.append('id', document.getElementById('doc-id').value);
+            formData.append('nama_file', document.getElementById('doc-nama').value);
+            formData.append('kategori_file', document.getElementById('doc-kategori').value);
+            formData.append('file_url_lama', document.getElementById('doc-url-lama').value);
+            
+            const file = document.getElementById('doc-file').files[0];
+            if(file) formData.append('file', file);
+
+            await fetch('/api/index.py', { method: 'POST', body: formData });
+            toggleModal(false, 'document-detail-modal'); fetchDocuments(); e.target.disabled = false;
         }
     </script>
 </body>
