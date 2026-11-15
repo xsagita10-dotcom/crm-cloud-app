@@ -180,15 +180,16 @@
         </div>
     </div>
 
-    <!-- LIGHTBOX GALERI FOTO INTERAKTIF -->
-    <div id="lightbox-modal" class="hidden fixed inset-0 bg-black bg-opacity-95 z-[70] flex flex-col items-center justify-center">
-        <button onclick="toggleModal(false, 'lightbox-modal')" class="absolute top-4 right-6 text-white text-5xl hover:text-gray-400">&times;</button>
+    <!-- LIGHTBOX GALERI FOTO INTERAKTIF (PERBAIKAN Z-INDEX) -->
+    <div id="lightbox-modal" class="hidden fixed inset-0 bg-black bg-opacity-95 z-[90] flex flex-col items-center justify-center">
+        <!-- Z-INDEX TINGGI (z-[100]) PADA TOMBOL X AGAR SELALU BISA DIKLIK -->
+        <button onclick="toggleModal(false, 'lightbox-modal')" class="absolute top-4 right-4 md:right-8 text-white text-5xl hover:text-red-500 z-[100] cursor-pointer drop-shadow-md">&times;</button>
         <div class="flex items-center justify-center w-full px-4 relative h-full">
-            <button onclick="prevImage()" class="absolute left-4 md:left-10 text-white text-6xl hover:text-blue-400 p-4 select-none drop-shadow-lg">&lt;</button>
-            <img id="lightbox-img" src="" class="max-h-[85vh] max-w-[85vw] object-contain rounded-lg shadow-2xl transition-all">
-            <button onclick="nextImage()" class="absolute right-4 md:right-10 text-white text-6xl hover:text-blue-400 p-4 select-none drop-shadow-lg">&gt;</button>
+            <button onclick="prevImage()" class="absolute left-4 md:left-10 text-white text-6xl hover:text-blue-400 p-4 select-none drop-shadow-lg z-[100]">&lt;</button>
+            <img id="lightbox-img" src="" class="max-h-[85vh] max-w-[85vw] object-contain rounded-lg shadow-2xl transition-all relative z-[95]">
+            <button onclick="nextImage()" class="absolute right-4 md:right-10 text-white text-6xl hover:text-blue-400 p-4 select-none drop-shadow-lg z-[100]">&gt;</button>
         </div>
-        <p id="lightbox-counter" class="absolute bottom-6 text-white font-bold bg-black bg-opacity-50 px-4 py-2 rounded-full"></p>
+        <p id="lightbox-counter" class="absolute bottom-6 text-white font-bold bg-black bg-opacity-50 px-4 py-2 rounded-full z-[100]"></p>
     </div>
 
     <script>
@@ -277,7 +278,7 @@
         // ==========================================
         function openProject(projek, customerId) {
             currentProject = projek;
-            currentCustomerId = customerId; // Menyimpan ID relasi untuk dokumen
+            currentCustomerId = customerId; 
             document.getElementById('project-title').innerText = "Proyek: " + projek;
             switchTab('progress'); 
             toggleModal(true, 'project-modal');
@@ -398,7 +399,7 @@
             toggleModal(false, 'meeting-detail-modal'); fetchMeetings(); e.target.disabled = false;
         }
 
-        // --- MANAJEMEN DOKUMEN ---
+        // --- MANAJEMEN DOKUMEN (PERBAIKAN ERROR ALERT) ---
         async function fetchDocuments() {
             const list = document.getElementById('document-list');
             list.innerHTML = '<p class="text-sm text-center">Memuat dokumen...</p>';
@@ -451,7 +452,10 @@
         }
 
         async function saveDocument(e) {
-            e.target.disabled = true;
+            const btn = e.target;
+            btn.disabled = true;
+            btn.innerText = "Mengunggah...";
+
             const formData = new FormData();
             formData.append('action', 'dokumen');
             formData.append('customer_id', currentCustomerId); 
@@ -465,8 +469,21 @@
             const file = document.getElementById('doc-file').files[0];
             if(file) formData.append('file', file);
 
-            await fetch('/api/index.py', { method: 'POST', body: formData });
-            toggleModal(false, 'document-detail-modal'); fetchDocuments(); e.target.disabled = false;
+            try {
+                const res = await fetch('/api/index.py', { method: 'POST', body: formData });
+                if (res.ok) {
+                    toggleModal(false, 'document-detail-modal'); 
+                    fetchDocuments(); 
+                } else {
+                    const data = await res.json();
+                    alert("Gagal simpan dokumen. Pesan sistem: " + (data.error || "Pastikan RLS di tabel 'documents' Supabase sudah dimatikan."));
+                }
+            } catch (err) {
+                alert("Error jaringan.");
+            }
+            
+            btn.disabled = false;
+            btn.innerText = "Simpan File";
         }
     </script>
 </body>
