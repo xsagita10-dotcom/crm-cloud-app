@@ -57,14 +57,40 @@ def master_route(path):
         if request.is_json:
             data = request.get_json()
             if data and 'message' in data: return process_telegram_webhook(data)
+            
+            action = data.get('action')
+            customer_id = data.get('id')
+            
+            # --- LOGIKA HAPUS CUSTOMER ---
+            if action == 'delete':
+                try:
+                    supabase.table('customers').delete().eq('id', customer_id).execute()
+                    return jsonify({"message": "Dihapus"}), 200
+                except Exception as e: return jsonify({"error": str(e)}), 500
+
+            # --- LOGIKA TAMBAH / EDIT CUSTOMER ---
+            perusahaan = data.get("perusahaan", "").strip()
+            
+            # Validasi Anti-Duplikat Nama PT
+            if perusahaan:
+                existing = supabase.table('customers').select('id').ilike('perusahaan', perusahaan).execute()
+                if existing.data:
+                    # Tolak jika ini tambah baru, ATAU jika diedit tapi pakai nama PT lain yang sudah ada
+                    if not customer_id or str(existing.data[0]['id']) != str(customer_id):
+                        return jsonify({"error": f"Nama perusahaan '{perusahaan}' sudah terdaftar di sistem!"}), 400
+
             try:
-                supabase.table('customers').insert({
-                    "perusahaan": data.get("perusahaan"), "nama_customer": data.get("nama_customer"),
+                payload = {
+                    "perusahaan": perusahaan, "nama_customer": data.get("nama_customer"),
                     "no_telepon": data.get("no_telepon"), "alamat": data.get("alamat"),
                     "posisi": data.get("posisi"), "nama_projek": data.get("nama_projek"),
                     "status_projek": data.get("status_projek"), "dibawa_oleh": data.get("dibawa_oleh"),
                     "status_kerjasama": "Aktif"
-                }).execute()
+                }
+                if customer_id:
+                    supabase.table('customers').update(payload).eq('id', customer_id).execute()
+                else:
+                    supabase.table('customers').insert(payload).execute()
                 return jsonify({"message": "Berhasil!"}), 201
             except Exception as e: return jsonify({"error": str(e)}), 500
         
@@ -147,7 +173,7 @@ def process_telegram_webhook(data):
             if c_res.data: cust_data = json.dumps(c_res.data)
             if m_res.data: meet_data = json.dumps(m_res.data)
             
-        prompt = f"Data Proyek: {cust_data}. Riwayat Meeting: {meet_data}. Pertanyaan pengguna: '{text_message}'. Jawablah sebagai asisten CRM secara ringkas dan informatif."
+        prompt = f"Data Proyek: {cust_data}. Riwayat Meeting: {meet_data}. Pertanyaan pengguna: '{text_message}'. Jawab ringkas."
         response = ai_client.models.generate_content(model='gemini-3.8-flash', contents=prompt)
         send_telegram_message(chat_id, response.text)
     except Exception as e: pass
