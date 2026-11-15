@@ -30,11 +30,11 @@
                 <h2 class="text-2xl font-bold text-gray-800">Data Customer & Proyek</h2>
                 <div class="flex gap-3 w-full md:w-auto">
                     <button onclick="openScheduleModal()" class="flex-1 bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-yellow-600 shadow-sm">📅 Buat Jadwal</button>
-                    <button onclick="toggleModal(true, 'add-modal')" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 shadow-sm">+ Tambah Data</button>
+                    <button onclick="openAddCustomer()" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 shadow-sm">+ Tambah Data</button>
                 </div>
             </div>
 
-            <!-- FITUR BARU: LIVE SEARCH -->
+            <!-- FITUR LIVE SEARCH -->
             <div class="mb-4">
                 <input type="text" id="search-input" onkeyup="filterCustomers()" placeholder="🔍 Cari nama perusahaan, pelanggan, atau nama projek..." class="w-full md:w-1/2 px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-700 font-medium">
             </div>
@@ -45,10 +45,10 @@
                         <thead>
                             <tr class="bg-gray-50 border-b border-gray-200 text-sm text-gray-600">
                                 <th class="p-4 font-semibold">Perusahaan (Klik untuk Detail)</th>
-                                <th class="p-4 font-semibold">Kontak & Posisi</th>
+                                <th class="p-4 font-semibold">Kontak & Telepon</th>
                                 <th class="p-4 font-semibold">Projek & Status</th>
-                                <th class="p-4 font-semibold">Dibawa Oleh</th>
-                                <th class="p-4 font-semibold">Status</th>
+                                <th class="p-4 font-semibold">Status Klien</th>
+                                <th class="p-4 font-semibold text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="customer-table-body" class="divide-y divide-gray-100"></tbody>
@@ -67,7 +67,6 @@
             </div>
         </header>
 
-        <!-- LAYOUT 3 KOLOM TERBAGI -->
         <main class="flex-1 p-4 md:p-6 mx-auto w-full max-w-screen-2xl flex flex-col md:flex-row gap-6 h-auto md:h-[calc(100vh-80px)]">
             
             <!-- BAGIAN KIRI: Riwayat Meeting -->
@@ -87,9 +86,7 @@
                     <div class="p-4 border-b bg-gray-50 shadow-sm z-10">
                         <h2 class="font-bold text-lg text-gray-800 flex items-center gap-2">🖼️ Galeri Foto Progress</h2>
                     </div>
-                    <div id="photo-gallery" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-100">
-                        <!-- Foto akan muncul di sini -->
-                    </div>
+                    <div id="photo-gallery" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-100"></div>
                 </div>
 
                 <!-- KANAN BAWAH: Dokumen -->
@@ -100,27 +97,26 @@
                     </div>
                     <div id="document-list" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50"></div>
                 </div>
-
             </div>
         </main>
     </div>
 
-    <!-- MODAL FORM & LIGHTBOX (TIDAK BERUBAH) -->
-    <!-- Modal Tambah Data -->
+    <!-- MODAL FORM TAMBAH / EDIT CUSTOMER -->
     <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 my-8">
-            <h3 class="text-xl font-bold mb-4 border-b pb-2">Tambah Data Baru</h3>
+            <h3 class="text-xl font-bold mb-4 border-b pb-2" id="customer-modal-title">Data Pelanggan</h3>
             <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                <input type="text" id="input-perusahaan" placeholder="Nama Perusahaan" class="w-full border p-2 rounded">
+                <input type="hidden" id="input-customer-id">
+                <input type="text" id="input-perusahaan" placeholder="Nama Perusahaan" class="w-full border p-2 rounded font-bold text-blue-700">
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="input-nama" placeholder="Nama Kontak" class="w-full border p-2 rounded">
-                    <input type="text" id="input-posisi" placeholder="Posisi" class="w-full border p-2 rounded">
+                    <input type="text" id="input-nama" placeholder="Nama Kontak Utama" class="w-full border p-2 rounded">
+                    <input type="text" id="input-posisi" placeholder="Posisi / Jabatan" class="w-full border p-2 rounded">
                 </div>
-                <input type="text" id="input-telepon" placeholder="No. Telepon" class="w-full border p-2 rounded">
+                <input type="text" id="input-telepon" placeholder="No. Telepon / WhatsApp" class="w-full border p-2 rounded">
                 <textarea id="input-alamat" placeholder="Alamat Lengkap" class="w-full border p-2 rounded text-sm"></textarea>
                 <input type="text" id="input-projek" placeholder="Nama Projek" class="w-full border p-2 rounded mt-4">
                 <input type="text" id="input-status-projek" placeholder="Status Projek" class="w-full border p-2 rounded">
-                <input type="text" id="input-dibawa-oleh" placeholder="Dibawa Oleh" class="w-full border p-2 rounded">
+                <input type="text" id="input-dibawa-oleh" placeholder="Dibawa Oleh (Referral)" class="w-full border p-2 rounded">
             </div>
             <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
                 <button onclick="toggleModal(false, 'add-modal')" class="px-4 py-2 bg-gray-100 rounded text-gray-600 font-bold">Batal</button>
@@ -129,7 +125,7 @@
         </div>
     </div>
 
-    <!-- Modal Jadwal -->
+    <!-- MODAL JADWAL DENGAN TOMBOL GOOGLE CALENDAR -->
     <div id="schedule-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
             <h3 class="text-xl font-bold mb-4 border-b pb-2 text-yellow-600">📅 Buat Jadwal Baru</h3>
@@ -139,16 +135,22 @@
                     <input type="date" id="sched-tanggal" class="w-full border p-2 rounded">
                     <input type="time" id="sched-jam" class="w-full border p-2 rounded">
                 </div>
-                <input type="text" id="sched-judul" placeholder="Cth: Meeting Awal..." class="w-full border p-2 rounded">
+                <input type="text" id="sched-judul" placeholder="Cth: Meeting Awal..." class="w-full border p-2 rounded font-bold text-gray-700">
             </div>
-            <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
-                <button onclick="toggleModal(false, 'schedule-modal')" class="px-4 py-2 bg-gray-100 rounded text-gray-600 font-bold">Batal</button>
-                <button onclick="saveSchedule(event)" class="px-4 py-2 bg-yellow-500 text-white rounded font-bold">Jadwalkan</button>
+            <div class="mt-6 flex flex-col gap-2 pt-4 border-t">
+                <div class="flex gap-2 w-full">
+                    <button onclick="toggleModal(false, 'schedule-modal')" class="w-1/3 py-2 bg-gray-100 rounded text-gray-600 font-bold">Batal</button>
+                    <button onclick="saveSchedule(event, false)" class="w-2/3 py-2 bg-yellow-500 text-white rounded font-bold hover:bg-yellow-600">Simpan Jadwal</button>
+                </div>
+                <!-- TOMBOL GOOGLE CALENDAR -->
+                <button onclick="saveSchedule(event, true)" class="w-full py-2 bg-blue-100 text-blue-700 rounded font-bold border border-blue-300 hover:bg-blue-200 transition-colors">
+                    Simpan & Masukkan ke Google Calendar 📆
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Form Progress -->
+    <!-- MODAL FORM PROGRESS -->
     <div id="meeting-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[95vh] flex flex-col overflow-hidden border-t-8 border-blue-500">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
@@ -162,7 +164,7 @@
                     <input type="time" id="edit-jam" class="w-full border p-2 rounded text-sm bg-gray-50">
                 </div>
                 <input type="text" id="edit-judul" placeholder="Judul / Agenda" class="w-full border p-2 rounded text-sm font-bold text-blue-700">
-                <textarea id="edit-mom" placeholder="Ketik hasil meeting (MoM)..." class="w-full border p-3 rounded text-sm h-32"></textarea>
+                <textarea id="edit-mom" placeholder="Ketik hasil meeting atau laporan (MoM)..." class="w-full border p-3 rounded text-sm h-32"></textarea>
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                     <label class="block text-sm font-bold text-blue-800 mb-2">Unggah Lampiran Foto</label>
                     <input type="file" id="edit-foto" accept="image/*" class="w-full border p-2 rounded bg-white text-sm">
@@ -174,7 +176,7 @@
         </div>
     </div>
 
-    <!-- Modal Form Dokumen -->
+    <!-- MODAL FORM DOKUMEN -->
     <div id="document-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border-t-8 border-purple-500">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
@@ -192,7 +194,7 @@
                     <input type="text" id="doc-kategori" placeholder="Cth: Invoice, Perjanjian" class="w-full border p-2 rounded">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Pilih File (Biarkan kosong jika hanya ubah nama)</label>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Pilih File Baru</label>
                     <input type="file" id="doc-file" class="w-full border p-2 rounded bg-gray-50 text-sm">
                 </div>
             </div>
@@ -202,7 +204,7 @@
         </div>
     </div>
 
-    <!-- Lightbox Galeri Foto -->
+    <!-- LIGHTBOX GALERI FOTO INTERAKTIF -->
     <div id="lightbox-modal" class="hidden fixed inset-0 bg-black bg-opacity-95 z-[90] flex flex-col items-center justify-center">
         <button onclick="toggleModal(false, 'lightbox-modal')" class="absolute top-4 right-4 md:right-8 text-white text-5xl hover:text-red-500 z-[100] cursor-pointer drop-shadow-md">&times;</button>
         <div class="flex items-center justify-center w-full px-4 relative h-full">
@@ -220,7 +222,6 @@
         let globalCustomers = []; 
         let meetingsData = []; 
         let documentsData = [];
-        
         let projectImages = [];
         let currentImageIndex = 0;
 
@@ -242,7 +243,7 @@
         function toggleModal(show, modalId) { document.getElementById(modalId).classList.toggle('hidden', !show); }
 
         // ==========================================
-        // FITUR LIVE SEARCH
+        // FITUR LIVE SEARCH & RENDER TABLE
         // ==========================================
         function filterCustomers() {
             const query = document.getElementById('search-input').value.toLowerCase();
@@ -270,124 +271,196 @@
                 tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Tidak ada data ditemukan.</td></tr>';
                 return;
             }
-            tbody.innerHTML = dataArray.map(c => `
+            tbody.innerHTML = dataArray.map((c, idx) => `
                 <tr class="hover:bg-blue-50 border-b border-gray-100 transition-colors">
                     <td class="p-4 align-top">
-                        <!-- SEKARANG YANG BISA DIKLIK ADALAH NAMA PERUSAHAAN -->
                         <button onclick="openDetailView('${c.nama_projek || ''}', '${c.id}', '${c.perusahaan || 'Tanpa Nama'}')" class="font-bold text-lg text-blue-600 hover:text-blue-800 hover:underline text-left tracking-wide">${c.perusahaan || '-'}</button>
                         <br><span class="text-xs text-gray-500 mt-1 block">${c.alamat || '-'}</span>
                     </td>
-                    <td class="p-4 align-top"><b>${c.nama_customer || '-'}</b><br><span class="text-xs text-gray-500">${c.posisi || '-'}</span></td>
+                    <td class="p-4 align-top">
+                        <b>${c.nama_customer || '-'}</b><br>
+                        <span class="text-xs text-gray-500">${c.posisi || '-'}</span><br>
+                        <span class="text-xs font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">📞 ${c.no_telepon || '-'}</span>
+                    </td>
                     <td class="p-4 align-top">
                         <span class="font-bold text-gray-800">${c.nama_projek || '-'}</span>
                         <br><span class="text-xs bg-blue-100 text-blue-800 rounded-full px-2 mt-1 inline-block">${c.status_projek || '-'}</span>
                     </td>
-                    <td class="p-4 align-top text-sm">${c.dibawa_oleh || '-'}</td>
                     <td class="p-4 align-top"><span class="bg-green-100 text-green-800 text-xs px-2 rounded-full">${c.status_kerjasama || 'Aktif'}</span></td>
+                    <td class="p-4 align-top text-center">
+                        <button onclick="openEditCustomer(${idx})" class="text-blue-600 hover:text-blue-800 text-sm font-bold bg-blue-50 px-2 py-1 rounded mr-2">Edit</button>
+                        <button onclick="deleteCustomer('${c.id}', '${c.perusahaan}')" class="text-red-600 hover:text-red-800 text-sm font-bold bg-red-50 px-2 py-1 rounded">Hapus</button>
+                    </td>
                 </tr>
             `).join('');
         }
 
-        async function saveCustomer(e) {
-            e.target.disabled = true;
-            const payload = {
-                perusahaan: document.getElementById('input-perusahaan').value, nama_customer: document.getElementById('input-nama').value,
-                posisi: document.getElementById('input-posisi').value, no_telepon: document.getElementById('input-telepon').value,
-                alamat: document.getElementById('input-alamat').value, nama_projek: document.getElementById('input-projek').value,
-                status_projek: document.getElementById('input-status-projek').value, dibawa_oleh: document.getElementById('input-dibawa-oleh').value
-            };
-            await fetch('/api/index.py', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            toggleModal(false, 'add-modal'); fetchCustomers(); e.target.disabled = false;
+        // ==========================================
+        // FITUR TAMBAH / EDIT / HAPUS CUSTOMER
+        // ==========================================
+        function openAddCustomer() {
+            document.getElementById('customer-modal-title').innerText = "Tambah Pelanggan Baru";
+            document.getElementById('input-customer-id').value = "";
+            document.getElementById('input-perusahaan').value = "";
+            document.getElementById('input-nama').value = "";
+            document.getElementById('input-posisi').value = "";
+            document.getElementById('input-telepon').value = "";
+            document.getElementById('input-alamat').value = "";
+            document.getElementById('input-projek').value = "";
+            document.getElementById('input-status-projek').value = "";
+            document.getElementById('input-dibawa-oleh').value = "";
+            toggleModal(true, 'add-modal');
         }
 
+        function openEditCustomer(idx) {
+            const c = globalCustomers[idx];
+            document.getElementById('customer-modal-title').innerText = "Edit Pelanggan";
+            document.getElementById('input-customer-id').value = c.id;
+            document.getElementById('input-perusahaan').value = c.perusahaan || '';
+            document.getElementById('input-nama').value = c.nama_customer || '';
+            document.getElementById('input-posisi').value = c.posisi || '';
+            document.getElementById('input-telepon').value = c.no_telepon || '';
+            document.getElementById('input-alamat').value = c.alamat || '';
+            document.getElementById('input-projek').value = c.nama_projek || '';
+            document.getElementById('input-status-projek').value = c.status_projek || '';
+            document.getElementById('input-dibawa-oleh').value = c.dibawa_oleh || '';
+            toggleModal(true, 'add-modal');
+        }
+
+        async function deleteCustomer(id, namaPT) {
+            if(!confirm(`Yakin ingin menghapus semua data ${namaPT}?\nData tidak dapat dikembalikan.`)) return;
+            try {
+                await fetch('/api/index.py', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ action: 'delete', id: id }) 
+                });
+                fetchCustomers();
+            } catch(e) { alert("Gagal menghapus pelanggan."); }
+        }
+
+        async function saveCustomer(e) {
+            e.target.disabled = true; e.target.innerText = "Menyimpan...";
+            const payload = {
+                id: document.getElementById('input-customer-id').value,
+                perusahaan: document.getElementById('input-perusahaan').value, 
+                nama_customer: document.getElementById('input-nama').value,
+                posisi: document.getElementById('input-posisi').value, 
+                no_telepon: document.getElementById('input-telepon').value,
+                alamat: document.getElementById('input-alamat').value, 
+                nama_projek: document.getElementById('input-projek').value,
+                status_projek: document.getElementById('input-status-projek').value, 
+                dibawa_oleh: document.getElementById('input-dibawa-oleh').value
+            };
+            
+            try {
+                const res = await fetch('/api/index.py', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if(res.ok) {
+                    toggleModal(false, 'add-modal'); fetchCustomers();
+                } else {
+                    const errorData = await res.json();
+                    alert("Gagal: " + (errorData.error || "Data tidak valid."));
+                }
+            } catch(err) { alert("Error jaringan."); }
+            e.target.disabled = false; e.target.innerText = "Simpan Data";
+        }
+
+        // ==========================================
+        // FITUR BUAT JADWAL & GOOGLE CALENDAR
+        // ==========================================
         function openScheduleModal() {
             const select = document.getElementById('sched-projek');
             const projects = globalCustomers.filter(c => c.nama_projek && c.nama_projek.trim() !== "");
             if (projects.length === 0) { alert("Belum ada proyek."); return; }
             select.innerHTML = projects.map(c => `<option value="${c.nama_projek}">${c.nama_projek} (${c.perusahaan})</option>`).join('');
+            document.getElementById('sched-tanggal').value = ''; document.getElementById('sched-jam').value = ''; document.getElementById('sched-judul').value = '';
             toggleModal(true, 'schedule-modal');
         }
 
-        async function saveSchedule(e) {
-            e.target.disabled = true;
+        async function saveSchedule(e, addToGCal = false) {
+            const btn = e.target; btn.disabled = true;
+            
             const formData = new FormData();
+            const projek = document.getElementById('sched-projek').value;
+            const tgl = document.getElementById('sched-tanggal').value;
+            const jam = document.getElementById('sched-jam').value;
+            const judul = document.getElementById('sched-judul').value || 'Meeting Baru';
+
             formData.append('action', 'meeting');
-            formData.append('nama_projek', document.getElementById('sched-projek').value);
-            formData.append('tanggal', document.getElementById('sched-tanggal').value);
-            formData.append('jam', document.getElementById('sched-jam').value);
-            formData.append('judul', document.getElementById('sched-judul').value);
+            formData.append('nama_projek', projek);
+            formData.append('tanggal', tgl);
+            formData.append('jam', jam);
+            formData.append('judul', judul);
             formData.append('mom', ''); 
-            await fetch('/api/index.py', { method: 'POST', body: formData });
-            toggleModal(false, 'schedule-modal'); e.target.disabled = false;
+
+            try {
+                const res = await fetch('/api/index.py', { method: 'POST', body: formData });
+                if(res.ok) {
+                    toggleModal(false, 'schedule-modal');
+                    
+                    if (addToGCal) {
+                        if(tgl && jam) {
+                            // Konversi format tanggal ke format GCal: YYYYMMDDTHHMMSS
+                            const startStr = tgl.replace(/-/g, '') + 'T' + jam.replace(':', '') + '00';
+                            const url = new URL("https://calendar.google.com/calendar/render");
+                            url.searchParams.append("action", "TEMPLATE");
+                            url.searchParams.append("text", `${judul} - ${projek}`);
+                            url.searchParams.append("dates", `${startStr}/${startStr}`); // Jam yang sama (user bisa edit sendiri)
+                            url.searchParams.append("details", `Meeting terkait proyek: ${projek}`);
+                            window.open(url.toString(), '_blank'); // Buka tab GCal
+                        } else {
+                            alert("Jadwal tersimpan, tapi Tanggal dan Jam harus diisi untuk masuk ke Google Calendar.");
+                        }
+                    }
+                } else { alert("Gagal menyimpan jadwal."); }
+            } catch(err) { alert("Error jaringan."); }
+            
+            btn.disabled = false;
         }
 
         // ==========================================
-        // FITUR DETAIL VIEW ("NEW TAB" FEEL)
+        // FITUR DETAIL VIEW (BARU)
         // ==========================================
         function openDetailView(projek, customerId, namaPerusahaan) {
-            currentProject = projek;
-            currentCustomerId = customerId; 
-            
-            // Ubah Judul Header View Baru
+            currentProject = projek; currentCustomerId = customerId; 
             document.getElementById('detail-header-title').innerText = `${namaPerusahaan} ${projek ? '— ' + projek : ''}`;
             
-            // Switch Layar
-            document.getElementById('dashboard-view').classList.add('hidden');
-            document.getElementById('dashboard-view').classList.remove('flex');
+            document.getElementById('dashboard-view').classList.add('hidden'); document.getElementById('dashboard-view').classList.remove('flex');
+            document.getElementById('detail-view').classList.remove('hidden'); document.getElementById('detail-view').classList.add('flex');
             
-            document.getElementById('detail-view').classList.remove('hidden');
-            document.getElementById('detail-view').classList.add('flex');
-            
-            fetchMeetingsAndPhotos();
-            fetchDocuments();
+            fetchMeetingsAndPhotos(); fetchDocuments();
         }
 
         function closeDetailView() {
-            document.getElementById('detail-view').classList.add('hidden');
-            document.getElementById('detail-view').classList.remove('flex');
-            
-            document.getElementById('dashboard-view').classList.remove('hidden');
-            document.getElementById('dashboard-view').classList.add('flex');
-            
-            // Refresh data just in case
+            document.getElementById('detail-view').classList.add('hidden'); document.getElementById('detail-view').classList.remove('flex');
+            document.getElementById('dashboard-view').classList.remove('hidden'); document.getElementById('dashboard-view').classList.add('flex');
             fetchCustomers();
         }
 
-        // --- MANAJEMEN MEETING & GALERI KANAN ATAS ---
         async function fetchMeetingsAndPhotos() {
-            const list = document.getElementById('meeting-list');
-            const gallery = document.getElementById('photo-gallery');
-            list.innerHTML = '<p class="text-sm text-center">Memuat...</p>';
-            gallery.innerHTML = '';
+            const list = document.getElementById('meeting-list'); const gallery = document.getElementById('photo-gallery');
+            list.innerHTML = '<p class="text-sm text-center">Memuat...</p>'; gallery.innerHTML = '';
 
             try {
                 if(!currentProject) {
-                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl">Nama Projek kosong. Tambahkan projek terlebih dahulu.</div>';
-                    return;
+                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl">Nama Projek kosong.</div>'; return;
                 }
 
                 const res = await fetch('/api/index.py?tipe=meeting&projek=' + encodeURIComponent(currentProject));
                 meetingsData = await res.json();
-                
-                // Ambil semua foto untuk grid Galeri Kanan Atas
                 projectImages = meetingsData.filter(m => m.foto_url).map(m => m.foto_url);
 
-                // --- 1. RENDER GALERI FOTO (KANAN ATAS) ---
                 if(projectImages.length === 0) {
                     gallery.innerHTML = '<div class="col-span-2 lg:col-span-3 text-center py-8 text-gray-400">Belum ada foto yang diunggah.</div>';
                 } else {
                     gallery.innerHTML = projectImages.map((url, idx) => `
                         <div class="relative group cursor-pointer aspect-square" onclick="openLightbox(${idx})">
-                            <img src="${url}" class="w-full h-full object-cover rounded-xl border border-gray-200 shadow-sm group-hover:scale-105 group-hover:shadow-md transition-all duration-300">
-                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-xl transition-all duration-300"></div>
-                        </div>
-                    `).join('');
+                            <img src="${url}" class="w-full h-full object-cover rounded-xl border border-gray-200 shadow-sm group-hover:scale-105 transition-all duration-300">
+                        </div>`).join('');
                 }
 
-                // --- 2. RENDER RIWAYAT MEETING (KIRI) ---
                 if(meetingsData.length === 0) { 
-                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl">Belum ada progress.</div>'; 
-                    return; 
+                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl">Belum ada progress.</div>'; return; 
                 }
                 
                 list.innerHTML = meetingsData.map((m, idx) => `
@@ -400,36 +473,24 @@
                             </div>
                         </div>
                         <p class="text-sm text-gray-600 mb-3 whitespace-pre-wrap">${m.mom || ''}</p>
-                        
-                        ${m.foto_url ? `<span class="inline-block text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold mb-3 border border-green-200">📸 Memiliki Foto Lampiran</span>` : ''}
-                        
+                        ${m.foto_url ? `<span class="inline-block text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold mb-3 border border-green-200">📸 Lampiran Foto Tersedia (Lihat Galeri)</span>` : ''}
                         <div class="flex justify-end border-t border-dashed pt-3">
                             <button onclick="openEditMeeting(${idx})" class="bg-gray-100 text-gray-700 text-xs px-4 py-2 rounded font-bold hover:bg-gray-200 transition-colors">✏️ Edit</button>
                         </div>
                     </div>`).join('');
-            } catch (e) { 
-                list.innerHTML = '<p class="text-red-500">Error.</p>'; 
-            }
+            } catch (e) { list.innerHTML = '<p class="text-red-500">Error.</p>'; }
         }
 
         // FUNGSI LIGHTBOX FOTO
         function openLightbox(index) {
-            currentImageIndex = index;
-            updateLightboxView();
-            toggleModal(true, 'lightbox-modal');
+            currentImageIndex = index; updateLightboxView(); toggleModal(true, 'lightbox-modal');
         }
         function updateLightboxView() {
             document.getElementById('lightbox-img').src = projectImages[currentImageIndex];
             document.getElementById('lightbox-counter').innerText = `Foto ${currentImageIndex + 1} dari ${projectImages.length}`;
         }
-        function nextImage() {
-            currentImageIndex = (currentImageIndex + 1) % projectImages.length;
-            updateLightboxView();
-        }
-        function prevImage() {
-            currentImageIndex = (currentImageIndex - 1 + projectImages.length) % projectImages.length;
-            updateLightboxView();
-        }
+        function nextImage() { currentImageIndex = (currentImageIndex + 1) % projectImages.length; updateLightboxView(); }
+        function prevImage() { currentImageIndex = (currentImageIndex - 1 + projectImages.length) % projectImages.length; updateLightboxView(); }
 
         function openAddProgress() {
             document.getElementById('modal-progress-title').innerText = "Tambah Progress Baru";
@@ -451,8 +512,7 @@
         }
 
         async function updateMeetingData(e) {
-            e.target.disabled = true;
-            const formData = new FormData();
+            e.target.disabled = true; const formData = new FormData();
             formData.append('action', 'meeting');
             if (document.getElementById('edit-id').value) formData.append('id', document.getElementById('edit-id').value);
             formData.append('nama_projek', document.getElementById('edit-projek').value);
@@ -464,19 +524,15 @@
             if(foto) formData.append('foto', foto);
             
             await fetch('/api/index.py', { method: 'POST', body: formData });
-            toggleModal(false, 'meeting-detail-modal'); 
-            fetchMeetingsAndPhotos(); // Refresh Kiri & Kanan Atas
-            e.target.disabled = false;
+            toggleModal(false, 'meeting-detail-modal'); fetchMeetingsAndPhotos(); e.target.disabled = false;
         }
 
-        // --- MANAJEMEN DOKUMEN (KANAN BAWAH) ---
+        // --- MANAJEMEN DOKUMEN ---
         async function fetchDocuments() {
-            const list = document.getElementById('document-list');
-            list.innerHTML = '<p class="text-sm text-center">Memuat dokumen...</p>';
+            const list = document.getElementById('document-list'); list.innerHTML = '<p class="text-sm text-center">Memuat dokumen...</p>';
             try {
                 const res = await fetch('/api/index.py?tipe=dokumen&projek=' + encodeURIComponent(currentProject) + '&customer_id=' + encodeURIComponent(currentCustomerId));
                 documentsData = await res.json();
-                
                 if(documentsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500 border rounded-lg border-dashed">Belum ada file dokumen.</div>'; return; }
                 
                 list.innerHTML = documentsData.map((d, idx) => `
@@ -492,57 +548,38 @@
                             ${d.file_url ? `<a href="${d.file_url}" target="_blank" class="bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold text-xs hover:bg-blue-100 border border-blue-200">📥</a>` : ''}
                             <button onclick="openEditDocument(${idx})" class="bg-gray-50 text-gray-700 px-2 py-1 rounded font-bold text-xs hover:bg-gray-200 border border-gray-200">✏️</button>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`).join('');
             } catch (e) { list.innerHTML = '<p class="text-red-500">Error memuat dokumen.</p>'; }
         }
 
         function openDocModal() {
             document.getElementById('modal-doc-title').innerText = "Upload Dokumen Baru";
-            document.getElementById('doc-id').value = ""; 
-            document.getElementById('doc-url-lama').value = "";
-            document.getElementById('doc-nama').value = ""; 
-            document.getElementById('doc-kategori').value = ""; 
-            document.getElementById('doc-file').value = "";
-            toggleModal(true, 'document-detail-modal');
+            document.getElementById('doc-id').value = ""; document.getElementById('doc-url-lama').value = "";
+            document.getElementById('doc-nama').value = ""; document.getElementById('doc-kategori').value = ""; 
+            document.getElementById('doc-file').value = ""; toggleModal(true, 'document-detail-modal');
         }
 
         function openEditDocument(index) {
             const d = documentsData[index];
             document.getElementById('modal-doc-title').innerText = "Edit Dokumen";
-            document.getElementById('doc-id').value = d.id; 
-            document.getElementById('doc-url-lama').value = d.file_url || "";
-            document.getElementById('doc-nama').value = d.nama_file; 
-            document.getElementById('doc-kategori').value = d.kategori_file || ""; 
-            document.getElementById('doc-file').value = "";
-            toggleModal(true, 'document-detail-modal');
+            document.getElementById('doc-id').value = d.id; document.getElementById('doc-url-lama').value = d.file_url || "";
+            document.getElementById('doc-nama').value = d.nama_file; document.getElementById('doc-kategori').value = d.kategori_file || ""; 
+            document.getElementById('doc-file').value = ""; toggleModal(true, 'document-detail-modal');
         }
 
         async function saveDocument(e) {
             const btn = e.target; btn.disabled = true; btn.innerText = "Mengunggah...";
-
             const formData = new FormData();
-            formData.append('action', 'dokumen');
-            formData.append('customer_id', currentCustomerId); 
-            formData.append('nama_projek', currentProject); 
-            
+            formData.append('action', 'dokumen'); formData.append('customer_id', currentCustomerId); formData.append('nama_projek', currentProject); 
             if (document.getElementById('doc-id').value) formData.append('id', document.getElementById('doc-id').value);
-            formData.append('nama_file', document.getElementById('doc-nama').value);
-            formData.append('kategori_file', document.getElementById('doc-kategori').value);
+            formData.append('nama_file', document.getElementById('doc-nama').value); formData.append('kategori_file', document.getElementById('doc-kategori').value);
             formData.append('file_url_lama', document.getElementById('doc-url-lama').value);
-            
-            const file = document.getElementById('doc-file').files[0];
-            if(file) formData.append('file', file);
+            const file = document.getElementById('doc-file').files[0]; if(file) formData.append('file', file);
 
             try {
                 const res = await fetch('/api/index.py', { method: 'POST', body: formData });
-                if (res.ok) {
-                    toggleModal(false, 'document-detail-modal'); fetchDocuments(); 
-                } else {
-                    alert("Gagal simpan dokumen. Pastikan ukuran file tidak melebihi batas Supabase.");
-                }
-            } catch (err) { alert("Error jaringan."); }
-            
+                if (res.ok) { toggleModal(false, 'document-detail-modal'); fetchDocuments(); }
+            } catch (err) {}
             btn.disabled = false; btn.innerText = "Simpan File";
         }
     </script>
