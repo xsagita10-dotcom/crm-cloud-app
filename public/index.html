@@ -6,8 +6,9 @@
     <title>Cloud CRM & Document Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 font-sans text-gray-900">
+<body class="bg-gray-100 font-sans text-gray-900">
 
+    <!-- LAYAR LOGIN PIN -->
     <div id="login-view" class="min-h-screen flex items-center justify-center bg-gray-100">
         <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm text-center">
             <h2 class="text-2xl font-bold mb-6 text-blue-600">Login CRM</h2>
@@ -17,6 +18,7 @@
         </div>
     </div>
 
+    <!-- LAYAR 1: DASHBOARD UTAMA -->
     <div id="dashboard-view" class="hidden min-h-screen flex-col">
         <header class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
             <h1 class="text-xl font-bold">Cloud CRM Dashboard</h1>
@@ -31,13 +33,18 @@
                     <button onclick="toggleModal(true, 'add-modal')" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 shadow-sm">+ Tambah Data</button>
                 </div>
             </div>
+
+            <!-- FITUR BARU: LIVE SEARCH -->
+            <div class="mb-4">
+                <input type="text" id="search-input" onkeyup="filterCustomers()" placeholder="🔍 Cari nama perusahaan, pelanggan, atau nama projek..." class="w-full md:w-1/2 px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-700 font-medium">
+            </div>
             
             <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-max">
                         <thead>
                             <tr class="bg-gray-50 border-b border-gray-200 text-sm text-gray-600">
-                                <th class="p-4 font-semibold">Perusahaan & Alamat</th>
+                                <th class="p-4 font-semibold">Perusahaan (Klik untuk Detail)</th>
                                 <th class="p-4 font-semibold">Kontak & Posisi</th>
                                 <th class="p-4 font-semibold">Projek & Status</th>
                                 <th class="p-4 font-semibold">Dibawa Oleh</th>
@@ -51,8 +58,56 @@
         </main>
     </div>
 
-    <!-- MODAL TAMBAH CUSTOMER & JADWAL AWAL -->
-    <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40 overflow-y-auto">
+    <!-- LAYAR 2: DETAIL PERUSAHAAN (MUNCUL SEPERTI TAB BARU) -->
+    <div id="detail-view" class="hidden min-h-screen flex-col bg-gray-100">
+        <header class="bg-blue-800 text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <button onclick="closeDetailView()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-bold shadow">&larr; Kembali</button>
+                <h1 class="text-xl font-bold" id="detail-header-title">Detail</h1>
+            </div>
+        </header>
+
+        <!-- LAYOUT 3 KOLOM TERBAGI -->
+        <main class="flex-1 p-4 md:p-6 mx-auto w-full max-w-screen-2xl flex flex-col md:flex-row gap-6 h-auto md:h-[calc(100vh-80px)]">
+            
+            <!-- BAGIAN KIRI: Riwayat Meeting -->
+            <div class="w-full md:w-5/12 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden h-[500px] md:h-full">
+                <div class="p-4 border-b bg-gray-50 flex justify-between items-center shadow-sm z-10">
+                    <h2 class="font-bold text-lg text-gray-800 flex items-center gap-2">📝 Riwayat Meeting</h2>
+                    <button onclick="openAddProgress()" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-bold shadow hover:bg-blue-700">+ Tambah</button>
+                </div>
+                <div id="meeting-list" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
+            </div>
+
+            <!-- BAGIAN KANAN: Foto & Dokumen -->
+            <div class="w-full md:w-7/12 flex flex-col gap-6 h-[800px] md:h-full">
+                
+                <!-- KANAN ATAS: Galeri Semua Foto -->
+                <div class="flex-1 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                    <div class="p-4 border-b bg-gray-50 shadow-sm z-10">
+                        <h2 class="font-bold text-lg text-gray-800 flex items-center gap-2">🖼️ Galeri Foto Progress</h2>
+                    </div>
+                    <div id="photo-gallery" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-100">
+                        <!-- Foto akan muncul di sini -->
+                    </div>
+                </div>
+
+                <!-- KANAN BAWAH: Dokumen -->
+                <div class="flex-1 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                    <div class="p-4 border-b bg-gray-50 flex justify-between items-center shadow-sm z-10">
+                        <h2 class="font-bold text-lg text-gray-800 flex items-center gap-2">📂 Dokumen File</h2>
+                        <button onclick="openDocModal()" class="bg-purple-600 text-white px-3 py-1.5 rounded text-sm font-bold shadow hover:bg-purple-700">+ Upload</button>
+                    </div>
+                    <div id="document-list" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50"></div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL FORM & LIGHTBOX (TIDAK BERUBAH) -->
+    <!-- Modal Tambah Data -->
+    <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6 my-8">
             <h3 class="text-xl font-bold mb-4 border-b pb-2">Tambah Data Baru</h3>
             <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -68,12 +123,13 @@
                 <input type="text" id="input-dibawa-oleh" placeholder="Dibawa Oleh" class="w-full border p-2 rounded">
             </div>
             <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
-                <button onclick="toggleModal(false, 'add-modal')" class="px-4 py-2 bg-gray-100 rounded font-bold text-gray-600">Batal</button>
+                <button onclick="toggleModal(false, 'add-modal')" class="px-4 py-2 bg-gray-100 rounded text-gray-600 font-bold">Batal</button>
                 <button onclick="saveCustomer(event)" class="px-4 py-2 bg-blue-600 text-white rounded font-bold">Simpan Data</button>
             </div>
         </div>
     </div>
 
+    <!-- Modal Jadwal -->
     <div id="schedule-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
             <h3 class="text-xl font-bold mb-4 border-b pb-2 text-yellow-600">📅 Buat Jadwal Baru</h3>
@@ -92,40 +148,7 @@
         </div>
     </div>
 
-    <!-- MODAL DETAIL PROJECT (TABS: PROGRESS & DOKUMEN) -->
-    <div id="project-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
-            <div class="p-4 border-b flex justify-between items-center bg-blue-50">
-                <h3 class="text-xl font-bold text-blue-800" id="project-title">Detail Proyek</h3>
-                <button onclick="toggleModal(false, 'project-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
-            </div>
-            
-            <div class="flex border-b bg-gray-50">
-                <button id="tab-btn-progress" onclick="switchTab('progress')" class="flex-1 py-3 font-bold border-b-2 border-blue-600 text-blue-600 bg-white transition-colors">Riwayat Progress</button>
-                <button id="tab-btn-dokumen" onclick="switchTab('dokumen')" class="flex-1 py-3 font-bold border-b-2 border-transparent text-gray-500 hover:bg-gray-100 transition-colors">Dokumen Proyek</button>
-            </div>
-
-            <div class="p-6 overflow-y-auto flex-1 bg-gray-50 relative">
-                <div id="tab-progress">
-                    <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                        <h4 class="font-bold text-gray-800">Timeline Meeting & Laporan</h4>
-                        <button onclick="openAddProgress()" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-blue-700 shadow">+ Tambah Progress</button>
-                    </div>
-                    <div id="meeting-list" class="space-y-4"></div>
-                </div>
-
-                <div id="tab-dokumen" class="hidden">
-                    <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                        <h4 class="font-bold text-gray-800">Manajemen Dokumen File</h4>
-                        <button onclick="openDocModal()" class="bg-purple-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-purple-700 shadow">+ Upload File</button>
-                    </div>
-                    <div id="document-list" class="space-y-3"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL FORM PROGRESS -->
+    <!-- Modal Form Progress -->
     <div id="meeting-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[95vh] flex flex-col overflow-hidden border-t-8 border-blue-500">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
@@ -139,8 +162,7 @@
                     <input type="time" id="edit-jam" class="w-full border p-2 rounded text-sm bg-gray-50">
                 </div>
                 <input type="text" id="edit-judul" placeholder="Judul / Agenda" class="w-full border p-2 rounded text-sm font-bold text-blue-700">
-                <textarea id="edit-mom" placeholder="Ketik hasil meeting atau laporan (MoM)..." class="w-full border p-3 rounded text-sm h-32"></textarea>
-                
+                <textarea id="edit-mom" placeholder="Ketik hasil meeting (MoM)..." class="w-full border p-3 rounded text-sm h-32"></textarea>
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                     <label class="block text-sm font-bold text-blue-800 mb-2">Unggah Lampiran Foto</label>
                     <input type="file" id="edit-foto" accept="image/*" class="w-full border p-2 rounded bg-white text-sm">
@@ -152,7 +174,7 @@
         </div>
     </div>
 
-    <!-- MODAL FORM DOKUMEN -->
+    <!-- Modal Form Dokumen -->
     <div id="document-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border-t-8 border-purple-500">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
@@ -167,7 +189,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Kategori File</label>
-                    <input type="text" id="doc-kategori" placeholder="Cth: Invoice, Perjanjian, Desain" class="w-full border p-2 rounded">
+                    <input type="text" id="doc-kategori" placeholder="Cth: Invoice, Perjanjian" class="w-full border p-2 rounded">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Pilih File (Biarkan kosong jika hanya ubah nama)</label>
@@ -180,9 +202,8 @@
         </div>
     </div>
 
-    <!-- LIGHTBOX GALERI FOTO INTERAKTIF (PERBAIKAN Z-INDEX) -->
+    <!-- Lightbox Galeri Foto -->
     <div id="lightbox-modal" class="hidden fixed inset-0 bg-black bg-opacity-95 z-[90] flex flex-col items-center justify-center">
-        <!-- Z-INDEX TINGGI (z-[100]) PADA TOMBOL X AGAR SELALU BISA DIKLIK -->
         <button onclick="toggleModal(false, 'lightbox-modal')" class="absolute top-4 right-4 md:right-8 text-white text-5xl hover:text-red-500 z-[100] cursor-pointer drop-shadow-md">&times;</button>
         <div class="flex items-center justify-center w-full px-4 relative h-full">
             <button onclick="prevImage()" class="absolute left-4 md:left-10 text-white text-6xl hover:text-blue-400 p-4 select-none drop-shadow-lg z-[100]">&lt;</button>
@@ -192,6 +213,7 @@
         <p id="lightbox-counter" class="absolute bottom-6 text-white font-bold bg-black bg-opacity-50 px-4 py-2 rounded-full z-[100]"></p>
     </div>
 
+    <!-- SCRIPT JAVASCRIPT -->
     <script>
         let currentProject = "";
         let currentCustomerId = ""; 
@@ -219,25 +241,51 @@
         function handleLogout() { sessionStorage.removeItem('app_pin'); location.reload(); }
         function toggleModal(show, modalId) { document.getElementById(modalId).classList.toggle('hidden', !show); }
 
+        // ==========================================
+        // FITUR LIVE SEARCH
+        // ==========================================
+        function filterCustomers() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = globalCustomers.filter(c => 
+                (c.perusahaan && c.perusahaan.toLowerCase().includes(query)) ||
+                (c.nama_customer && c.nama_customer.toLowerCase().includes(query)) ||
+                (c.nama_projek && c.nama_projek.toLowerCase().includes(query))
+            );
+            renderTable(filtered);
+        }
+
         async function fetchCustomers() {
             const tbody = document.getElementById('customer-table-body');
             tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Memuat...</td></tr>';
             try {
                 const res = await fetch('/api/index.py');
                 globalCustomers = await res.json();
-                tbody.innerHTML = globalCustomers.map(c => `
-                    <tr class="hover:bg-blue-50 border-b border-gray-100">
-                        <td class="p-4 align-top"><b>${c.perusahaan || '-'}</b><br><span class="text-xs text-gray-500">${c.alamat || '-'}</span></td>
-                        <td class="p-4 align-top"><b>${c.nama_customer || '-'}</b><br><span class="text-xs text-gray-500">${c.posisi || '-'}</span></td>
-                        <td class="p-4 align-top">
-                            ${c.nama_projek ? `<button onclick="openProject('${c.nama_projek}', '${c.id}')" class="font-bold text-blue-600 hover:text-blue-800 hover:underline text-left">${c.nama_projek}</button>` : '-'}
-                            <br><span class="text-xs bg-blue-100 text-blue-800 rounded-full px-2 mt-1 inline-block">${c.status_projek || '-'}</span>
-                        </td>
-                        <td class="p-4 align-top text-sm">${c.dibawa_oleh || '-'}</td>
-                        <td class="p-4 align-top"><span class="bg-green-100 text-green-800 text-xs px-2 rounded-full">${c.status_kerjasama || 'Aktif'}</span></td>
-                    </tr>
-                `).join('');
+                renderTable(globalCustomers);
             } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-red-500 text-center p-4">Error Jaringan</td></tr>'; }
+        }
+
+        function renderTable(dataArray) {
+            const tbody = document.getElementById('customer-table-body');
+            if (dataArray.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Tidak ada data ditemukan.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = dataArray.map(c => `
+                <tr class="hover:bg-blue-50 border-b border-gray-100 transition-colors">
+                    <td class="p-4 align-top">
+                        <!-- SEKARANG YANG BISA DIKLIK ADALAH NAMA PERUSAHAAN -->
+                        <button onclick="openDetailView('${c.nama_projek || ''}', '${c.id}', '${c.perusahaan || 'Tanpa Nama'}')" class="font-bold text-lg text-blue-600 hover:text-blue-800 hover:underline text-left tracking-wide">${c.perusahaan || '-'}</button>
+                        <br><span class="text-xs text-gray-500 mt-1 block">${c.alamat || '-'}</span>
+                    </td>
+                    <td class="p-4 align-top"><b>${c.nama_customer || '-'}</b><br><span class="text-xs text-gray-500">${c.posisi || '-'}</span></td>
+                    <td class="p-4 align-top">
+                        <span class="font-bold text-gray-800">${c.nama_projek || '-'}</span>
+                        <br><span class="text-xs bg-blue-100 text-blue-800 rounded-full px-2 mt-1 inline-block">${c.status_projek || '-'}</span>
+                    </td>
+                    <td class="p-4 align-top text-sm">${c.dibawa_oleh || '-'}</td>
+                    <td class="p-4 align-top"><span class="bg-green-100 text-green-800 text-xs px-2 rounded-full">${c.status_kerjasama || 'Aktif'}</span></td>
+                </tr>
+            `).join('');
         }
 
         async function saveCustomer(e) {
@@ -274,74 +322,94 @@
         }
 
         // ==========================================
-        // FITUR PROYEK: TABS & FETCH
+        // FITUR DETAIL VIEW ("NEW TAB" FEEL)
         // ==========================================
-        function openProject(projek, customerId) {
+        function openDetailView(projek, customerId, namaPerusahaan) {
             currentProject = projek;
             currentCustomerId = customerId; 
-            document.getElementById('project-title').innerText = "Proyek: " + projek;
-            switchTab('progress'); 
-            toggleModal(true, 'project-modal');
+            
+            // Ubah Judul Header View Baru
+            document.getElementById('detail-header-title').innerText = `${namaPerusahaan} ${projek ? '— ' + projek : ''}`;
+            
+            // Switch Layar
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('flex');
+            
+            document.getElementById('detail-view').classList.remove('hidden');
+            document.getElementById('detail-view').classList.add('flex');
+            
+            fetchMeetingsAndPhotos();
+            fetchDocuments();
         }
 
-        function switchTab(tabName) {
-            const tabProgress = document.getElementById('tab-progress');
-            const tabDokumen = document.getElementById('tab-dokumen');
-            const btnProgress = document.getElementById('tab-btn-progress');
-            const btnDokumen = document.getElementById('tab-btn-dokumen');
-
-            if (tabName === 'progress') {
-                tabProgress.classList.remove('hidden'); tabDokumen.classList.add('hidden');
-                btnProgress.className = "flex-1 py-3 font-bold border-b-2 border-blue-600 text-blue-600 bg-white";
-                btnDokumen.className = "flex-1 py-3 font-bold border-b-2 border-transparent text-gray-500 hover:bg-gray-100";
-                fetchMeetings();
-            } else {
-                tabProgress.classList.add('hidden'); tabDokumen.classList.remove('hidden');
-                btnProgress.className = "flex-1 py-3 font-bold border-b-2 border-transparent text-gray-500 hover:bg-gray-100";
-                btnDokumen.className = "flex-1 py-3 font-bold border-b-2 border-purple-600 text-purple-600 bg-white";
-                fetchDocuments();
-            }
+        function closeDetailView() {
+            document.getElementById('detail-view').classList.add('hidden');
+            document.getElementById('detail-view').classList.remove('flex');
+            
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            document.getElementById('dashboard-view').classList.add('flex');
+            
+            // Refresh data just in case
+            fetchCustomers();
         }
 
-        // --- MANAJEMEN MEETING & FOTO (LIGHTBOX) ---
-        async function fetchMeetings() {
+        // --- MANAJEMEN MEETING & GALERI KANAN ATAS ---
+        async function fetchMeetingsAndPhotos() {
             const list = document.getElementById('meeting-list');
+            const gallery = document.getElementById('photo-gallery');
             list.innerHTML = '<p class="text-sm text-center">Memuat...</p>';
+            gallery.innerHTML = '';
+
             try {
+                if(!currentProject) {
+                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl">Nama Projek kosong. Tambahkan projek terlebih dahulu.</div>';
+                    return;
+                }
+
                 const res = await fetch('/api/index.py?tipe=meeting&projek=' + encodeURIComponent(currentProject));
                 meetingsData = await res.json();
                 
+                // Ambil semua foto untuk grid Galeri Kanan Atas
                 projectImages = meetingsData.filter(m => m.foto_url).map(m => m.foto_url);
 
-                if(meetingsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl">Belum ada progress.</div>'; return; }
+                // --- 1. RENDER GALERI FOTO (KANAN ATAS) ---
+                if(projectImages.length === 0) {
+                    gallery.innerHTML = '<div class="col-span-2 lg:col-span-3 text-center py-8 text-gray-400">Belum ada foto yang diunggah.</div>';
+                } else {
+                    gallery.innerHTML = projectImages.map((url, idx) => `
+                        <div class="relative group cursor-pointer aspect-square" onclick="openLightbox(${idx})">
+                            <img src="${url}" class="w-full h-full object-cover rounded-xl border border-gray-200 shadow-sm group-hover:scale-105 group-hover:shadow-md transition-all duration-300">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-xl transition-all duration-300"></div>
+                        </div>
+                    `).join('');
+                }
+
+                // --- 2. RENDER RIWAYAT MEETING (KIRI) ---
+                if(meetingsData.length === 0) { 
+                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl">Belum ada progress.</div>'; 
+                    return; 
+                }
                 
-                list.innerHTML = meetingsData.map((m, idx) => {
-                    let imageHtml = "";
-                    if (m.foto_url) {
-                        const imgIndex = projectImages.indexOf(m.foto_url);
-                        imageHtml = `
-                            <div class="mb-4 mt-2 cursor-pointer inline-block" onclick="openLightbox(${imgIndex})" title="Klik untuk perbesar foto">
-                                <img src="${m.foto_url}" class="h-28 w-auto object-cover rounded-lg border-2 border-gray-200 shadow-sm hover:border-blue-400 hover:scale-105 transition-all">
-                            </div>`;
-                    }
-                    
-                    return `
-                    <div class="border p-4 rounded-xl bg-white shadow-sm mb-3">
+                list.innerHTML = meetingsData.map((m, idx) => `
+                    <div class="border p-4 rounded-xl bg-white shadow-sm hover:border-blue-300 transition-colors relative">
                         <div class="flex justify-between items-start mb-2">
-                            <span class="font-bold text-gray-800 text-lg">${m.judul}</span>
-                            <div class="text-right text-xs text-gray-500 shrink-0 ml-4">
-                                <span class="bg-blue-100 text-blue-800 font-bold px-2 py-1 rounded block">${m.tanggal || '-'}</span>
-                                <span class="block mt-1">🕒 ${m.jam || '-'}</span>
+                            <span class="font-bold text-gray-800 text-lg pr-2">${m.judul}</span>
+                            <div class="text-right text-xs text-gray-500 shrink-0">
+                                <span class="bg-blue-100 text-blue-800 font-bold px-2 py-1 rounded block mb-1">${m.tanggal || '-'}</span>
+                                🕒 ${m.jam || '-'}
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 mb-2 whitespace-pre-wrap">${m.mom || ''}</p>
-                        ${imageHtml}
-                        <div class="flex justify-end border-t pt-3">
+                        <p class="text-sm text-gray-600 mb-3 whitespace-pre-wrap">${m.mom || ''}</p>
+                        
+                        ${m.foto_url ? `<span class="inline-block text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold mb-3 border border-green-200">📸 Memiliki Foto Lampiran</span>` : ''}
+                        
+                        <div class="flex justify-end border-t border-dashed pt-3">
                             <button onclick="openEditMeeting(${idx})" class="bg-gray-100 text-gray-700 text-xs px-4 py-2 rounded font-bold hover:bg-gray-200 transition-colors">✏️ Edit</button>
                         </div>
-                    </div>`;
-                }).join('');
-            } catch (e) { list.innerHTML = '<p class="text-red-500">Error.</p>'; }
+                    </div>`).join('');
+            } catch (e) { 
+                list.innerHTML = '<p class="text-red-500">Error.</p>'; 
+            }
         }
 
         // FUNGSI LIGHTBOX FOTO
@@ -396,10 +464,12 @@
             if(foto) formData.append('foto', foto);
             
             await fetch('/api/index.py', { method: 'POST', body: formData });
-            toggleModal(false, 'meeting-detail-modal'); fetchMeetings(); e.target.disabled = false;
+            toggleModal(false, 'meeting-detail-modal'); 
+            fetchMeetingsAndPhotos(); // Refresh Kiri & Kanan Atas
+            e.target.disabled = false;
         }
 
-        // --- MANAJEMEN DOKUMEN (PERBAIKAN ERROR ALERT) ---
+        // --- MANAJEMEN DOKUMEN (KANAN BAWAH) ---
         async function fetchDocuments() {
             const list = document.getElementById('document-list');
             list.innerHTML = '<p class="text-sm text-center">Memuat dokumen...</p>';
@@ -407,23 +477,20 @@
                 const res = await fetch('/api/index.py?tipe=dokumen&projek=' + encodeURIComponent(currentProject) + '&customer_id=' + encodeURIComponent(currentCustomerId));
                 documentsData = await res.json();
                 
-                if(documentsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500 border rounded-lg border-dashed">Belum ada dokumen yang diunggah.</div>'; return; }
+                if(documentsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500 border rounded-lg border-dashed">Belum ada file dokumen.</div>'; return; }
                 
                 list.innerHTML = documentsData.map((d, idx) => `
-                    <div class="border p-4 rounded-xl bg-white shadow-sm flex items-center justify-between hover:border-purple-300 transition-colors">
-                        <div class="flex items-center gap-4 overflow-hidden">
-                            <div class="text-3xl bg-purple-50 p-3 rounded-lg text-purple-600">📄</div>
+                    <div class="border border-gray-200 p-3 rounded-xl bg-white shadow-sm flex items-center justify-between hover:border-purple-300 transition-colors">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <div class="text-2xl bg-purple-50 p-2 rounded-lg text-purple-600 shrink-0">📄</div>
                             <div class="truncate">
-                                <p class="font-bold text-purple-900 truncate">${d.nama_file}</p>
-                                <div class="flex gap-2 items-center mt-1">
-                                    <span class="text-xs bg-gray-100 px-2 py-0.5 rounded font-medium text-gray-600">${d.kategori_file || 'Umum'}</span>
-                                    <span class="text-xs text-gray-400">${d.uploaded_at ? new Date(d.uploaded_at).toLocaleDateString() : ''}</span>
-                                </div>
+                                <p class="font-bold text-gray-800 text-sm truncate">${d.nama_file}</p>
+                                <span class="text-xs bg-gray-100 px-2 py-0.5 rounded font-medium text-gray-500 mt-1 inline-block">${d.kategori_file || 'Umum'}</span>
                             </div>
                         </div>
-                        <div class="flex gap-2 shrink-0 ml-4">
-                            ${d.file_url ? `<a href="${d.file_url}" target="_blank" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded font-bold text-xs hover:bg-blue-200 shadow-sm">📥 Buka / Unduh</a>` : ''}
-                            <button onclick="openEditDocument(${idx})" class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded font-bold text-xs hover:bg-gray-200">✏️ Edit</button>
+                        <div class="flex gap-2 shrink-0 ml-2">
+                            ${d.file_url ? `<a href="${d.file_url}" target="_blank" class="bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold text-xs hover:bg-blue-100 border border-blue-200">📥</a>` : ''}
+                            <button onclick="openEditDocument(${idx})" class="bg-gray-50 text-gray-700 px-2 py-1 rounded font-bold text-xs hover:bg-gray-200 border border-gray-200">✏️</button>
                         </div>
                     </div>
                 `).join('');
@@ -452,9 +519,7 @@
         }
 
         async function saveDocument(e) {
-            const btn = e.target;
-            btn.disabled = true;
-            btn.innerText = "Mengunggah...";
+            const btn = e.target; btn.disabled = true; btn.innerText = "Mengunggah...";
 
             const formData = new FormData();
             formData.append('action', 'dokumen');
@@ -472,18 +537,13 @@
             try {
                 const res = await fetch('/api/index.py', { method: 'POST', body: formData });
                 if (res.ok) {
-                    toggleModal(false, 'document-detail-modal'); 
-                    fetchDocuments(); 
+                    toggleModal(false, 'document-detail-modal'); fetchDocuments(); 
                 } else {
-                    const data = await res.json();
-                    alert("Gagal simpan dokumen. Pesan sistem: " + (data.error || "Pastikan RLS di tabel 'documents' Supabase sudah dimatikan."));
+                    alert("Gagal simpan dokumen. Pastikan ukuran file tidak melebihi batas Supabase.");
                 }
-            } catch (err) {
-                alert("Error jaringan.");
-            }
+            } catch (err) { alert("Error jaringan."); }
             
-            btn.disabled = false;
-            btn.innerText = "Simpan File";
+            btn.disabled = false; btn.innerText = "Simpan File";
         }
     </script>
 </body>
