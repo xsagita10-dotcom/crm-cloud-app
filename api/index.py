@@ -10,9 +10,6 @@ from google.genai import types
 
 app = Flask(__name__)
 
-# ==========================================
-# 1. KONFIGURASI ENVIRONMENT VARIABLES
-# ==========================================
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', '').strip()
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '').strip()
 SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '').strip()
@@ -32,35 +29,39 @@ if GEMINI_API_KEY:
     try: ai_client = genai.Client(api_key=GEMINI_API_KEY)
     except Exception as e: print(f"Error Gemini: {e}")
 
-# ==========================================
-# 2. MASTER ROUTING (UNTUK WEB & BOT)
-# ==========================================
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
 @app.route('/<path:path>', methods=['GET', 'POST'])
 def master_route(path):
     if not supabase: return jsonify({"error": "Database terputus"}), 500
 
     if request.method == 'GET':
-        tipe = request.args.get('tipe', 'meeting')
+        tipe = request.args.get('tipe', 'customers')
         projek = request.args.get('projek')
-        customer_id = request.args.get('customer_id') 
+        customer_id = request.args.get('customer_id')
         
-        if projek:
-            if tipe == 'dokumen' and customer_id:
-                try:
-                    res = supabase.table('documents').select('*').eq('customer_id', customer_id).order('uploaded_at', desc=True).execute()
-                    return jsonify(res.data), 200
-                except Exception as e: return jsonify({"error": str(e)}), 500
+        try:
+            # Ambil semua dokumen (Global atau per Customer)
+            if tipe == 'all_dokumen':
+                res = supabase.table('documents').select('*').order('uploaded_at', desc=True).execute()
+                return jsonify(res.data), 200
+            # Ambil semua meeting/foto (Global)
+            elif tipe == 'all_meetings':
+                res = supabase.table('meetings').select('*').order('tanggal', desc=True).order('jam', desc=True).execute()
+                return jsonify(res.data), 200
+            # Ambil dokumen spesifik customer
+            elif tipe == 'dokumen' and customer_id:
+                res = supabase.table('documents').select('*').eq('customer_id', customer_id).order('uploaded_at', desc=True).execute()
+                return jsonify(res.data), 200
+            # Ambil meeting spesifik proyek
+            elif projek:
+                res = supabase.table('meetings').select('*').eq('nama_projek', projek).order('tanggal', desc=True).order('jam', desc=True).execute()
+                return jsonify(res.data), 200
+            # Default: Ambil semua customer
             else:
-                try:
-                    res = supabase.table('meetings').select('*').eq('nama_projek', projek).order('tanggal', desc=True).order('jam', desc=True).execute()
-                    return jsonify(res.data), 200
-                except Exception as e: return jsonify({"error": str(e)}), 500
-        else:
-            try:
                 res = supabase.table('customers').select('*').order('updated_at', desc=True).execute()
                 return jsonify(res.data), 200
-            except Exception as e: return jsonify({"error": str(e)}), 500
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     elif request.method == 'POST':
         if request.is_json:
@@ -76,12 +77,22 @@ def master_route(path):
                     return jsonify({"message": "Dihapus"}), 200
                 except Exception as e: return jsonify({"error": str(e)}), 500
 
+            # Tambah proyek baru ke customer yang sudah ada
+            if action == 'update_projects':
+                try:
+                    supabase.table('customers').update({
+                        "nama_projek": data.get("nama_projek"),
+                        "status_projek": data.get("status_projek")
+                    }).eq('id', customer_id).execute()
+                    return jsonify({"message": "Proyek diperbarui!"}), 200
+                except Exception as e: return jsonify({"error": str(e)}), 500
+
             perusahaan = data.get("perusahaan", "").strip()
             if perusahaan:
                 existing = supabase.table('customers').select('id').ilike('perusahaan', perusahaan).execute()
                 if existing.data:
                     if not customer_id or str(existing.data[0]['id']) != str(customer_id):
-                        return jsonify({"error": f"Nama perusahaan '{perusahaan}' sudah terdaftar di sistem!"}), 400
+                        return jsonify({"error": f"Nama perusahaan '{perusahaan}' sudah terdaftar!"}), 400
 
             try:
                 payload = {
@@ -98,7 +109,7 @@ def master_route(path):
         
         else:
             action = request.form.get('action', 'meeting')
-            projek = request.form.get('nama_projek')
+            projek = request.form.get('nama_projek', 'Umum')
             customer_id = request.form.get('customer_id')
             
             if action == 'dokumen' and customer_id:
@@ -109,10 +120,12 @@ def master_route(path):
                 file_url = request.form.get('file_url_lama') 
                 
                 if file and file.filename:
-                    file_name = f"doc_{customer_id}_{file.filename.replace(' ', '_')}"
+                    ts = int(datetime.now().timestamp())
+                    clean_name = file.filename.replace(' ', '_')
+                    file_name = f"doc_{customer_id}_{ts}_{clean_name}"
                     file_bytes = file.read()
                     try:
-                        supabase.storage.from_('documents').upload(file_name, file_bytes, {"content-type": file.content_type})
+                        supabase.storage.from_('documents').upload(file_name, file_bytes, {"content-type": file.content_type, "upsert": "true"})
                         file_url = f"{SUPABASE_URL}/storage/v1/object/public/documents/{file_name}"
                     except Exception:
                         file_url = f"{SUPABASE_URL}/storage/v1/object/public/documents/{file_name}"
@@ -133,10 +146,11 @@ def master_route(path):
                 foto_url = None
                 
                 if foto and foto.filename:
-                    file_name = f"{projek.replace(' ', '_')}_{foto.filename.replace(' ', '_')}"
+                    ts = int(datetime.now().timestamp())
+                    file_name = f"{projek.replace(' ', '_')}_{ts}_{foto.filename.replace(' ', '_')}"
                     file_bytes = foto.read()
                     try:
-                        supabase.storage.from_('documents').upload(file_name, file_bytes, {"content-type": foto.content_type})
+                        supabase.storage.from_('documents').upload(file_name, file_bytes, {"content-type": foto.content_type, "upsert": "true"})
                         foto_url = f"{SUPABASE_URL}/storage/v1/object/public/documents/{file_name}"
                     except Exception:
                         foto_url = f"{SUPABASE_URL}/storage/v1/object/public/documents/{file_name}"
@@ -152,18 +166,13 @@ def master_route(path):
 
         return jsonify({"error": "Permintaan tidak valid"}), 400
 
-# ==========================================
-# 3. FUNGSI TELEGRAM BOT (VOICE NOTE & AI ACTION)
-# ==========================================
 def get_telegram_file_bytes(file_id):
-    """Mengunduh file suara (Voice Note) dari server Telegram"""
     try:
         res = requests.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}").json()
         if res.get("ok"):
             file_path = res["result"]["file_path"]
             return requests.get(f"https://api.telegram.org/file/bot{TELEGRAM_TOKEN}/{file_path}").content
-    except Exception as e:
-        print(f"Gagal unduh suara: {e}")
+    except Exception as e: print(f"Gagal unduh suara: {e}")
     return None
 
 def process_telegram_webhook(data):
@@ -174,17 +183,15 @@ def process_telegram_webhook(data):
     voice = msg.get('voice')
     
     if text_message == '/start':
-        send_telegram_message(chat_id, "Halo! Asisten Pintar CRM siap. Anda bisa kirim pesan teks atau *Voice Note* untuk mengecek data, membuat jadwal meeting, atau menambah klien baru.")
+        send_telegram_message(chat_id, "Halo! Asisten Pintar CRM siap.")
         return jsonify({"status": "ok"}), 200
         
     if not ai_client: return jsonify({"status": "ok"}), 200
 
     try:
-        # 1. Ambil Waktu Saat Ini (WIB / UTC+7) agar AI tahu tanggal "besok" atau "hari ini"
         wib_now = datetime.now(timezone(timedelta(hours=7)))
         waktu_sekarang = wib_now.strftime("%Y-%m-%d %H:%M (%A)")
 
-        # 2. Ambil Data dari Database untuk Konteks AI
         cust_data, meet_data, doc_data = "[]", "[]", "[]"
         if supabase:
             c_res = supabase.table('customers').select('id, perusahaan, nama_customer, posisi, no_telepon, nama_projek, status_projek').execute()
@@ -194,117 +201,62 @@ def process_telegram_webhook(data):
             if m_res.data: meet_data = json.dumps(m_res.data)
             if d_res.data: doc_data = json.dumps(d_res.data)
 
-        # 3. Instruksi Sistem (Prompt) agar AI mengembalikan format JSON terstruktur
         system_instruction = f"""
-Kamu adalah Asisten AI Cloud CRM.
-Waktu sekarang (WIB): {waktu_sekarang}
-
+Kamu adalah Asisten AI Cloud CRM. Waktu sekarang (WIB): {waktu_sekarang}
 Data Pelanggan & Proyek: {cust_data}
 Riwayat Meeting: {meet_data}
 Data Dokumen: {doc_data}
-
-TUGASMU:
-Analisis pesan teks atau suara (Voice Note) dari pengguna. Kamu WAJIB merespons HANYA dengan format JSON murni (tanpa tanda ```json).
-
-Pilih salah satu "action" berikut berdasarkan niat pengguna:
-
-1. Jika pengguna hanya bertanya / meminta rangkuman data:
-{{"action": "chat", "reply": "Jawaban lengkap, sopan, dan rapi"}}
-
-2. Jika pengguna meminta dibuatkan jadwal meeting atau mencatat progress baru:
-Cocokkan nama PT atau nama projek yang disebut pengguna dengan 'nama_projek' yang ada di Data Pelanggan!
-Jika pengguna menyebut kata waktu relatif seperti "besok" atau "lusa", hitung tanggalnya dari Waktu Sekarang dalam format YYYY-MM-DD, dan jam dalam format HH:MM (24 jam).
-{{"action": "create_meeting", "nama_projek": "Nama Projek yang cocok", "perusahaan": "Nama PT", "tanggal": "YYYY-MM-DD", "jam": "HH:MM", "judul": "Judul/Agenda Meeting", "mom": "Catatan jika ada, atau kosongkan", "reply": "Pesan konfirmasi bahwa jadwal berhasil dibuat"}}
-
-3. Jika pengguna meminta untuk menambahkan data pelanggan / PT baru:
-{{"action": "add_customer", "perusahaan": "Nama PT", "nama_customer": "Nama Kontak", "posisi": "Jabatan", "no_telepon": "No HP", "alamat": "Alamat", "nama_projek": "Nama Projek", "status_projek": "On Progress", "reply": "Pesan konfirmasi pelanggan ditambahkan"}}
+WAJIB merespons HANYA dengan format JSON murni:
+1. Tanya jawab: {{"action": "chat", "reply": "Jawaban"}}
+2. Buat jadwal: {{"action": "create_meeting", "nama_projek": "Nama Projek", "perusahaan": "Nama PT", "tanggal": "YYYY-MM-DD", "jam": "HH:MM", "judul": "Agenda", "mom": "", "reply": "Konfirmasi"}}
+3. Tambah PT: {{"action": "add_customer", "perusahaan": "Nama PT", "nama_customer": "Kontak", "posisi": "Jabatan", "no_telepon": "HP", "alamat": "Alamat", "nama_projek": "Projek", "status_projek": "On Progress", "reply": "Konfirmasi"}}
 """
-
-        # 4. Proses Input (Suara / Teks) ke Gemini AI
         contents = [system_instruction]
         if voice:
-            send_telegram_message(chat_id, "🎧 _Mendengarkan Voice Note Anda..._")
             audio_bytes = get_telegram_file_bytes(voice['file_id'])
             if audio_bytes:
                 contents.append(types.Part.from_bytes(data=audio_bytes, mime_type="audio/ogg"))
-                contents.append("Tolong dengarkan perintah suara ini dan jalankan sesuai instruksi JSON.")
-            else:
-                send_telegram_message(chat_id, "Maaf, gagal mengunduh suara Anda.")
-                return jsonify({"status": "ok"}), 200
+                contents.append("Jalankan perintah suara ini sesuai instruksi JSON.")
+            else: return jsonify({"status": "ok"}), 200
         else:
             contents.append(f"Pesan pengguna: '{text_message}'")
 
-        response = ai_client.models.generate_content(
-            model='gemini-3.8-flash',
-            contents=contents
-        )
-        
-        # 5. Bersihkan & Baca JSON dari AI
-        raw_text = response.text.strip()
-        if raw_text.startswith("```json"): raw_text = raw_text[7:]
-        if raw_text.startswith("```"): raw_text = raw_text[3:]
-        if raw_text.endswith("```"): raw_text = raw_text[:-3]
-        
-        result = json.loads(raw_text.strip())
+        response = ai_client.models.generate_content(model='gemini-3.8-flash', contents=contents)
+        raw_text = response.text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        result = json.loads(raw_text)
         action = result.get("action", "chat")
         reply_msg = result.get("reply", "Siap, sudah diproses.")
 
-        # 6. Eksekusi ke Database Berdasarkan Action
         if action == "create_meeting" and supabase:
             projek = result.get("nama_projek")
             tgl = result.get("tanggal") or wib_now.strftime("%Y-%m-%d")
             jam = result.get("jam") or "10:00"
             judul = result.get("judul") or "Meeting"
             mom = result.get("mom") or ""
-            
-            # Simpan ke Supabase
-            supabase.table('meetings').insert({
-                "nama_projek": projek, "tanggal": tgl, "jam": jam, "judul": judul, "mom": mom
-            }).execute()
-
-            # Buat Tautan Otomatis Google Calendar
+            supabase.table('meetings').insert({"nama_projek": projek, "tanggal": tgl, "jam": jam, "judul": judul, "mom": mom}).execute()
             start_str = tgl.replace('-', '') + 'T' + jam.replace(':', '') + '00'
-            gcal_params = urllib.parse.urlencode({
-                "action": "TEMPLATE",
-                "text": f"{judul} - {projek}",
-                "dates": f"{start_str}/{start_str}",
-                "details": f"Meeting Proyek: {projek}\nCatatan: {mom}"
-            })
-            gcal_url = f"https://calendar.google.com/calendar/render?{gcal_params}"
-            
-            reply_msg += f"\n\n📌 *Detail Tersimpan di Web CRM:*\n• Proyek: {projek}\n• Waktu: {tgl} jam {jam}\n• Agenda: {judul}\n\n📅 [Klik di Sini untuk Simpan ke Google Calendar]({gcal_url})"
+            gcal_params = urllib.parse.urlencode({"action": "TEMPLATE", "text": f"{judul} - {projek}", "dates": f"{start_str}/{start_str}", "details": f"Meeting Proyek: {projek}"})
+            reply_msg += f"\n\n📅 [Simpan ke Google Calendar](https://calendar.google.com/calendar/render?{gcal_params})"
 
         elif action == "add_customer" and supabase:
             pt = result.get("perusahaan", "").strip()
             existing = supabase.table('customers').select('id').ilike('perusahaan', pt).execute()
-            if existing.data:
-                reply_msg = f"⚠️ Maaf, perusahaan *{pt}* sudah terdaftar sebelumnya di sistem!"
-            else:
+            if not existing.data:
                 supabase.table('customers').insert({
-                    "perusahaan": pt,
-                    "nama_customer": result.get("nama_customer", "-"),
-                    "posisi": result.get("posisi", "-"),
-                    "no_telepon": result.get("no_telepon", "-"),
-                    "alamat": result.get("alamat", "-"),
-                    "nama_projek": result.get("nama_projek", "Proyek Baru"),
-                    "status_projek": result.get("status_projek", "On Progress"),
-                    "status_kerjasama": "Aktif"
+                    "perusahaan": pt, "nama_customer": result.get("nama_customer", "-"),
+                    "posisi": result.get("posisi", "-"), "no_telepon": result.get("no_telepon", "-"),
+                    "alamat": result.get("alamat", "-"), "nama_projek": result.get("nama_projek", "Proyek Baru"),
+                    "status_projek": result.get("status_projek", "On Progress"), "status_kerjasama": "Aktif"
                 }).execute()
 
         send_telegram_message(chat_id, reply_msg)
-
     except Exception as e:
-        send_telegram_message(chat_id, f"Maaf, terjadi kendala saat memproses perintah: {e}")
-        
+        send_telegram_message(chat_id, f"Kendala memproses perintah: {e}")
     return jsonify({"status": "ok"}), 200
 
 def send_telegram_message(chat_id, text):
     if TELEGRAM_TOKEN: 
-        requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json={
-            "chat_id": chat_id, 
-            "text": text,
-            "parse_mode": "Markdown"
-        })
+        requests.post(f"[https://api.telegram.org/bot](https://api.telegram.org/bot){TELEGRAM_TOKEN}/sendMessage", json={"chat_id": chat_id, "text": text, "parse_mode": "Markdown"})
 
 if __name__ == '__main__':
     app.run(debug=True)
