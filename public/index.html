@@ -23,128 +23,126 @@
 
     <!-- LAYAR UTAMA DENGAN 3 MENU NAVIGASI -->
     <div id="dashboard-view" class="hidden min-h-screen flex-col">
-        <header class="bg-blue-700 text-white px-4 py-3 flex flex-wrap justify-between items-center shadow-md gap-4 sticky top-0 z-30">
-            <div class="flex items-center gap-6">
-                <h1 class="text-xl font-bold tracking-wide">☁️ Cloud CRM</h1>
-                <nav class="flex gap-2">
-                    <button id="nav-customers" onclick="switchMainMenu('customers')" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-white text-blue-700 shadow-sm transition-all">👥 Customer & Proyek</button>
-                    <button id="nav-documents" onclick="switchMainMenu('documents')" class="px-3 py-1.5 rounded-lg text-sm font-bold text-blue-100 hover:bg-blue-600 transition-all">📂 Semua Dokumen</button>
-                    <button id="nav-photos" onclick="switchMainMenu('photos')" class="px-3 py-1.5 rounded-lg text-sm font-bold text-blue-100 hover:bg-blue-600 transition-all">🖼️ Semua Foto</button>
+        <header class="bg-blue-700 text-white px-4 py-2.5 flex flex-wrap justify-between items-center shadow-md gap-3 sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <h1 class="text-lg font-bold tracking-wide">☁️ Cloud CRM</h1>
+                <nav class="flex gap-1.5">
+                    <button id="nav-customers" onclick="switchMainMenu('customers')" class="px-3 py-1 rounded-lg text-xs font-bold bg-white text-blue-700 shadow-sm transition-all">👥 Customer & Proyek</button>
+                    <button id="nav-documents" onclick="switchMainMenu('documents')" class="px-3 py-1 rounded-lg text-xs font-bold text-blue-100 hover:bg-blue-600 transition-all">📂 Semua Dokumen</button>
+                    <button id="nav-photos" onclick="switchMainMenu('photos')" class="px-3 py-1 rounded-lg text-xs font-bold text-blue-100 hover:bg-blue-600 transition-all">🖼️ Semua Foto</button>
                 </nav>
             </div>
-            <button onclick="handleLogout()" class="bg-red-500 px-4 py-1.5 rounded-lg text-sm hover:bg-red-600 font-bold">Logout</button>
+            <button onclick="handleLogout()" class="bg-red-500 px-3 py-1 rounded-lg text-xs hover:bg-red-600 font-bold">Logout</button>
         </header>
 
-        <!-- MENU 1: DATA CUSTOMER & PROYEK -->
-        <main id="section-customers" class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <h2 class="text-2xl font-bold text-gray-800">Daftar Pelanggan & Multi-Proyek</h2>
-                <div class="flex flex-wrap gap-2 w-full md:w-auto">
-                    <button onclick="openWordEditor()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 shadow-sm text-sm">📝 Word Studio Pro</button>
-                    <button onclick="openScheduleModal()" class="bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-yellow-600 shadow-sm text-sm">📅 Buat Jadwal</button>
-                    <button onclick="openAddCustomer()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 shadow-sm text-sm">+ Tambah Customer</button>
+        <!-- MENU 1: DATA CUSTOMER & PROYEK (COMPACT MODE) -->
+        <main id="section-customers" class="flex-1 p-3 md:p-5 max-w-full mx-auto w-full">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-2">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <h2 class="text-lg font-bold text-gray-800 shrink-0">Daftar Pelanggan</h2>
+                    <input type="text" id="search-input" onkeyup="filterCustomers()" placeholder="🔍 Cari PT, PIC, atau projek..." class="w-full md:w-72 px-3 py-1.5 text-xs border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-700 font-medium bg-white">
                 </div>
-            </div>
-
-            <div class="mb-4">
-                <input type="text" id="search-input" onkeyup="filterCustomers()" placeholder="🔍 Cari nama perusahaan, pelanggan, atau nama projek..." class="w-full md:w-1/2 px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-700 font-medium">
+                <div class="flex flex-wrap gap-1.5 w-full md:w-auto">
+                    <button onclick="openWordEditor()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-700 shadow-sm text-xs">📝 Word Studio</button>
+                    <button onclick="openScheduleModal()" class="bg-yellow-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-yellow-600 shadow-sm text-xs">📅 Buat Jadwal</button>
+                    <button onclick="openAddCustomer()" class="bg-green-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-green-700 shadow-sm text-xs">+ Tambah Customer</button>
+                </div>
             </div>
             
             <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-max">
+                    <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50 border-b border-gray-200 text-sm text-gray-600">
-                                <th class="p-4 font-semibold">Perusahaan (Klik untuk Detail)</th>
-                                <th class="p-4 font-semibold">Kontak & Telepon</th>
-                                <th class="p-4 font-semibold">Daftar Projek, Nilai & Status</th>
-                                <th class="p-4 font-semibold">Dibawa Oleh</th>
-                                <th class="p-4 font-semibold text-center">Aksi</th>
+                            <tr class="bg-gray-100 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-600">
+                                <th class="px-3 py-2 font-bold w-1/4">Perusahaan & Alamat</th>
+                                <th class="px-3 py-2 font-bold w-1/5">Kontak & Telepon</th>
+                                <th class="px-3 py-2 font-bold w-1/3">Daftar Projek, Nilai & Status</th>
+                                <th class="px-3 py-2 font-bold">Dibawa Oleh</th>
+                                <th class="px-3 py-2 font-bold text-center w-24">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="customer-table-body" class="divide-y divide-gray-100"></tbody>
+                        <tbody id="customer-table-body" class="divide-y divide-gray-100 text-xs"></tbody>
                     </table>
                 </div>
             </div>
         </main>
 
         <!-- MENU 2: SEMUA DOKUMEN GLOBAL -->
-        <main id="section-documents" class="hidden flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <main id="section-documents" class="hidden flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800">📂 Pusat Semua Dokumen & PDF Reader</h2>
-                    <p class="text-sm text-gray-500">Baca PDF langsung di web, edit dengan Word Studio, atau bagikan ke WhatsApp.</p>
+                    <h2 class="text-xl font-bold text-gray-800">📂 Pusat Semua Dokumen & PDF Reader</h2>
+                    <p class="text-xs text-gray-500">Baca PDF langsung di web, edit dengan Word Studio, atau bagikan ke WhatsApp.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <button onclick="openWordEditor()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 shadow-sm text-sm">📝 Buat di Word Studio</button>
-                    <button onclick="openDocModal(true)" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-700 shadow-sm text-sm">+ Upload PDF / File / Link GDocs</button>
+                    <button onclick="openWordEditor()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-700 shadow-sm text-xs">📝 Buat di Word Studio</button>
+                    <button onclick="openDocModal(true)" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-purple-700 shadow-sm text-xs">+ Upload PDF / File / Link GDocs</button>
                 </div>
             </div>
 
-            <!-- FITUR BARU: SEARCH DOKUMEN GLOBAL -->
-            <div class="mb-5">
-                <input type="text" id="search-doc-input" onkeyup="filterGlobalDocuments()" placeholder="🔍 Cari judul dokumen, kategori, atau nama perusahaan..." class="w-full md:w-1/2 px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-purple-500 focus:outline-none text-gray-700 font-medium bg-white">
+            <div class="mb-4">
+                <input type="text" id="search-doc-input" onkeyup="filterGlobalDocuments()" placeholder="🔍 Cari judul dokumen, kategori, atau nama perusahaan..." class="w-full md:w-1/2 px-3 py-2 text-xs border rounded-xl shadow-sm focus:ring-2 focus:ring-purple-500 focus:outline-none text-gray-700 font-medium bg-white">
             </div>
 
-            <div id="global-document-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div id="global-document-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
         </main>
 
         <!-- MENU 3: SEMUA FOTO GLOBAL -->
-        <main id="section-photos" class="hidden flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <main id="section-photos" class="hidden flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800">🖼️ Galeri Semua Foto Proyek</h2>
-                    <p class="text-sm text-gray-500">Kumpulan seluruh dokumentasi foto progres dari semua proyek.</p>
+                    <h2 class="text-xl font-bold text-gray-800">🖼️ Galeri Semua Foto Proyek</h2>
+                    <p class="text-xs text-gray-500">Kumpulan seluruh dokumentasi foto progres dari semua proyek.</p>
                 </div>
-                <button onclick="openGlobalPhotoModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-sm text-sm">+ Upload Foto Baru</button>
+                <button onclick="openGlobalPhotoModal()" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 shadow-sm text-xs">+ Upload Foto Baru</button>
             </div>
-            <div id="global-photo-gallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+            <div id="global-photo-gallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
         </main>
     </div>
 
     <!-- LAYAR DETAIL PERUSAHAAN (3 PANEL + MULTI PROYEK SWITCHER) -->
     <div id="detail-view" class="hidden min-h-screen flex-col bg-gray-100">
-        <header class="bg-blue-800 text-white p-4 flex flex-wrap justify-between items-center shadow-md sticky top-0 z-30 gap-4">
-            <div class="flex items-center gap-4">
-                <button onclick="closeDetailView()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-bold shadow">&larr; Kembali</button>
-                <h1 class="text-xl font-bold" id="detail-header-title">Detail Perusahaan</h1>
+        <header class="bg-blue-800 text-white px-4 py-2.5 flex flex-wrap justify-between items-center shadow-md sticky top-0 z-30 gap-4">
+            <div class="flex items-center gap-3">
+                <button onclick="closeDetailView()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-bold shadow">&larr; Kembali</button>
+                <h1 class="text-base font-bold" id="detail-header-title">Detail Perusahaan</h1>
             </div>
             <div class="flex items-center gap-2">
-                <span class="text-sm text-blue-200 font-medium">Pilih Proyek:</span>
-                <select id="detail-project-switcher" onchange="switchActiveProject(this.value)" class="bg-white text-blue-900 font-bold px-3 py-1.5 rounded-lg shadow-sm focus:outline-none"></select>
+                <span class="text-xs text-blue-200 font-medium">Pilih Proyek:</span>
+                <select id="detail-project-switcher" onchange="switchActiveProject(this.value)" class="bg-white text-blue-900 text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm focus:outline-none"></select>
             </div>
         </header>
 
-        <main class="flex-1 p-4 md:p-6 mx-auto w-full max-w-screen-2xl flex flex-col md:flex-row gap-6 h-auto md:h-[calc(100vh-80px)]">
+        <main class="flex-1 p-4 mx-auto w-full max-w-screen-2xl flex flex-col md:flex-row gap-4 h-auto md:h-[calc(100vh-60px)]">
             <!-- KIRI: Riwayat Meeting Proyek Aktif -->
             <div class="w-full md:w-5/12 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden h-[500px] md:h-full">
-                <div class="p-4 border-b bg-gray-50 flex justify-between items-center shadow-sm z-10">
-                    <h2 class="font-bold text-lg text-gray-800">📝 Riwayat Meeting Proyek</h2>
-                    <button onclick="openAddProgress()" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-bold shadow hover:bg-blue-700">+ Tambah</button>
+                <div class="p-3 border-b bg-gray-50 flex justify-between items-center shadow-sm z-10">
+                    <h2 class="font-bold text-sm text-gray-800">📝 Riwayat Meeting Proyek</h2>
+                    <button onclick="openAddProgress()" class="bg-blue-600 text-white px-2.5 py-1 rounded text-xs font-bold shadow hover:bg-blue-700">+ Tambah</button>
                 </div>
-                <div id="meeting-list" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
+                <div id="meeting-list" class="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50"></div>
             </div>
 
             <!-- KANAN: Foto & Dokumen -->
-            <div class="w-full md:w-7/12 flex flex-col gap-6 h-[800px] md:h-full">
+            <div class="w-full md:w-7/12 flex flex-col gap-4 h-[800px] md:h-full">
                 <!-- KANAN ATAS: Galeri Foto -->
                 <div class="flex-1 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                    <div class="p-4 border-b bg-gray-50 shadow-sm z-10 flex justify-between items-center">
-                        <h2 class="font-bold text-lg text-gray-800">🖼️ Foto Progress Proyek Ini</h2>
+                    <div class="p-3 border-b bg-gray-50 shadow-sm z-10 flex justify-between items-center">
+                        <h2 class="font-bold text-sm text-gray-800">🖼️ Foto Progress Proyek Ini</h2>
                     </div>
-                    <div id="photo-gallery" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-100"></div>
+                    <div id="photo-gallery" class="flex-1 overflow-y-auto p-3 grid grid-cols-3 lg:grid-cols-4 gap-3 bg-gray-100"></div>
                 </div>
 
                 <!-- KANAN BAWAH: Dokumen Perusahaan -->
                 <div class="flex-1 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                    <div class="p-4 border-b bg-gray-50 flex justify-between items-center shadow-sm z-10">
-                        <h2 class="font-bold text-lg text-gray-800">📂 Dokumen Perusahaan</h2>
-                        <div class="flex gap-2">
-                            <button onclick="openWordEditor(currentCustomerId)" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold shadow hover:bg-indigo-700">📝 Word Studio</button>
-                            <button onclick="openDocModal(false)" class="bg-purple-600 text-white px-3 py-1.5 rounded text-xs font-bold shadow hover:bg-purple-700">+ Upload / Link GDocs</button>
+                    <div class="p-3 border-b bg-gray-50 flex justify-between items-center shadow-sm z-10">
+                        <h2 class="font-bold text-sm text-gray-800">📂 Dokumen Perusahaan</h2>
+                        <div class="flex gap-1.5">
+                            <button onclick="openWordEditor(currentCustomerId)" class="bg-indigo-600 text-white px-2.5 py-1 rounded text-xs font-bold shadow hover:bg-indigo-700">📝 Word Studio</button>
+                            <button onclick="openDocModal(false)" class="bg-purple-600 text-white px-2.5 py-1 rounded text-xs font-bold shadow hover:bg-purple-700">+ Upload / Link GDocs</button>
                         </div>
                     </div>
-                    <div id="document-list" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50"></div>
+                    <div id="document-list" class="flex-1 overflow-y-auto p-3 space-y-2.5 bg-gray-50"></div>
                 </div>
             </div>
         </main>
@@ -153,18 +151,18 @@
     <!-- MODAL BUILT-IN PDF & DOCUMENT READER -->
     <div id="pdf-reader-modal" class="hidden fixed inset-0 bg-black bg-opacity-85 flex items-center justify-center p-2 md:p-6 z-[95]">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[92vh] flex flex-col overflow-hidden border-t-8 border-red-600">
-            <div class="p-4 border-b flex flex-wrap justify-between items-center bg-gray-50 gap-2">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">📕</span>
+            <div class="p-3 border-b flex flex-wrap justify-between items-center bg-gray-50 gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📕</span>
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900" id="pdf-reader-title">PDF & Document Reader</h3>
-                        <p class="text-xs text-gray-500" id="pdf-reader-subtitle">Pratinjau Dokumen Langsung</p>
+                        <h3 class="text-sm font-bold text-gray-900" id="pdf-reader-title">PDF & Document Reader</h3>
+                        <p class="text-[11px] text-gray-500" id="pdf-reader-subtitle">Pratinjau Dokumen Langsung</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button id="pdf-switch-viewer-btn" onclick="switchPdfViewerEngine()" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">🔄 Ganti Mode Penampil (Google Viewer)</button>
-                    <a id="pdf-download-btn" href="#" target="_blank" download class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700">📥 Buka Tab Baru / Unduh</a>
-                    <button onclick="closePdfReader()" class="text-gray-500 hover:text-red-600 font-bold text-3xl ml-2 leading-none">&times;</button>
+                    <button id="pdf-switch-viewer-btn" onclick="switchPdfViewerEngine()" class="px-2.5 py-1 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">🔄 Ganti Mode Penampil (Google Viewer)</button>
+                    <a id="pdf-download-btn" href="#" target="_blank" download class="px-2.5 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700">📥 Buka Tab Baru / Unduh</a>
+                    <button onclick="closePdfReader()" class="text-gray-500 hover:text-red-600 font-bold text-2xl ml-2 leading-none">&times;</button>
                 </div>
             </div>
             <div class="flex-1 bg-gray-800 relative">
@@ -176,39 +174,39 @@
     <!-- MODAL PLUGIN EDITOR WORD ADVANCED (TINYMCE STUDIO PRO) -->
     <div id="word-editor-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-2 md:p-4 z-[80]">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[94vh] flex flex-col overflow-hidden border-t-8 border-indigo-600">
-            <div class="px-4 py-3 border-b flex justify-between items-center bg-gray-50">
+            <div class="px-4 py-2.5 border-b flex justify-between items-center bg-gray-50">
                 <div>
-                    <h3 class="text-lg font-bold text-indigo-900 flex items-center gap-2">📝 Word Studio Pro (Advanced Document Editor)</h3>
-                    <p class="text-xs text-gray-500">Dilengkapi Tabel, Format Font Lengkap, Page Setup, Cetak PDF, & Ekspor MS Word.</p>
+                    <h3 class="text-base font-bold text-indigo-900 flex items-center gap-2">📝 Word Studio Pro (Advanced Document Editor)</h3>
+                    <p class="text-[11px] text-gray-500">Dilengkapi Tabel, Format Font Lengkap, Page Setup, Cetak PDF, & Ekspor MS Word.</p>
                 </div>
                 <button onclick="toggleModal(false, 'word-editor-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
-            <div class="p-3 bg-indigo-50 border-b grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="p-2.5 bg-indigo-50 border-b grid grid-cols-1 md:grid-cols-3 gap-2">
                 <input type="hidden" id="word-doc-id">
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Perusahaan</label>
-                    <select id="word-customer-select" class="w-full border p-2 rounded bg-white text-sm font-bold"></select>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-0.5">Pilih Perusahaan</label>
+                    <select id="word-customer-select" class="w-full border p-1.5 rounded bg-white text-xs font-bold"></select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Judul Dokumen</label>
-                    <input type="text" id="word-doc-title" placeholder="Contoh: Proposal Penawaran / MoM" class="w-full border p-2 rounded bg-white text-sm font-bold">
+                    <label class="block text-[11px] font-bold text-gray-600 mb-0.5">Judul Dokumen</label>
+                    <input type="text" id="word-doc-title" placeholder="Contoh: Proposal Penawaran / MoM" class="w-full border p-1.5 rounded bg-white text-xs font-bold">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Impor File .DOCX dari Komputer (Opsional)</label>
-                    <input type="file" accept=".docx" onchange="importDocxToEditor(event)" class="w-full border p-1.5 rounded bg-white text-xs">
+                    <label class="block text-[11px] font-bold text-gray-600 mb-0.5">Impor File .DOCX dari Komputer (Opsional)</label>
+                    <input type="file" accept=".docx" onchange="importDocxToEditor(event)" class="w-full border p-1 rounded bg-white text-xs">
                 </div>
             </div>
             <div class="flex-1 overflow-hidden flex flex-col bg-gray-100">
                 <textarea id="tinymce-editor" class="w-full h-full"></textarea>
             </div>
-            <div class="p-3 border-t bg-gray-50 flex flex-wrap justify-between items-center gap-2">
+            <div class="p-2.5 border-t bg-gray-50 flex flex-wrap justify-between items-center gap-2">
                 <div class="flex gap-2">
-                    <button onclick="downloadAsWord()" class="px-4 py-2 bg-gray-800 text-white rounded-lg font-bold text-xs md:text-sm hover:bg-black">📥 Download MS Word (.doc)</button>
-                    <button onclick="printEditorToPdf()" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold text-xs md:text-sm hover:bg-red-700">🖨️ Cetak / Simpan PDF</button>
+                    <button onclick="downloadAsWord()" class="px-3 py-1.5 bg-gray-800 text-white rounded-lg font-bold text-xs hover:bg-black">📥 Download MS Word (.doc)</button>
+                    <button onclick="printEditorToPdf()" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs hover:bg-red-700">🖨️ Cetak / Simpan PDF</button>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="toggleModal(false, 'word-editor-modal')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-xs md:text-sm">Tutup</button>
-                    <button onclick="saveWordToCloud(event)" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-xs md:text-sm hover:bg-indigo-700 shadow-md">☁️ Simpan ke Cloud CRM</button>
+                    <button onclick="toggleModal(false, 'word-editor-modal')" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg font-bold text-xs">Tutup</button>
+                    <button onclick="saveWordToCloud(event)" class="px-5 py-1.5 bg-indigo-600 text-white rounded-lg font-bold text-xs hover:bg-indigo-700 shadow-md">☁️ Simpan ke Cloud CRM</button>
                 </div>
             </div>
         </div>
@@ -216,28 +214,28 @@
 
     <!-- MODAL FORM TAMBAH / EDIT CUSTOMER (DENGAN NILAI PROYEK) -->
     <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6 my-8">
-            <h3 class="text-xl font-bold mb-4 border-b pb-2" id="customer-modal-title">Data Pelanggan</h3>
-            <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl p-5 my-8">
+            <h3 class="text-lg font-bold mb-3 border-b pb-2" id="customer-modal-title">Data Pelanggan</h3>
+            <div class="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
                 <input type="hidden" id="input-customer-id">
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Nama Perusahaan (PT)</label>
-                    <input type="text" id="input-perusahaan" placeholder="Contoh: PT INLA" class="w-full border p-2 rounded font-bold text-blue-700">
+                    <input type="text" id="input-perusahaan" placeholder="Contoh: PT INLA" class="w-full border p-2 rounded font-bold text-blue-700 text-sm">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">Nama Kontak Utama</label>
-                        <input type="text" id="input-nama" placeholder="Nama PIC" class="w-full border p-2 rounded">
+                        <input type="text" id="input-nama" placeholder="Nama PIC" class="w-full border p-2 rounded text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">Posisi / Jabatan</label>
-                        <input type="text" id="input-posisi" placeholder="Direktur / Manajer" class="w-full border p-2 rounded">
+                        <input type="text" id="input-posisi" placeholder="Direktur / Manajer" class="w-full border p-2 rounded text-sm">
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">No. Telepon / WhatsApp</label>
-                        <input type="text" id="input-telepon" placeholder="0812..." class="w-full border p-2 rounded">
+                        <input type="text" id="input-telepon" placeholder="0812..." class="w-full border p-2 rounded text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">Dibawa Oleh (Pilih Customer)</label>
@@ -247,43 +245,43 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Alamat Lengkap</label>
-                    <textarea id="input-alamat" placeholder="Alamat kantor..." class="w-full border p-2 rounded text-sm h-16"></textarea>
+                    <textarea id="input-alamat" placeholder="Alamat kantor..." class="w-full border p-2 rounded text-sm h-14"></textarea>
                 </div>
 
                 <!-- BAGIAN MULTI-PROYEK & NILAI PROYEK DINAMIS -->
-                <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="text-sm font-bold text-blue-900">📋 Daftar Proyek, Nilai & Status</label>
-                        <button type="button" onclick="addProjectRow()" class="bg-blue-600 text-white text-xs px-3 py-1 rounded font-bold hover:bg-blue-700">+ Tambah Proyek</button>
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-bold text-blue-900">📋 Daftar Proyek, Nilai & Status</label>
+                        <button type="button" onclick="addProjectRow()" class="bg-blue-600 text-white text-xs px-2.5 py-1 rounded font-bold hover:bg-blue-700">+ Tambah Proyek</button>
                     </div>
                     <div id="multi-project-container" class="space-y-2"></div>
                 </div>
             </div>
-            <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
-                <button onclick="toggleModal(false, 'add-modal')" class="px-4 py-2 bg-gray-100 rounded text-gray-600 font-bold">Batal</button>
-                <button onclick="saveCustomer(event)" class="px-4 py-2 bg-blue-600 text-white rounded font-bold">Simpan Data</button>
+            <div class="mt-5 flex justify-end space-x-2 pt-3 border-t">
+                <button onclick="toggleModal(false, 'add-modal')" class="px-4 py-1.5 bg-gray-100 rounded text-gray-600 font-bold text-xs">Batal</button>
+                <button onclick="saveCustomer(event)" class="px-4 py-1.5 bg-blue-600 text-white rounded font-bold text-xs">Simpan Data</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL BUAT JADWAL -->
     <div id="schedule-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
-            <h3 class="text-xl font-bold mb-4 border-b pb-2 text-yellow-600">📅 Buat Jadwal Baru</h3>
-            <div class="space-y-4">
-                <select id="sched-projek" class="w-full border p-2 rounded bg-gray-50 font-medium"></select>
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="date" id="sched-tanggal" class="w-full border p-2 rounded">
-                    <input type="time" id="sched-jam" class="w-full border p-2 rounded">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-5">
+            <h3 class="text-lg font-bold mb-3 border-b pb-2 text-yellow-600">📅 Buat Jadwal Baru</h3>
+            <div class="space-y-3">
+                <select id="sched-projek" class="w-full border p-2 rounded bg-gray-50 font-medium text-sm"></select>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="date" id="sched-tanggal" class="w-full border p-2 rounded text-sm">
+                    <input type="time" id="sched-jam" class="w-full border p-2 rounded text-sm">
                 </div>
-                <input type="text" id="sched-judul" placeholder="Cth: Meeting Awal..." class="w-full border p-2 rounded font-bold text-gray-700">
+                <input type="text" id="sched-judul" placeholder="Cth: Meeting Awal..." class="w-full border p-2 rounded font-bold text-gray-700 text-sm">
             </div>
-            <div class="mt-6 flex flex-col gap-2 pt-4 border-t">
+            <div class="mt-5 flex flex-col gap-2 pt-3 border-t">
                 <div class="flex gap-2 w-full">
-                    <button onclick="toggleModal(false, 'schedule-modal')" class="w-1/3 py-2 bg-gray-100 rounded text-gray-600 font-bold">Batal</button>
-                    <button onclick="saveSchedule(event, false)" class="w-2/3 py-2 bg-yellow-500 text-white rounded font-bold hover:bg-yellow-600">Simpan Jadwal</button>
+                    <button onclick="toggleModal(false, 'schedule-modal')" class="w-1/3 py-2 bg-gray-100 rounded text-gray-600 font-bold text-xs">Batal</button>
+                    <button onclick="saveSchedule(event, false)" class="w-2/3 py-2 bg-yellow-500 text-white rounded font-bold hover:bg-yellow-600 text-xs">Simpan Jadwal</button>
                 </div>
-                <button onclick="saveSchedule(event, true)" class="w-full py-2 bg-blue-100 text-blue-700 rounded font-bold border border-blue-300 hover:bg-blue-200">
+                <button onclick="saveSchedule(event, true)" class="w-full py-2 bg-blue-100 text-blue-700 rounded font-bold border border-blue-300 hover:bg-blue-200 text-xs">
                     Simpan & Masukkan ke Google Calendar 📆
                 </button>
             </div>
@@ -293,30 +291,30 @@
     <!-- MODAL FORM PROGRESS / UPLOAD FOTO -->
     <div id="meeting-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[95vh] flex flex-col overflow-hidden border-t-8 border-blue-500">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="text-xl font-bold text-gray-800" id="modal-progress-title">Perbarui Progress</h3>
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="text-base font-bold text-gray-800" id="modal-progress-title">Perbarui Progress</h3>
                 <button onclick="toggleModal(false, 'meeting-detail-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
-            <div class="p-6 overflow-y-auto flex-1 space-y-4">
+            <div class="p-5 overflow-y-auto flex-1 space-y-3">
                 <input type="hidden" id="edit-id">
                 <div id="edit-projek-Select-wrapper" class="hidden">
                     <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Proyek</label>
-                    <select id="edit-projek-dropdown" class="w-full border p-2 rounded bg-white font-bold"></select>
+                    <select id="edit-projek-dropdown" class="w-full border p-2 rounded bg-white font-bold text-sm"></select>
                 </div>
                 <input type="hidden" id="edit-projek">
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="date" id="edit-tanggal" class="w-full border p-2 rounded text-sm bg-gray-50">
-                    <input type="time" id="edit-jam" class="w-full border p-2 rounded text-sm bg-gray-50">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="date" id="edit-tanggal" class="w-full border p-2 rounded text-xs bg-gray-50">
+                    <input type="time" id="edit-jam" class="w-full border p-2 rounded text-xs bg-gray-50">
                 </div>
                 <input type="text" id="edit-judul" placeholder="Judul / Agenda Foto" class="w-full border p-2 rounded text-sm font-bold text-blue-700">
-                <textarea id="edit-mom" placeholder="Ketik hasil meeting atau keterangan foto (MoM)..." class="w-full border p-3 rounded text-sm h-28"></textarea>
-                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                    <label class="block text-sm font-bold text-blue-800 mb-2">Unggah Lampiran Foto</label>
-                    <input type="file" id="edit-foto" accept="image/*" class="w-full border p-2 rounded bg-white text-sm">
+                <textarea id="edit-mom" placeholder="Ketik hasil meeting atau keterangan foto (MoM)..." class="w-full border p-2.5 rounded text-xs h-24"></textarea>
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                    <label class="block text-xs font-bold text-blue-800 mb-1">Unggah Lampiran Foto</label>
+                    <input type="file" id="edit-foto" accept="image/*" class="w-full border p-1.5 rounded bg-white text-xs">
                 </div>
             </div>
-            <div class="p-5 border-t bg-gray-50 flex justify-end">
-                <button onclick="updateMeetingData(event)" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md">Simpan Progress</button>
+            <div class="p-4 border-t bg-gray-50 flex justify-end">
+                <button onclick="updateMeetingData(event)" class="px-5 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md text-xs">Simpan Progress</button>
             </div>
         </div>
     </div>
@@ -324,35 +322,35 @@
     <!-- MODAL FORM UPLOAD FILE DOKUMEN / LINK GOOGLE DOCS -->
     <div id="document-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border-t-8 border-purple-500">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="text-xl font-bold text-gray-800" id="modal-doc-title">Upload Dokumen / Link Google Docs</h3>
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="text-base font-bold text-gray-800" id="modal-doc-title">Upload Dokumen / Link Google Docs</h3>
                 <button onclick="toggleModal(false, 'document-detail-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
-            <div class="p-6 space-y-4">
+            <div class="p-5 space-y-3">
                 <input type="hidden" id="doc-id">
                 <div id="doc-customer-wrapper" class="hidden">
                     <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Perusahaan Pemilik Dokumen</label>
-                    <select id="doc-customer-select" class="w-full border p-2 rounded bg-white font-bold text-sm"></select>
+                    <select id="doc-customer-select" class="w-full border p-2 rounded bg-white font-bold text-xs"></select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Nama Dokumen / File</label>
-                    <input type="text" id="doc-nama" placeholder="Cth: Kontrak SPK / RAB" class="w-full border p-2 rounded font-bold text-purple-700">
+                    <input type="text" id="doc-nama" placeholder="Cth: Kontrak SPK / RAB" class="w-full border p-2 rounded font-bold text-purple-700 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Kategori File</label>
-                    <input type="text" id="doc-kategori" placeholder="Cth: PDF, Google Docs, Invoice" class="w-full border p-2 rounded">
+                    <input type="text" id="doc-kategori" placeholder="Cth: PDF, Google Docs, Invoice" class="w-full border p-2 rounded text-sm">
                 </div>
-                <div class="bg-purple-50 p-3 rounded-lg border border-purple-200">
-                    <label class="block text-xs font-bold text-purple-900 mb-1">Opsi 1: Pilih File dari Perangkat (PDF, Word, Excel)</label>
-                    <input type="file" id="doc-file" class="w-full border p-1.5 rounded bg-white text-xs">
+                <div class="bg-purple-50 p-2.5 rounded-lg border border-purple-200">
+                    <label class="block text-[11px] font-bold text-purple-900 mb-1">Opsi 1: Pilih File dari Perangkat (PDF, Word, Excel)</label>
+                    <input type="file" id="doc-file" class="w-full border p-1 rounded bg-white text-xs">
                 </div>
-                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                    <label class="block text-xs font-bold text-blue-900 mb-1">Opsi 2: Atau Tempel Link Google Docs / Sheets / Drive</label>
-                    <input type="url" id="doc-url-lama" placeholder="https://docs.google.com/document/d/..." class="w-full border p-2 rounded bg-white text-xs">
+                <div class="bg-blue-50 p-2.5 rounded-lg border border-blue-200">
+                    <label class="block text-[11px] font-bold text-blue-900 mb-1">Opsi 2: Atau Tempel Link Google Docs / Sheets / Drive</label>
+                    <input type="url" id="doc-url-lama" placeholder="https://docs.google.com/document/d/..." class="w-full border p-1.5 rounded bg-white text-xs">
                 </div>
             </div>
-            <div class="p-5 border-t bg-gray-50 flex justify-end">
-                <button onclick="saveDocument(event)" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 shadow-md">Simpan Dokumen</button>
+            <div class="p-4 border-t bg-gray-50 flex justify-end">
+                <button onclick="saveDocument(event)" class="px-5 py-2 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 shadow-md text-xs">Simpan Dokumen</button>
             </div>
         </div>
     </div>
@@ -365,7 +363,7 @@
             <img id="lightbox-img" src="" class="max-h-[85vh] max-w-[85vw] object-contain rounded-lg shadow-2xl relative z-[95]">
             <button onclick="nextImage()" class="absolute right-4 md:right-10 text-white text-6xl hover:text-blue-400 p-4 select-none z-[100]">&gt;</button>
         </div>
-        <p id="lightbox-counter" class="absolute bottom-6 text-white font-bold bg-black bg-opacity-50 px-4 py-2 rounded-full z-[100]"></p>
+        <p id="lightbox-counter" class="absolute bottom-6 text-white font-bold bg-black bg-opacity-50 px-4 py-2 rounded-full z-[100] text-xs"></p>
     </div>
 
     <!-- SCRIPT JAVASCRIPT -->
@@ -477,7 +475,6 @@
 
         // ==========================================
         // HELPER MULTI-PROYEK & NILAI PROYEK
-        // Disimpan dengan format: status_projek = "On Progress::Rp 150 Juta||Selesai::Rp 80 Juta"
         // ==========================================
         function parseProjects(namaProjekStr, statusProjekStr) {
             if (!namaProjekStr || !namaProjekStr.trim()) return [];
@@ -511,9 +508,9 @@
                 document.getElementById(`section-${m}`).classList.toggle('hidden', m !== menu);
                 const btn = document.getElementById(`nav-${m}`);
                 if (m === menu) {
-                    btn.className = "px-3 py-1.5 rounded-lg text-sm font-bold bg-white text-blue-700 shadow-sm transition-all";
+                    btn.className = "px-3 py-1 rounded-lg text-xs font-bold bg-white text-blue-700 shadow-sm transition-all";
                 } else {
-                    btn.className = "px-3 py-1.5 rounded-lg text-sm font-bold text-blue-100 hover:bg-blue-600 transition-all";
+                    btn.className = "px-3 py-1 rounded-lg text-xs font-bold text-blue-100 hover:bg-blue-600 transition-all";
                 }
             });
             if (menu === 'customers') fetchCustomers();
@@ -522,7 +519,7 @@
         }
 
         // ==========================================
-        // MENU 1: CUSTOMER, MULTI-PROYEK & NILAI PROYEK
+        // MENU 1: CUSTOMER, MULTI-PROYEK & NILAI PROYEK (COMPACT RENDER)
         // ==========================================
         function filterCustomers() {
             const query = document.getElementById('search-input').value.toLowerCase();
@@ -537,18 +534,18 @@
 
         async function fetchCustomers() {
             const tbody = document.getElementById('customer-table-body');
-            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Memuat...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-xs">Memuat...</td></tr>';
             try {
                 const res = await fetch('/api/index.py');
                 globalCustomers = await res.json();
                 renderTable(globalCustomers);
-            } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-red-500 text-center p-4">Error Jaringan</td></tr>'; }
+            } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-red-500 text-center p-3 text-xs">Error Jaringan</td></tr>'; }
         }
 
         function renderTable(dataArray) {
             const tbody = document.getElementById('customer-table-body');
             if (dataArray.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Tidak ada data ditemukan.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-gray-500 text-xs">Tidak ada data ditemukan.</td></tr>';
                 return;
             }
             tbody.innerHTML = dataArray.map((c) => {
@@ -556,29 +553,30 @@
                 const projects = parseProjects(c.nama_projek, c.status_projek);
                 const projectsHtml = projects.length > 0 
                     ? projects.map(p => `
-                        <div class="mb-2 flex flex-wrap items-center gap-1.5">
-                            <button onclick="openDetailView('${c.id}', '${p.name.replace(/'/g, "\\'")}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline text-left">• ${p.name}</button>
-                            ${p.nilai ? `<span class="text-xs bg-emerald-100 text-emerald-800 font-bold rounded-md px-2 py-0.5 border border-emerald-200">💰 ${p.nilai}</span>` : ''}
-                            <span class="text-xs bg-blue-100 text-blue-800 rounded-full px-2 py-0.5">${p.status}</span>
+                        <div class="mb-1 flex flex-wrap items-center gap-1 leading-tight">
+                            <button onclick="openDetailView('${c.id}', '${p.name.replace(/'/g, "\\'")}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline text-left text-xs">• ${p.name}</button>
+                            ${p.nilai ? `<span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold rounded px-1.5 py-0.2 border border-emerald-200">${p.nilai}</span>` : ''}
+                            <span class="text-[10px] bg-blue-50 text-blue-700 rounded px-1.5 py-0.2">${p.status}</span>
                         </div>`).join('')
-                    : '<span class="text-gray-400 text-sm">-</span>';
+                    : '<span class="text-gray-400 text-xs">-</span>';
 
                 return `
-                <tr class="hover:bg-blue-50 border-b border-gray-100 transition-colors">
-                    <td class="p-4 align-top">
-                        <button onclick="openDetailView('${c.id}')" class="font-bold text-lg text-blue-600 hover:text-blue-800 hover:underline text-left">${c.perusahaan || '-'}</button>
-                        <br><span class="text-xs text-gray-500 mt-1 block">${c.alamat || '-'}</span>
+                <tr class="hover:bg-blue-50/60 border-b border-gray-100 transition-colors">
+                    <td class="px-3 py-2 align-top">
+                        <button onclick="openDetailView('${c.id}')" class="font-bold text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight">${c.perusahaan || '-'}</button>
+                        <span class="text-[11px] text-gray-500 block leading-tight mt-0.5 line-clamp-1" title="${c.alamat || ''}">${c.alamat || '-'}</span>
                     </td>
-                    <td class="p-4 align-top">
-                        <b>${c.nama_customer || '-'}</b><br>
-                        <span class="text-xs text-gray-500">${c.posisi || '-'}</span><br>
-                        <span class="text-xs font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">📞 ${c.no_telepon || '-'}</span>
+                    <td class="px-3 py-2 align-top leading-tight">
+                        <span class="font-bold text-gray-800 text-xs">${c.nama_customer || '-'}</span>
+                        ${c.posisi ? `<span class="text-[10px] text-gray-500"> (${c.posisi})</span>` : ''}
+                        <br>
+                        <span class="text-[11px] font-medium text-gray-600 inline-block mt-0.5">📞 ${c.no_telepon || '-'}</span>
                     </td>
-                    <td class="p-4 align-top">${projectsHtml}</td>
-                    <td class="p-4 align-top text-sm font-medium text-gray-700">${c.dibawa_oleh || '-'}</td>
-                    <td class="p-4 align-top text-center">
-                        <button onclick="openEditCustomer(${realIdx})" class="text-blue-600 hover:text-blue-800 text-sm font-bold bg-blue-50 px-2 py-1 rounded mr-2">Edit</button>
-                        <button onclick="deleteCustomer('${c.id}', '${(c.perusahaan || '').replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-800 text-sm font-bold bg-red-50 px-2 py-1 rounded">Hapus</button>
+                    <td class="px-3 py-2 align-top">${projectsHtml}</td>
+                    <td class="px-3 py-2 align-top text-[11px] font-medium text-gray-700">${c.dibawa_oleh || '-'}</td>
+                    <td class="px-3 py-2 align-top text-center whitespace-nowrap">
+                        <button onclick="openEditCustomer(${realIdx})" class="text-blue-600 hover:text-blue-800 text-[11px] font-bold bg-blue-50 px-2 py-0.5 rounded mr-1 border border-blue-100">Edit</button>
+                        <button onclick="deleteCustomer('${c.id}', '${(c.perusahaan || '').replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-800 text-[11px] font-bold bg-red-50 px-2 py-0.5 rounded border border-red-100">Hapus</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -621,11 +619,11 @@
             const div = document.createElement('div');
             div.className = "flex flex-col sm:flex-row gap-2 items-center project-row bg-white p-2 rounded-lg border border-blue-100";
             div.innerHTML = `
-                <input type="text" placeholder="Nama Proyek" value="${name}" class="proj-name w-full sm:w-5/12 border p-2 rounded text-sm font-medium">
-                <input type="text" placeholder="Nilai (Cth: Rp 250 Juta)" value="${nilai}" class="proj-nilai w-full sm:w-4/12 border p-2 rounded text-sm text-emerald-700 font-semibold">
+                <input type="text" placeholder="Nama Proyek" value="${name}" class="proj-name w-full sm:w-5/12 border p-1.5 rounded text-xs font-medium">
+                <input type="text" placeholder="Nilai (Cth: Rp 250 Juta)" value="${nilai}" class="proj-nilai w-full sm:w-4/12 border p-1.5 rounded text-xs text-emerald-700 font-semibold">
                 <div class="flex w-full sm:w-3/12 gap-1 items-center">
-                    <input type="text" placeholder="Status" value="${status}" class="proj-status w-full border p-2 rounded text-sm">
-                    <button type="button" onclick="this.closest('.project-row').remove()" class="text-red-500 hover:text-red-700 font-bold px-2 text-lg">&times;</button>
+                    <input type="text" placeholder="Status" value="${status}" class="proj-status w-full border p-1.5 rounded text-xs">
+                    <button type="button" onclick="this.closest('.project-row').remove()" class="text-red-500 hover:text-red-700 font-bold px-2 text-base">&times;</button>
                 </div>
             `;
             container.appendChild(div);
@@ -726,24 +724,24 @@
             const safePt = (ptName || '').replace(/'/g, "\\'");
 
             return `
-            <div class="border border-gray-200 p-3.5 rounded-xl bg-white shadow-sm flex flex-col justify-between gap-2.5 hover:border-purple-400 transition-all">
-                <div class="flex items-start gap-3">
-                    <div class="text-2xl bg-purple-50 p-2.5 rounded-xl shrink-0">${icon}</div>
+            <div class="border border-gray-200 p-3 rounded-xl bg-white shadow-sm flex flex-col justify-between gap-2 hover:border-purple-400 transition-all">
+                <div class="flex items-start gap-2.5">
+                    <div class="text-xl bg-purple-50 p-2 rounded-lg shrink-0">${icon}</div>
                     <div class="min-w-0 flex-1">
-                        <p class="font-bold text-gray-900 text-sm leading-snug break-words line-clamp-2" title="${d.nama_file}">${d.nama_file}</p>
+                        <p class="font-bold text-gray-900 text-xs leading-snug break-words line-clamp-2" title="${d.nama_file}">${d.nama_file}</p>
                         <div class="flex flex-wrap items-center gap-1.5 mt-1">
-                            ${isGlobal ? `<span class="text-[11px] font-bold text-blue-600">🏢 ${ptName}</span>` : ''}
-                            <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-600 font-medium">${d.kategori_file || 'Dokumen'}</span>
+                            ${isGlobal ? `<span class="text-[10px] font-bold text-blue-600">🏢 ${ptName}</span>` : ''}
+                            <span class="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 font-medium">${d.kategori_file || 'Dokumen'}</span>
                         </div>
                     </div>
                 </div>
-                <div class="flex flex-wrap items-center justify-end gap-1 pt-2 border-t border-gray-100">
-                    ${url ? `<button onclick="openPdfReader('${safeUrl}', '${safeTitle}')" class="bg-red-50 text-red-700 px-2 py-1 rounded font-bold text-[11px] hover:bg-red-100 border border-red-200" title="Baca / Preview">👁️ Baca</button>` : ''}
-                    ${url ? `<button onclick="shareDocToWhatsApp('${safeTitle}', '${safePt}', '${safeUrl}')" class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded font-bold text-[11px] hover:bg-emerald-100 border border-emerald-200" title="Bagikan ke WhatsApp">📲 WA</button>` : ''}
-                    ${isGDocs ? `<a href="${url}" target="_blank" class="bg-green-50 text-green-700 px-2 py-1 rounded font-bold text-[11px] hover:bg-green-100 border border-green-200">🌐 GDocs</a>` : ''}
-                    ${isWord ? `<button onclick="editDocInWordEditor(${idx}, ${isGlobal})" class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-bold text-[11px] hover:bg-indigo-100 border border-indigo-200" title="Edit di Word Studio">📝 Word</button>` : ''}
-                    ${url && !isGDocs ? `<a href="${url}" target="_blank" download class="bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold text-[11px] hover:bg-blue-100 border border-blue-200" title="Unduh File">📥 Unduh</a>` : ''}
-                    <button onclick="openEditDocument(${idx}, ${isGlobal})" class="bg-gray-50 text-gray-700 px-2 py-1 rounded font-bold text-[11px] hover:bg-gray-200 border" title="Ubah Nama / File">✏️ Edit</button>
+                <div class="flex flex-wrap items-center justify-end gap-1 pt-1.5 border-t border-gray-100">
+                    ${url ? `<button onclick="openPdfReader('${safeUrl}', '${safeTitle}')" class="bg-red-50 text-red-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-red-100 border border-red-200" title="Baca / Preview">👁️ Baca</button>` : ''}
+                    ${url ? `<button onclick="shareDocToWhatsApp('${safeTitle}', '${safePt}', '${safeUrl}')" class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-emerald-100 border border-emerald-200" title="Bagikan ke WhatsApp">📲 WA</button>` : ''}
+                    ${isGDocs ? `<a href="${url}" target="_blank" class="bg-green-50 text-green-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-green-100 border border-green-200">🌐 GDocs</a>` : ''}
+                    ${isWord ? `<button onclick="editDocInWordEditor(${idx}, ${isGlobal})" class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-indigo-100 border border-indigo-200" title="Edit di Word Studio">📝 Word</button>` : ''}
+                    ${url && !isGDocs ? `<a href="${url}" target="_blank" download class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-blue-100 border border-blue-200" title="Unduh File">📥 Unduh</a>` : ''}
+                    <button onclick="openEditDocument(${idx}, ${isGlobal})" class="bg-gray-50 text-gray-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-gray-200 border" title="Ubah Nama / File">✏️ Edit</button>
                 </div>
             </div>`;
         }
@@ -753,7 +751,7 @@
         // ==========================================
         async function fetchGlobalDocuments() {
             const list = document.getElementById('global-document-list');
-            list.innerHTML = '<p class="text-sm text-gray-500">Memuat seluruh dokumen...</p>';
+            list.innerHTML = '<p class="text-xs text-gray-500">Memuat seluruh dokumen...</p>';
             try {
                 if (globalCustomers.length === 0) {
                     const cRes = await fetch('/api/index.py');
@@ -762,7 +760,7 @@
                 const res = await fetch('/api/index.py?tipe=all_dokumen');
                 globalDocsData = await res.json();
                 renderGlobalDocumentsList(globalDocsData);
-            } catch (e) { list.innerHTML = '<p class="text-red-500">Gagal memuat dokumen.</p>'; }
+            } catch (e) { list.innerHTML = '<p class="text-red-500 text-xs">Gagal memuat dokumen.</p>'; }
         }
 
         function filterGlobalDocuments() {
@@ -780,7 +778,7 @@
         function renderGlobalDocumentsList(docsArray) {
             const list = document.getElementById('global-document-list');
             if (docsArray.length === 0) {
-                list.innerHTML = '<div class="col-span-2 text-center p-8 bg-white rounded-xl border border-dashed text-gray-500">Tidak ada dokumen yang cocok.</div>';
+                list.innerHTML = '<div class="col-span-2 text-center p-6 bg-white rounded-xl border border-dashed text-gray-500 text-xs">Tidak ada dokumen yang cocok.</div>';
                 return;
             }
             list.innerHTML = docsArray.map(d => {
@@ -794,7 +792,7 @@
         // ==========================================
         async function fetchGlobalPhotos() {
             const gallery = document.getElementById('global-photo-gallery');
-            gallery.innerHTML = '<p class="text-sm text-gray-500">Memuat seluruh foto...</p>';
+            gallery.innerHTML = '<p class="text-xs text-gray-500">Memuat seluruh foto...</p>';
             try {
                 const res = await fetch('/api/index.py?tipe=all_meetings');
                 const allMeetings = await res.json();
@@ -802,7 +800,7 @@
                 projectImages = withPhotos.map(m => m.foto_url);
 
                 if (withPhotos.length === 0) {
-                    gallery.innerHTML = '<div class="col-span-full text-center p-8 bg-white rounded-xl border border-dashed text-gray-500">Belum ada foto yang diunggah.</div>';
+                    gallery.innerHTML = '<div class="col-span-full text-center p-6 bg-white rounded-xl border border-dashed text-gray-500 text-xs">Belum ada foto yang diunggah.</div>';
                     return;
                 }
                 gallery.innerHTML = withPhotos.map((m, idx) => `
@@ -810,14 +808,14 @@
                         <div class="aspect-square overflow-hidden bg-gray-100">
                             <img src="${m.foto_url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         </div>
-                        <div class="p-3">
-                            <p class="font-bold text-xs text-blue-700 truncate">${m.nama_projek || '-'}</p>
-                            <p class="text-xs text-gray-800 font-medium truncate">${m.judul || 'Dokumentasi'}</p>
-                            <p class="text-[11px] text-gray-400 mt-1">📅 ${m.tanggal || '-'}</p>
+                        <div class="p-2">
+                            <p class="font-bold text-[11px] text-blue-700 truncate">${m.nama_projek || '-'}</p>
+                            <p class="text-[11px] text-gray-800 font-medium truncate">${m.judul || 'Dokumentasi'}</p>
+                            <p class="text-[10px] text-gray-400 mt-0.5">📅 ${m.tanggal || '-'}</p>
                         </div>
                     </div>
                 `).join('');
-            } catch (e) { gallery.innerHTML = '<p class="text-red-500">Gagal memuat foto.</p>'; }
+            } catch (e) { gallery.innerHTML = '<p class="text-red-500 text-xs">Gagal memuat foto.</p>'; }
         }
 
         function openGlobalPhotoModal() {
@@ -1017,18 +1015,18 @@
 
         async function fetchMeetingsAndPhotos() {
             const list = document.getElementById('meeting-list'); const gallery = document.getElementById('photo-gallery');
-            list.innerHTML = '<p class="text-sm text-center">Memuat...</p>'; gallery.innerHTML = '';
+            list.innerHTML = '<p class="text-xs text-center">Memuat...</p>'; gallery.innerHTML = '';
 
             try {
                 if(!currentProject) {
-                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl">Belum ada proyek. Klik Edit pada perusahaan ini untuk menambah proyek.</div>'; return;
+                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl text-xs">Belum ada proyek. Klik Edit pada perusahaan ini untuk menambah proyek.</div>'; return;
                 }
                 const res = await fetch('/api/index.py?tipe=meeting&projek=' + encodeURIComponent(currentProject));
                 meetingsData = await res.json();
                 projectImages = meetingsData.filter(m => m.foto_url).map(m => m.foto_url);
 
                 if(projectImages.length === 0) {
-                    gallery.innerHTML = '<div class="col-span-full text-center py-8 text-gray-400">Belum ada foto di proyek ini.</div>';
+                    gallery.innerHTML = '<div class="col-span-full text-center py-6 text-gray-400 text-xs">Belum ada foto di proyek ini.</div>';
                 } else {
                     gallery.innerHTML = projectImages.map((url, idx) => `
                         <div class="relative group cursor-pointer aspect-square" onclick="openLightbox(${idx})">
@@ -1037,25 +1035,25 @@
                 }
 
                 if(meetingsData.length === 0) { 
-                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl">Belum ada progress di proyek ini.</div>'; return; 
+                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl text-xs">Belum ada progress di proyek ini.</div>'; return; 
                 }
                 
                 list.innerHTML = meetingsData.map((m, idx) => `
-                    <div class="border p-4 rounded-xl bg-white shadow-sm hover:border-blue-300 transition-colors">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="font-bold text-gray-800 text-lg pr-2">${m.judul}</span>
-                            <div class="text-right text-xs text-gray-500 shrink-0">
-                                <span class="bg-blue-100 text-blue-800 font-bold px-2 py-1 rounded block mb-1">${m.tanggal || '-'}</span>
+                    <div class="border p-3 rounded-xl bg-white shadow-sm hover:border-blue-300 transition-colors">
+                        <div class="flex justify-between items-start mb-1.5">
+                            <span class="font-bold text-gray-800 text-sm pr-2">${m.judul}</span>
+                            <div class="text-right text-[11px] text-gray-500 shrink-0">
+                                <span class="bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded block mb-0.5">${m.tanggal || '-'}</span>
                                 🕒 ${m.jam || '-'}
                             </div>
                         </div>
-                        <p class="text-sm text-gray-600 mb-3 whitespace-pre-wrap">${m.mom || ''}</p>
-                        ${m.foto_url ? `<span class="inline-block text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold mb-3">📸 Ada Foto Lampiran</span>` : ''}
-                        <div class="flex justify-end border-t border-dashed pt-3">
-                            <button onclick="openEditMeeting(${idx})" class="bg-gray-100 text-gray-700 text-xs px-4 py-2 rounded font-bold hover:bg-gray-200">✏️ Edit</button>
+                        <p class="text-xs text-gray-600 mb-2 whitespace-pre-wrap">${m.mom || ''}</p>
+                        ${m.foto_url ? `<span class="inline-block text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold mb-2">📸 Ada Foto Lampiran</span>` : ''}
+                        <div class="flex justify-end border-t border-dashed pt-2">
+                            <button onclick="openEditMeeting(${idx})" class="bg-gray-100 text-gray-700 text-[11px] px-3 py-1 rounded font-bold hover:bg-gray-200">✏️ Edit</button>
                         </div>
                     </div>`).join('');
-            } catch (e) { list.innerHTML = '<p class="text-red-500">Error.</p>'; }
+            } catch (e) { list.innerHTML = '<p class="text-red-500 text-xs">Error.</p>'; }
         }
 
         function openLightbox(index) { currentImageIndex = index; updateLightboxView(); toggleModal(true, 'lightbox-modal'); }
@@ -1112,13 +1110,13 @@
 
         // --- MANAJEMEN DOKUMEN PERUSAHAAN ---
         async function fetchDocuments() {
-            const list = document.getElementById('document-list'); list.innerHTML = '<p class="text-sm text-center">Memuat dokumen...</p>';
+            const list = document.getElementById('document-list'); list.innerHTML = '<p class="text-xs text-center">Memuat dokumen...</p>';
             try {
                 const res = await fetch('/api/index.py?tipe=dokumen&projek=' + encodeURIComponent(currentProject || 'Umum') + '&customer_id=' + encodeURIComponent(currentCustomerId));
                 documentsData = await res.json();
-                if(documentsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500 border rounded-lg border-dashed">Belum ada file dokumen.</div>'; return; }
+                if(documentsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500 border rounded-lg border-dashed text-xs">Belum ada file dokumen.</div>'; return; }
                 list.innerHTML = documentsData.map((d, idx) => buildDocumentCardHtml(d, idx, false)).join('');
-            } catch (e) { list.innerHTML = '<p class="text-red-500">Error memuat dokumen.</p>'; }
+            } catch (e) { list.innerHTML = '<p class="text-red-500 text-xs">Error memuat dokumen.</p>'; }
         }
 
         function openDocModal(isGlobal = false) {
