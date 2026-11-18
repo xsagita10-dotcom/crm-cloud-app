@@ -76,10 +76,26 @@ def master_route(path):
             action = data.get('action')
             customer_id = data.get('id')
             
+            # --- HAPUS CUSTOMER ---
             if action == 'delete':
                 try:
                     supabase.table('customers').delete().eq('id', customer_id).execute()
                     return jsonify({"message": "Dihapus"}), 200
+                except Exception as e: return jsonify({"error": str(e)}), 500
+
+            # --- HAPUS FILE DOKUMEN (DATABASE + STORAGE) ---
+            if action == 'delete_dokumen':
+                doc_id = data.get('id')
+                file_url = data.get('file_url', '')
+                try:
+                    if file_url and '/storage/v1/object/public/documents/' in file_url:
+                        file_name = file_url.split('/storage/v1/object/public/documents/')[-1]
+                        try:
+                            supabase.storage.from_('documents').remove([file_name])
+                        except Exception:
+                            pass
+                    supabase.table('documents').delete().eq('id', doc_id).execute()
+                    return jsonify({"message": "Dokumen dihapus"}), 200
                 except Exception as e: return jsonify({"error": str(e)}), 500
 
             perusahaan = data.get("perusahaan", "").strip()
@@ -113,7 +129,6 @@ def master_route(path):
                 nama_file = request.form.get('nama_file')
                 kategori_raw = request.form.get('kategori_file', 'Umum')
                 
-                # Sematkan nama proyek di dalam kategori_file agar bisa difilter & digrup per proyek
                 if projek and not kategori_raw.startswith('['):
                     kategori_file = f"[{projek}] {kategori_raw}"
                 else:
