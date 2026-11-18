@@ -370,7 +370,7 @@
 
     <!-- SCRIPT JAVASCRIPT -->
     <script>
-        let currentProject = "__ALL__"; // "__ALL__" = Klik Customer (Semua Proyek), atau Nama Proyek Spesifik
+        let currentProject = "__ALL__";
         let currentCustomerId = ""; 
         let currentCompanyName = "";
         let globalCustomers = []; 
@@ -437,14 +437,12 @@
             });
         }
 
-        // Ekstrak nama proyek dari format kategori_file: "[Nama Proyek] Kategori"
         function extractDocProjectAndCategory(kategoriStr, customerObj) {
             const raw = kategoriStr || 'Umum';
             const match = raw.match(/^\[(.*?)\]\s*(.*)$/);
             if (match) {
                 return { project: match[1].trim(), category: match[2].trim() || 'Dokumen' };
             }
-            // Fallback ke proyek pertama milik customer jika dokumen lama belum punya tag [Proyek]
             if (customerObj && customerObj.nama_projek) {
                 const firstProj = customerObj.nama_projek.split('||')[0].trim();
                 if (firstProj) return { project: firstProj, category: raw };
@@ -539,7 +537,7 @@
         }
 
         // ==========================================
-        // MENU 1: CUSTOMER & PROYEK (KLIK PT = SEMUA, KLIK PROYEK = SPESIFIK)
+        // MENU 1: CUSTOMER & PROYEK
         // ==========================================
         function filterCustomers() {
             const query = document.getElementById('search-input').value.toLowerCase();
@@ -574,7 +572,6 @@
                 const projectsHtml = projects.length > 0 
                     ? projects.map(p => `
                         <div class="mb-1 flex flex-wrap items-center gap-1 leading-tight">
-                            <!-- KLIK PROYEK: Buka khusus dokumen & foto proyek tersebut -->
                             <button onclick="openDetailView('${c.id}', '${p.name.replace(/'/g, "\\'")}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline text-left text-xs" title="Klik untuk melihat khusus proyek ${p.name}">📁 ${p.name}</button>
                             ${p.nilai ? `<span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold rounded px-1.5 py-0.2 border border-emerald-200">${p.nilai}</span>` : ''}
                             <span class="text-[10px] bg-blue-50 text-blue-700 rounded px-1.5 py-0.2">${p.status}</span>
@@ -584,7 +581,6 @@
                 return `
                 <tr class="hover:bg-blue-50/60 border-b border-gray-100 transition-colors">
                     <td class="px-3 py-2 align-top">
-                        <!-- KLIK CUSTOMER: Buka semua dokumen & foto dari seluruh proyek PT ini -->
                         <button onclick="openDetailView('${c.id}', '__ALL__')" class="font-bold text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight" title="Klik untuk melihat semua proyek ${c.perusahaan}">🏢 ${c.perusahaan || '-'}</button>
                         <span class="text-[11px] text-gray-500 block leading-tight mt-0.5 line-clamp-1" title="${c.alamat || ''}">${c.alamat || '-'}</span>
                     </td>
@@ -605,7 +601,7 @@
         }
 
         // ==========================================
-        // RENDER BARIS DOKUMEN MEMANJANG KE SAMPING (HORIZONTAL ROW)
+        // RENDER BARIS DOKUMEN MEMANJANG (DENGAN TOMBOL HAPUS 🗑️)
         // ==========================================
         function buildDocumentRowHtml(d, idx, isGlobal, showProjectBadge = true) {
             const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
@@ -635,14 +631,34 @@
                     ${dateStr ? `<span class="text-[10px] text-gray-400 hidden lg:inline shrink-0">🕒 ${dateStr}</span>` : ''}
                 </div>
                 <div class="flex items-center justify-end gap-1 shrink-0">
-                    ${url ? `<button onclick="openPdfReader('${safeUrl}', '${safeTitle}')" class="bg-red-50 text-red-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-red-100 border border-red-200">👁️ Baca</button>` : ''}
-                    ${url ? `<button onclick="shareDocToWhatsApp('${safeTitle}', '${safePt}', '${safeUrl}')" class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-emerald-100 border border-emerald-200">📲 WA</button>` : ''}
+                    ${url ? `<button onclick="openPdfReader('${safeUrl}', '${safeTitle}')" class="bg-red-50 text-red-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-red-100 border border-red-200" title="Baca PDF / Preview">👁️ Baca</button>` : ''}
+                    ${url ? `<button onclick="shareDocToWhatsApp('${safeTitle}', '${safePt}', '${safeUrl}')" class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-emerald-100 border border-emerald-200" title="Share ke WhatsApp">📲 WA</button>` : ''}
                     ${isGDocs ? `<a href="${url}" target="_blank" class="bg-green-50 text-green-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-green-100 border border-green-200">🌐 GDocs</a>` : ''}
-                    ${isWord ? `<button onclick="editDocInWordEditor(${idx}, ${isGlobal})" class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-indigo-100 border border-indigo-200">📝 Word</button>` : ''}
-                    ${url && !isGDocs ? `<a href="${url}" target="_blank" download class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-blue-100 border border-blue-200">📥 Unduh</a>` : ''}
-                    <button onclick="openEditDocument(${idx}, ${isGlobal})" class="bg-gray-50 text-gray-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-gray-200 border">✏️ Edit</button>
+                    ${isWord ? `<button onclick="editDocInWordEditor(${idx}, ${isGlobal})" class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-indigo-100 border border-indigo-200" title="Edit di Word Studio">📝 Word</button>` : ''}
+                    ${url && !isGDocs ? `<a href="${url}" target="_blank" download class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-blue-100 border border-blue-200" title="Download File">📥 Unduh</a>` : ''}
+                    <button onclick="openEditDocument(${idx}, ${isGlobal})" class="bg-gray-50 text-gray-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-gray-200 border" title="Edit Dokumen">✏️</button>
+                    <button onclick="deleteDocument('${d.id}', '${safeTitle}', '${safeUrl}', ${isGlobal})" class="bg-red-50 text-red-600 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-red-100 border border-red-200" title="Hapus File Dokumen">🗑️</button>
                 </div>
             </div>`;
+        }
+
+        async function deleteDocument(docId, docTitle, fileUrl, isGlobal) {
+            if (!confirm(`Yakin ingin menghapus dokumen "${docTitle}" secara permanen?`)) return;
+            try {
+                const res = await fetch('/api/index.py', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete_dokumen', id: docId, file_url: fileUrl })
+                });
+                if (res.ok) {
+                    if (isGlobal || !document.getElementById('section-documents').classList.contains('hidden')) fetchGlobalDocuments();
+                    if (!document.getElementById('detail-view').classList.contains('hidden')) fetchDocuments();
+                } else {
+                    alert("Gagal menghapus dokumen.");
+                }
+            } catch (e) {
+                alert("Error jaringan saat menghapus dokumen.");
+            }
         }
 
         // ==========================================
@@ -681,7 +697,6 @@
                 return;
             }
 
-            // Group by Project -> lalu Group by Customer
             const grouped = {};
             docsArray.forEach(d => {
                 const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
@@ -711,7 +726,7 @@
                             <div class="space-y-1.5 pl-2 border-l-2 border-blue-200">
                                 ${docs.map(d => {
                                     const realIdx = globalDocsData.findIndex(item => item.id === d.id);
-                                    return buildDocumentRowHtml(d, realIdx, false, false);
+                                    return buildDocumentRowHtml(d, realIdx, true, false);
                                 }).join('')}
                             </div>
                         </div>`;
@@ -743,7 +758,6 @@
                     return;
                 }
 
-                // Map Proyek ke Customer
                 const projToCompany = {};
                 globalCustomers.forEach(c => {
                     parseProjects(c.nama_projek, c.status_projek).forEach(p => {
@@ -751,7 +765,6 @@
                     });
                 });
 
-                // Group by Project -> Customer
                 const grouped = {};
                 withPhotos.forEach((m, idx) => {
                     const projName = m.nama_projek || 'Proyek Umum';
@@ -878,7 +891,6 @@
                 const withPhotos = meetingsData.filter(m => m.foto_url);
                 projectImages = withPhotos.map(m => m.foto_url);
 
-                // RENDER GALERI FOTO (Group by Project jika mode __ALL__)
                 if (withPhotos.length === 0) {
                     gallery.innerHTML = '<div class="text-center py-6 text-gray-400 text-xs">Belum ada foto.</div>';
                 } else if (currentProject === '__ALL__') {
@@ -908,7 +920,6 @@
                         </div>`).join('') + `</div>`;
                 }
 
-                // RENDER RIWAYAT MEETING
                 if (meetingsData.length === 0) { 
                     list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl text-xs">Belum ada riwayat meeting.</div>'; return; 
                 }
@@ -934,7 +945,7 @@
             } catch (e) { list.innerHTML = '<p class="text-red-500 text-xs">Error.</p>'; }
         }
 
-        // --- MANAJEMEN DOKUMEN DI DETAIL PERUSAHAAN (LIST MEMANJANG & GROUP BY PROYEK) ---
+        // --- MANAJEMEN DOKUMEN DI DETAIL PERUSAHAAN ---
         async function fetchDocuments() {
             const list = document.getElementById('document-list'); list.innerHTML = '<p class="text-xs text-center">Memuat dokumen...</p>';
             try {
@@ -954,7 +965,6 @@
             }
 
             if (currentProject === '__ALL__') {
-                // Jika klik Customer: Tampilkan semua dokumen milik Customer ini, dikelompokkan per Proyek
                 const grouped = {};
                 documentsData.forEach((d, idx) => {
                     const parsed = extractDocProjectAndCategory(d.kategori_file, cust);
@@ -973,7 +983,6 @@
                     </div>
                 `).join('');
             } else {
-                // Jika klik Proyek spesifik: Filter hanya dokumen milik proyek tersebut
                 const filtered = documentsData
                     .map((d, idx) => ({ d, idx, parsed: extractDocProjectAndCategory(d.kategori_file, cust) }))
                     .filter(item => item.parsed.project.toLowerCase() === currentProject.toLowerCase());
