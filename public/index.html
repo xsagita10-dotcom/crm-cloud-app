@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud CRM & Document Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Plugin Editor Word Advanced (TinyMCE) & Mammoth.js untuk baca DOCX -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 </head>
@@ -54,9 +53,9 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-100 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-600">
-                                <th class="px-3 py-2 font-bold w-1/4">Perusahaan & Alamat</th>
+                                <th class="px-3 py-2 font-bold w-1/4">Perusahaan (Klik = Semua Proyek)</th>
                                 <th class="px-3 py-2 font-bold w-1/5">Kontak & Telepon</th>
-                                <th class="px-3 py-2 font-bold w-1/3">Daftar Projek, Nilai & Status</th>
+                                <th class="px-3 py-2 font-bold w-1/3">Projek (Klik = Detail Proyek), Nilai & Status</th>
                                 <th class="px-3 py-2 font-bold">Dibawa Oleh</th>
                                 <th class="px-3 py-2 font-bold text-center w-24">Aksi</th>
                             </tr>
@@ -67,12 +66,12 @@
             </div>
         </main>
 
-        <!-- MENU 2: SEMUA DOKUMEN GLOBAL -->
-        <main id="section-documents" class="hidden flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+        <!-- MENU 2: SEMUA DOKUMEN GLOBAL (GROUP BY PROJECT -> CUSTOMER, LIST MEMANJANG) -->
+        <main id="section-documents" class="hidden flex-1 p-4 md:p-6 max-w-full mx-auto w-full">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800">📂 Pusat Semua Dokumen & PDF Reader</h2>
-                    <p class="text-xs text-gray-500">Baca PDF langsung di web, edit dengan Word Studio, atau bagikan ke WhatsApp.</p>
+                    <h2 class="text-xl font-bold text-gray-800">📂 Pusat Semua Dokumen (Group by Proyek & Customer)</h2>
+                    <p class="text-xs text-gray-500">Daftar memanjang ke samping, dikelompokkan berdasarkan Proyek lalu Perusahaan.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <button onclick="openWordEditor()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-700 shadow-sm text-xs">📝 Buat di Word Studio</button>
@@ -81,68 +80,72 @@
             </div>
 
             <div class="mb-4">
-                <input type="text" id="search-doc-input" onkeyup="filterGlobalDocuments()" placeholder="🔍 Cari judul dokumen, kategori, atau nama perusahaan..." class="w-full md:w-1/2 px-3 py-2 text-xs border rounded-xl shadow-sm focus:ring-2 focus:ring-purple-500 focus:outline-none text-gray-700 font-medium bg-white">
+                <input type="text" id="search-doc-input" onkeyup="filterGlobalDocuments()" placeholder="🔍 Cari judul dokumen, nama proyek, kategori, atau perusahaan..." class="w-full md:w-1/2 px-3 py-2 text-xs border rounded-xl shadow-sm focus:ring-2 focus:ring-purple-500 focus:outline-none text-gray-700 font-medium bg-white">
             </div>
 
-            <div id="global-document-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            <div id="global-document-list" class="space-y-4"></div>
         </main>
 
-        <!-- MENU 3: SEMUA FOTO GLOBAL -->
-        <main id="section-photos" class="hidden flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+        <!-- MENU 3: SEMUA FOTO GLOBAL (GROUP BY PROJECT -> CUSTOMER) -->
+        <main id="section-photos" class="hidden flex-1 p-4 md:p-6 max-w-full mx-auto w-full">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800">🖼️ Galeri Semua Foto Proyek</h2>
-                    <p class="text-xs text-gray-500">Kumpulan seluruh dokumentasi foto progres dari semua proyek.</p>
+                    <h2 class="text-xl font-bold text-gray-800">🖼️ Galeri Semua Foto (Group by Proyek & Customer)</h2>
+                    <p class="text-xs text-gray-500">Dokumentasi foto progres dikelompokkan berdasarkan Proyek dan Perusahaan.</p>
                 </div>
                 <button onclick="openGlobalPhotoModal()" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 shadow-sm text-xs">+ Upload Foto Baru</button>
             </div>
-            <div id="global-photo-gallery" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
+            <div id="global-photo-gallery" class="space-y-6"></div>
         </main>
     </div>
 
-    <!-- LAYAR DETAIL PERUSAHAAN (3 PANEL + MULTI PROYEK SWITCHER) -->
+    <!-- LAYAR DETAIL PERUSAHAAN / PROYEK -->
     <div id="detail-view" class="hidden min-h-screen flex-col bg-gray-100">
         <header class="bg-blue-800 text-white px-4 py-2.5 flex flex-wrap justify-between items-center shadow-md sticky top-0 z-30 gap-4">
             <div class="flex items-center gap-3">
                 <button onclick="closeDetailView()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-bold shadow">&larr; Kembali</button>
-                <h1 class="text-base font-bold" id="detail-header-title">Detail Perusahaan</h1>
+                <div>
+                    <h1 class="text-base font-bold leading-tight" id="detail-header-title">Detail Perusahaan</h1>
+                    <p class="text-[11px] text-blue-200" id="detail-header-subtitle">Menampilkan Semua Proyek</p>
+                </div>
             </div>
             <div class="flex items-center gap-2">
-                <span class="text-xs text-blue-200 font-medium">Pilih Proyek:</span>
-                <select id="detail-project-switcher" onchange="switchActiveProject(this.value)" class="bg-white text-blue-900 text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm focus:outline-none"></select>
+                <span class="text-xs text-blue-200 font-medium">Filter Tampilan:</span>
+                <select id="detail-project-switcher" onchange="switchActiveProject(this.value)" class="bg-white text-blue-900 text-xs font-bold px-2.5 py-1.5 rounded-lg shadow-sm focus:outline-none"></select>
             </div>
         </header>
 
-        <main class="flex-1 p-4 mx-auto w-full max-w-screen-2xl flex flex-col md:flex-row gap-4 h-auto md:h-[calc(100vh-60px)]">
-            <!-- KIRI: Riwayat Meeting Proyek Aktif -->
-            <div class="w-full md:w-5/12 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden h-[500px] md:h-full">
+        <main class="flex-1 p-4 mx-auto w-full max-w-screen-2xl flex flex-col md:flex-row gap-4 h-auto md:h-[calc(100vh-64px)]">
+            <!-- KIRI: Riwayat Meeting -->
+            <div class="w-full md:w-4/12 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden h-[500px] md:h-full">
                 <div class="p-3 border-b bg-gray-50 flex justify-between items-center shadow-sm z-10">
-                    <h2 class="font-bold text-sm text-gray-800">📝 Riwayat Meeting Proyek</h2>
+                    <h2 class="font-bold text-sm text-gray-800" id="left-panel-title">📝 Riwayat Meeting</h2>
                     <button onclick="openAddProgress()" class="bg-blue-600 text-white px-2.5 py-1 rounded text-xs font-bold shadow hover:bg-blue-700">+ Tambah</button>
                 </div>
                 <div id="meeting-list" class="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50"></div>
             </div>
 
-            <!-- KANAN: Foto & Dokumen -->
-            <div class="w-full md:w-7/12 flex flex-col gap-4 h-[800px] md:h-full">
+            <!-- KANAN: Foto & Dokumen List Memanjang -->
+            <div class="w-full md:w-8/12 flex flex-col gap-4 h-[800px] md:h-full">
                 <!-- KANAN ATAS: Galeri Foto -->
-                <div class="flex-1 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                <div class="h-2/5 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                     <div class="p-3 border-b bg-gray-50 shadow-sm z-10 flex justify-between items-center">
-                        <h2 class="font-bold text-sm text-gray-800">🖼️ Foto Progress Proyek Ini</h2>
+                        <h2 class="font-bold text-sm text-gray-800" id="right-top-title">🖼️ Galeri Foto</h2>
+                        <button onclick="openAddProgress()" class="bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded text-xs font-bold hover:bg-blue-100">+ Upload Foto</button>
                     </div>
-                    <div id="photo-gallery" class="flex-1 overflow-y-auto p-3 grid grid-cols-3 lg:grid-cols-4 gap-3 bg-gray-100"></div>
+                    <div id="photo-gallery" class="flex-1 overflow-y-auto p-3 bg-gray-100 space-y-3"></div>
                 </div>
 
-                <!-- KANAN BAWAH: Dokumen Perusahaan -->
-                <div class="flex-1 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                <!-- KANAN BAWAH: Dokumen List Memanjang -->
+                <div class="h-3/5 flex flex-col bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
                     <div class="p-3 border-b bg-gray-50 flex justify-between items-center shadow-sm z-10">
-                        <h2 class="font-bold text-sm text-gray-800">📂 Dokumen Perusahaan</h2>
+                        <h2 class="font-bold text-sm text-gray-800" id="right-bottom-title">📂 Daftar Dokumen</h2>
                         <div class="flex gap-1.5">
-                            <button onclick="openWordEditor(currentCustomerId)" class="bg-indigo-600 text-white px-2.5 py-1 rounded text-xs font-bold shadow hover:bg-indigo-700">📝 Word Studio</button>
+                            <button onclick="openWordEditor(currentCustomerId, currentProject === '__ALL__' ? '' : currentProject)" class="bg-indigo-600 text-white px-2.5 py-1 rounded text-xs font-bold shadow hover:bg-indigo-700">📝 Word Studio</button>
                             <button onclick="openDocModal(false)" class="bg-purple-600 text-white px-2.5 py-1 rounded text-xs font-bold shadow hover:bg-purple-700">+ Upload / Link GDocs</button>
                         </div>
                     </div>
-                    <div id="document-list" class="flex-1 overflow-y-auto p-3 space-y-2.5 bg-gray-50"></div>
+                    <div id="document-list" class="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50"></div>
                 </div>
             </div>
         </main>
@@ -171,21 +174,21 @@
         </div>
     </div>
 
-    <!-- MODAL PLUGIN EDITOR WORD ADVANCED (TINYMCE STUDIO PRO) -->
+    <!-- MODAL PLUGIN EDITOR WORD ADVANCED -->
     <div id="word-editor-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-2 md:p-4 z-[80]">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[94vh] flex flex-col overflow-hidden border-t-8 border-indigo-600">
             <div class="px-4 py-2.5 border-b flex justify-between items-center bg-gray-50">
                 <div>
                     <h3 class="text-base font-bold text-indigo-900 flex items-center gap-2">📝 Word Studio Pro (Advanced Document Editor)</h3>
-                    <p class="text-[11px] text-gray-500">Dilengkapi Tabel, Format Font Lengkap, Page Setup, Cetak PDF, & Ekspor MS Word.</p>
+                    <p class="text-[11px] text-gray-500">Otomatis tersimpan ke Proyek & Perusahaan yang dipilih.</p>
                 </div>
                 <button onclick="toggleModal(false, 'word-editor-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
             <div class="p-2.5 bg-indigo-50 border-b grid grid-cols-1 md:grid-cols-3 gap-2">
                 <input type="hidden" id="word-doc-id">
                 <div>
-                    <label class="block text-[11px] font-bold text-gray-600 mb-0.5">Pilih Perusahaan</label>
-                    <select id="word-customer-select" class="w-full border p-1.5 rounded bg-white text-xs font-bold"></select>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-0.5">Pilih Proyek & Perusahaan</label>
+                    <select id="word-project-select" class="w-full border p-1.5 rounded bg-white text-xs font-bold"></select>
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold text-gray-600 mb-0.5">Judul Dokumen</label>
@@ -212,7 +215,7 @@
         </div>
     </div>
 
-    <!-- MODAL FORM TAMBAH / EDIT CUSTOMER (DENGAN NILAI PROYEK) -->
+    <!-- MODAL FORM TAMBAH / EDIT CUSTOMER -->
     <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl p-5 my-8">
             <h3 class="text-lg font-bold mb-3 border-b pb-2" id="customer-modal-title">Data Pelanggan</h3>
@@ -248,7 +251,6 @@
                     <textarea id="input-alamat" placeholder="Alamat kantor..." class="w-full border p-2 rounded text-sm h-14"></textarea>
                 </div>
 
-                <!-- BAGIAN MULTI-PROYEK & NILAI PROYEK DINAMIS -->
                 <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
                     <div class="flex justify-between items-center mb-2">
                         <label class="text-xs font-bold text-blue-900">📋 Daftar Proyek, Nilai & Status</label>
@@ -298,7 +300,7 @@
             <div class="p-5 overflow-y-auto flex-1 space-y-3">
                 <input type="hidden" id="edit-id">
                 <div id="edit-projek-Select-wrapper" class="hidden">
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Proyek</label>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Proyek Tujuan</label>
                     <select id="edit-projek-dropdown" class="w-full border p-2 rounded bg-white font-bold text-sm"></select>
                 </div>
                 <input type="hidden" id="edit-projek">
@@ -319,18 +321,18 @@
         </div>
     </div>
 
-    <!-- MODAL FORM UPLOAD FILE DOKUMEN / LINK GOOGLE DOCS -->
+    <!-- MODAL FORM UPLOAD FILE DOKUMEN / LINK GOOGLE DOCS (PILIH PROYEK) -->
     <div id="document-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border-t-8 border-purple-500">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="text-base font-bold text-gray-800" id="modal-doc-title">Upload Dokumen / Link Google Docs</h3>
+                <h3 class="text-base font-bold text-gray-800" id="modal-doc-title">Upload Dokumen Proyek</h3>
                 <button onclick="toggleModal(false, 'document-detail-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
             <div class="p-5 space-y-3">
                 <input type="hidden" id="doc-id">
-                <div id="doc-customer-wrapper" class="hidden">
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Perusahaan Pemilik Dokumen</label>
-                    <select id="doc-customer-select" class="w-full border p-2 rounded bg-white font-bold text-xs"></select>
+                <div id="doc-project-wrapper">
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Simpan ke Proyek & Perusahaan</label>
+                    <select id="doc-project-select" class="w-full border p-2 rounded bg-white font-bold text-xs"></select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Nama Dokumen / File</label>
@@ -368,7 +370,7 @@
 
     <!-- SCRIPT JAVASCRIPT -->
     <script>
-        let currentProject = "";
+        let currentProject = "__ALL__"; // "__ALL__" = Klik Customer (Semua Proyek), atau Nama Proyek Spesifik
         let currentCustomerId = ""; 
         let currentCompanyName = "";
         let globalCustomers = []; 
@@ -422,17 +424,68 @@
         function toggleModal(show, modalId) { document.getElementById(modalId).classList.toggle('hidden', !show); }
 
         // ==========================================
-        // SHARE DOKUMEN KE WHATSAPP
+        // HELPER PARSE PROYEK & KATEGORI DOKUMEN
         // ==========================================
-        function shareDocToWhatsApp(docName, ptName, url) {
-            const text = `Halo, berikut tautan dokumen *${docName}* (${ptName}):\n${url}`;
-            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-            window.open(waUrl, '_blank');
+        function parseProjects(namaProjekStr, statusProjekStr) {
+            if (!namaProjekStr || !namaProjekStr.trim()) return [];
+            const names = namaProjekStr.split('||').map(s => s.trim()).filter(Boolean);
+            const rawStatuses = (statusProjekStr || '').split('||').map(s => s.trim());
+            return names.map((name, i) => {
+                const raw = rawStatuses[i] || 'On Progress';
+                const parts = raw.split('::');
+                return { name: name, status: parts[0] || 'On Progress', nilai: parts[1] || '' };
+            });
+        }
+
+        // Ekstrak nama proyek dari format kategori_file: "[Nama Proyek] Kategori"
+        function extractDocProjectAndCategory(kategoriStr, customerObj) {
+            const raw = kategoriStr || 'Umum';
+            const match = raw.match(/^\[(.*?)\]\s*(.*)$/);
+            if (match) {
+                return { project: match[1].trim(), category: match[2].trim() || 'Dokumen' };
+            }
+            // Fallback ke proyek pertama milik customer jika dokumen lama belum punya tag [Proyek]
+            if (customerObj && customerObj.nama_projek) {
+                const firstProj = customerObj.nama_projek.split('||')[0].trim();
+                if (firstProj) return { project: firstProj, category: raw };
+            }
+            return { project: 'Umum / Lainnya', category: raw };
+        }
+
+        function getAllProjectsList() {
+            const list = [];
+            globalCustomers.forEach(c => {
+                const projs = parseProjects(c.nama_projek, c.status_projek);
+                if (projs.length === 0) {
+                    list.push({ project: 'Umum', status: 'Aktif', nilai: '', company: c.perusahaan, customerId: c.id });
+                } else {
+                    projs.forEach(p => list.push({ project: p.name, status: p.status, nilai: p.nilai, company: c.perusahaan, customerId: c.id }));
+                }
+            });
+            return list;
+        }
+
+        function populateProjectSelect(selectId, filterCustId = "", selectedProj = "") {
+            const sel = document.getElementById(selectId);
+            const allProjs = getAllProjectsList();
+            const filtered = filterCustId ? allProjs.filter(p => String(p.customerId) === String(filterCustId)) : allProjs;
+            const targetList = filtered.length > 0 ? filtered : allProjs;
+
+            sel.innerHTML = targetList.map(p => {
+                const val = `${p.customerId}||${p.project}`;
+                const isSel = (selectedProj && p.project === selectedProj && (!filterCustId || String(p.customerId) === String(filterCustId))) ? 'selected' : '';
+                return `<option value="${val}" ${isSel}>📁 ${p.project} — 🏢 ${p.company}</option>`;
+            }).join('');
         }
 
         // ==========================================
-        // BUILT-IN PDF & DOCUMENT READER
+        // SHARE DOKUMEN KE WHATSAPP & PDF READER
         // ==========================================
+        function shareDocToWhatsApp(docName, ptName, url) {
+            const text = `Halo, berikut tautan dokumen *${docName}* (${ptName}):\n${url}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
         function openPdfReader(url, title) {
             currentPdfUrl = url;
             useGoogleViewerEngine = false;
@@ -446,7 +499,7 @@
                 document.getElementById('pdf-reader-subtitle').innerText = "Mode: Google Docs Live View";
             } else if (lower.endsWith('.pdf')) {
                 document.getElementById('pdf-reader-frame').src = url;
-                document.getElementById('pdf-reader-subtitle').innerText = "Mode: Built-in PDF Reader (Klik 'Ganti Mode' jika layar kosong di HP)";
+                document.getElementById('pdf-reader-subtitle').innerText = "Mode: Built-in PDF Reader";
             } else {
                 useGoogleViewerEngine = true;
                 document.getElementById('pdf-reader-frame').src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
@@ -459,45 +512,14 @@
             if (!currentPdfUrl) return;
             useGoogleViewerEngine = !useGoogleViewerEngine;
             const frame = document.getElementById('pdf-reader-frame');
-            if (useGoogleViewerEngine) {
-                frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(currentPdfUrl)}&embedded=true`;
-                document.getElementById('pdf-reader-subtitle').innerText = "Mode: Google Document Viewer";
-            } else {
-                frame.src = currentPdfUrl;
-                document.getElementById('pdf-reader-subtitle').innerText = "Mode: Native Browser PDF Reader";
-            }
+            frame.src = useGoogleViewerEngine 
+                ? `https://docs.google.com/gview?url=${encodeURIComponent(currentPdfUrl)}&embedded=true` 
+                : currentPdfUrl;
         }
 
         function closePdfReader() {
             document.getElementById('pdf-reader-frame').src = "";
             toggleModal(false, 'pdf-reader-modal');
-        }
-
-        // ==========================================
-        // HELPER MULTI-PROYEK & NILAI PROYEK
-        // ==========================================
-        function parseProjects(namaProjekStr, statusProjekStr) {
-            if (!namaProjekStr || !namaProjekStr.trim()) return [];
-            const names = namaProjekStr.split('||').map(s => s.trim()).filter(Boolean);
-            const rawStatuses = (statusProjekStr || '').split('||').map(s => s.trim());
-            return names.map((name, i) => {
-                const raw = rawStatuses[i] || 'On Progress';
-                const parts = raw.split('::');
-                return { 
-                    name: name, 
-                    status: parts[0] || 'On Progress',
-                    nilai: parts[1] || ''
-                };
-            });
-        }
-
-        function getAllProjectsList() {
-            const list = [];
-            globalCustomers.forEach(c => {
-                const projs = parseProjects(c.nama_projek, c.status_projek);
-                projs.forEach(p => list.push({ project: p.name, status: p.status, nilai: p.nilai, company: c.perusahaan, customerId: c.id }));
-            });
-            return list;
         }
 
         // ==========================================
@@ -507,11 +529,9 @@
             ['customers', 'documents', 'photos'].forEach(m => {
                 document.getElementById(`section-${m}`).classList.toggle('hidden', m !== menu);
                 const btn = document.getElementById(`nav-${m}`);
-                if (m === menu) {
-                    btn.className = "px-3 py-1 rounded-lg text-xs font-bold bg-white text-blue-700 shadow-sm transition-all";
-                } else {
-                    btn.className = "px-3 py-1 rounded-lg text-xs font-bold text-blue-100 hover:bg-blue-600 transition-all";
-                }
+                btn.className = m === menu 
+                    ? "px-3 py-1 rounded-lg text-xs font-bold bg-white text-blue-700 shadow-sm transition-all"
+                    : "px-3 py-1 rounded-lg text-xs font-bold text-blue-100 hover:bg-blue-600 transition-all";
             });
             if (menu === 'customers') fetchCustomers();
             if (menu === 'documents') fetchGlobalDocuments();
@@ -519,7 +539,7 @@
         }
 
         // ==========================================
-        // MENU 1: CUSTOMER, MULTI-PROYEK & NILAI PROYEK (COMPACT RENDER)
+        // MENU 1: CUSTOMER & PROYEK (KLIK PT = SEMUA, KLIK PROYEK = SPESIFIK)
         // ==========================================
         function filterCustomers() {
             const query = document.getElementById('search-input').value.toLowerCase();
@@ -554,7 +574,8 @@
                 const projectsHtml = projects.length > 0 
                     ? projects.map(p => `
                         <div class="mb-1 flex flex-wrap items-center gap-1 leading-tight">
-                            <button onclick="openDetailView('${c.id}', '${p.name.replace(/'/g, "\\'")}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline text-left text-xs">• ${p.name}</button>
+                            <!-- KLIK PROYEK: Buka khusus dokumen & foto proyek tersebut -->
+                            <button onclick="openDetailView('${c.id}', '${p.name.replace(/'/g, "\\'")}')" class="font-bold text-gray-800 hover:text-blue-600 hover:underline text-left text-xs" title="Klik untuk melihat khusus proyek ${p.name}">📁 ${p.name}</button>
                             ${p.nilai ? `<span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold rounded px-1.5 py-0.2 border border-emerald-200">${p.nilai}</span>` : ''}
                             <span class="text-[10px] bg-blue-50 text-blue-700 rounded px-1.5 py-0.2">${p.status}</span>
                         </div>`).join('')
@@ -563,7 +584,8 @@
                 return `
                 <tr class="hover:bg-blue-50/60 border-b border-gray-100 transition-colors">
                     <td class="px-3 py-2 align-top">
-                        <button onclick="openDetailView('${c.id}')" class="font-bold text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight">${c.perusahaan || '-'}</button>
+                        <!-- KLIK CUSTOMER: Buka semua dokumen & foto dari seluruh proyek PT ini -->
+                        <button onclick="openDetailView('${c.id}', '__ALL__')" class="font-bold text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight" title="Klik untuk melihat semua proyek ${c.perusahaan}">🏢 ${c.perusahaan || '-'}</button>
                         <span class="text-[11px] text-gray-500 block leading-tight mt-0.5 line-clamp-1" title="${c.alamat || ''}">${c.alamat || '-'}</span>
                     </td>
                     <td class="px-3 py-2 align-top leading-tight">
@@ -582,6 +604,391 @@
             }).join('');
         }
 
+        // ==========================================
+        // RENDER BARIS DOKUMEN MEMANJANG KE SAMPING (HORIZONTAL ROW)
+        // ==========================================
+        function buildDocumentRowHtml(d, idx, isGlobal, showProjectBadge = true) {
+            const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
+            const ptName = cust ? cust.perusahaan : 'Perusahaan';
+            const parsed = extractDocProjectAndCategory(d.kategori_file, cust);
+            const url = d.file_url || '';
+            const lower = url.toLowerCase();
+            
+            const isGDocs = lower.includes('docs.google.com') || lower.includes('drive.google.com');
+            const isPdf = lower.endsWith('.pdf');
+            const isWord = lower.endsWith('.html') || lower.endsWith('.docx') || lower.endsWith('.doc');
+            const icon = isPdf ? '📕' : (isGDocs ? '🌐' : '📄');
+
+            const safeUrl = url.replace(/'/g, "\\'");
+            const safeTitle = (d.nama_file || '').replace(/'/g, "\\'");
+            const safePt = (ptName || '').replace(/'/g, "\\'");
+            const dateStr = d.uploaded_at ? new Date(d.uploaded_at).toLocaleDateString('id-ID') : '';
+
+            return `
+            <div class="border border-gray-200 px-3 py-2 rounded-lg bg-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-purple-50/40 hover:border-purple-300 transition-all">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                    <span class="text-base shrink-0">${icon}</span>
+                    <span class="font-bold text-gray-900 text-xs truncate" title="${d.nama_file}">${d.nama_file}</span>
+                    ${showProjectBadge ? `<span class="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded border border-indigo-200 shrink-0">📁 ${parsed.project}</span>` : ''}
+                    ${isGlobal ? `<span class="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded border border-blue-200 shrink-0">🏢 ${ptName}</span>` : ''}
+                    <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-600 font-medium shrink-0">${parsed.category}</span>
+                    ${dateStr ? `<span class="text-[10px] text-gray-400 hidden lg:inline shrink-0">🕒 ${dateStr}</span>` : ''}
+                </div>
+                <div class="flex items-center justify-end gap-1 shrink-0">
+                    ${url ? `<button onclick="openPdfReader('${safeUrl}', '${safeTitle}')" class="bg-red-50 text-red-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-red-100 border border-red-200">👁️ Baca</button>` : ''}
+                    ${url ? `<button onclick="shareDocToWhatsApp('${safeTitle}', '${safePt}', '${safeUrl}')" class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-emerald-100 border border-emerald-200">📲 WA</button>` : ''}
+                    ${isGDocs ? `<a href="${url}" target="_blank" class="bg-green-50 text-green-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-green-100 border border-green-200">🌐 GDocs</a>` : ''}
+                    ${isWord ? `<button onclick="editDocInWordEditor(${idx}, ${isGlobal})" class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-indigo-100 border border-indigo-200">📝 Word</button>` : ''}
+                    ${url && !isGDocs ? `<a href="${url}" target="_blank" download class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-blue-100 border border-blue-200">📥 Unduh</a>` : ''}
+                    <button onclick="openEditDocument(${idx}, ${isGlobal})" class="bg-gray-50 text-gray-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-gray-200 border">✏️ Edit</button>
+                </div>
+            </div>`;
+        }
+
+        // ==========================================
+        // MENU 2: SEMUA DOKUMEN GLOBAL (GROUP BY PROJECT -> CUSTOMER)
+        // ==========================================
+        async function fetchGlobalDocuments() {
+            const list = document.getElementById('global-document-list');
+            list.innerHTML = '<p class="text-xs text-gray-500">Memuat seluruh dokumen...</p>';
+            try {
+                if (globalCustomers.length === 0) {
+                    const cRes = await fetch('/api/index.py');
+                    globalCustomers = await cRes.json();
+                }
+                const res = await fetch('/api/index.py?tipe=all_dokumen');
+                globalDocsData = await res.json();
+                renderGlobalDocumentsList(globalDocsData);
+            } catch (e) { list.innerHTML = '<p class="text-red-500 text-xs">Gagal memuat dokumen.</p>'; }
+        }
+
+        function filterGlobalDocuments() {
+            const q = (document.getElementById('search-doc-input').value || '').toLowerCase();
+            const filtered = globalDocsData.filter(d => {
+                const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
+                const ptName = cust ? (cust.perusahaan || '').toLowerCase() : '';
+                return (d.nama_file && d.nama_file.toLowerCase().includes(q)) ||
+                       (d.kategori_file && d.kategori_file.toLowerCase().includes(q)) ||
+                       ptName.includes(q);
+            });
+            renderGlobalDocumentsList(filtered);
+        }
+
+        function renderGlobalDocumentsList(docsArray) {
+            const list = document.getElementById('global-document-list');
+            if (docsArray.length === 0) {
+                list.innerHTML = '<div class="text-center p-6 bg-white rounded-xl border border-dashed text-gray-500 text-xs">Tidak ada dokumen yang cocok.</div>';
+                return;
+            }
+
+            // Group by Project -> lalu Group by Customer
+            const grouped = {};
+            docsArray.forEach(d => {
+                const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
+                const ptName = cust ? cust.perusahaan : 'Perusahaan Umum';
+                const parsed = extractDocProjectAndCategory(d.kategori_file, cust);
+                const projKey = parsed.project;
+
+                if (!grouped[projKey]) grouped[projKey] = {};
+                if (!grouped[projKey][ptName]) grouped[projKey][ptName] = [];
+                grouped[projKey][ptName].push(d);
+            });
+
+            let html = '';
+            Object.keys(grouped).sort().forEach(projName => {
+                html += `
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="bg-indigo-50 px-4 py-2 border-b border-indigo-100 flex justify-between items-center">
+                        <span class="font-bold text-xs text-indigo-900">📁 Proyek: ${projName}</span>
+                    </div>
+                    <div class="p-3 space-y-3">`;
+                
+                Object.keys(grouped[projName]).sort().forEach(ptName => {
+                    const docs = grouped[projName][ptName];
+                    html += `
+                        <div class="space-y-1.5">
+                            <div class="text-[11px] font-bold text-blue-700 px-1 flex items-center gap-1">🏢 Customer: ${ptName} <span class="text-gray-400 font-normal">(${docs.length} dokumen)</span></div>
+                            <div class="space-y-1.5 pl-2 border-l-2 border-blue-200">
+                                ${docs.map(d => {
+                                    const realIdx = globalDocsData.findIndex(item => item.id === d.id);
+                                    return buildDocumentRowHtml(d, realIdx, false, false);
+                                }).join('')}
+                            </div>
+                        </div>`;
+                });
+
+                html += `</div></div>`;
+            });
+            list.innerHTML = html;
+        }
+
+        // ==========================================
+        // MENU 3: SEMUA FOTO GLOBAL (GROUP BY PROJECT -> CUSTOMER)
+        // ==========================================
+        async function fetchGlobalPhotos() {
+            const gallery = document.getElementById('global-photo-gallery');
+            gallery.innerHTML = '<p class="text-xs text-gray-500">Memuat seluruh foto...</p>';
+            try {
+                if (globalCustomers.length === 0) {
+                    const cRes = await fetch('/api/index.py');
+                    globalCustomers = await cRes.json();
+                }
+                const res = await fetch('/api/index.py?tipe=all_meetings');
+                const allMeetings = await res.json();
+                const withPhotos = allMeetings.filter(m => m.foto_url);
+                projectImages = withPhotos.map(m => m.foto_url);
+
+                if (withPhotos.length === 0) {
+                    gallery.innerHTML = '<div class="text-center p-6 bg-white rounded-xl border border-dashed text-gray-500 text-xs">Belum ada foto yang diunggah.</div>';
+                    return;
+                }
+
+                // Map Proyek ke Customer
+                const projToCompany = {};
+                globalCustomers.forEach(c => {
+                    parseProjects(c.nama_projek, c.status_projek).forEach(p => {
+                        projToCompany[p.name.toLowerCase()] = c.perusahaan;
+                    });
+                });
+
+                // Group by Project -> Customer
+                const grouped = {};
+                withPhotos.forEach((m, idx) => {
+                    const projName = m.nama_projek || 'Proyek Umum';
+                    const ptName = projToCompany[projName.toLowerCase()] || 'Perusahaan';
+                    if (!grouped[projName]) grouped[projName] = {};
+                    if (!grouped[projName][ptName]) grouped[projName][ptName] = [];
+                    grouped[projName][ptName].push({ meeting: m, lightboxIdx: idx });
+                });
+
+                let html = '';
+                Object.keys(grouped).forEach(projName => {
+                    html += `
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="bg-blue-50 px-4 py-2 border-b border-blue-100">
+                            <span class="font-bold text-xs text-blue-900">📁 Proyek: ${projName}</span>
+                        </div>
+                        <div class="p-3 space-y-3">`;
+                    
+                    Object.keys(grouped[projName]).forEach(ptName => {
+                        const items = grouped[projName][ptName];
+                        html += `
+                            <div>
+                                <p class="text-[11px] font-bold text-gray-700 mb-2">🏢 Customer: ${ptName} (${items.length} foto)</p>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                                    ${items.map(item => `
+                                        <div class="bg-gray-50 rounded-lg border overflow-hidden group cursor-pointer flex flex-col" onclick="openLightbox(${item.lightboxIdx})">
+                                            <div class="aspect-square overflow-hidden bg-gray-200">
+                                                <img src="${item.meeting.foto_url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                            </div>
+                                            <div class="p-1.5">
+                                                <p class="text-[11px] text-gray-800 font-bold truncate">${item.meeting.judul || 'Dokumentasi'}</p>
+                                                <p class="text-[10px] text-gray-400">📅 ${item.meeting.tanggal || '-'}</p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>`;
+                    });
+
+                    html += `</div></div>`;
+                });
+                gallery.innerHTML = html;
+            } catch (e) { gallery.innerHTML = '<p class="text-red-500 text-xs">Gagal memuat foto.</p>'; }
+        }
+
+        function openGlobalPhotoModal() {
+            isGlobalPhotoUpload = true;
+            const projs = getAllProjectsList();
+            if (projs.length === 0) { alert("Tambahkan Customer dan Proyek terlebih dahulu."); return; }
+            
+            document.getElementById('modal-progress-title').innerText = "Upload Foto Progress Baru";
+            document.getElementById('edit-id').value = "";
+            document.getElementById('edit-projek-Select-wrapper').classList.remove('hidden');
+            document.getElementById('edit-projek-dropdown').innerHTML = projs.map(p => `<option value="${p.project}">📁 ${p.project} — 🏢 ${p.company}</option>`).join('');
+            document.getElementById('edit-tanggal').value = new Date().toISOString().split('T')[0];
+            document.getElementById('edit-jam').value = "10:00";
+            document.getElementById('edit-judul').value = "";
+            document.getElementById('edit-mom').value = "";
+            document.getElementById('edit-foto').value = "";
+            toggleModal(true, 'meeting-detail-modal');
+        }
+
+        // ==========================================
+        // DETAIL VIEW: KLIK CUSTOMER (__ALL__) VS KLIK PROYEK SPESIFIK
+        // ==========================================
+        function openDetailView(customerId, selectedMode = "__ALL__") {
+            const c = globalCustomers.find(item => String(item.id) === String(customerId));
+            if (!c) return;
+            currentCustomerId = c.id;
+            currentCompanyName = c.perusahaan || 'Perusahaan';
+
+            const projs = parseProjects(c.nama_projek, c.status_projek);
+            const switcher = document.getElementById('detail-project-switcher');
+            
+            currentProject = selectedMode || "__ALL__";
+            let optionsHtml = `<option value="__ALL__" ${currentProject === '__ALL__' ? 'selected' : ''}>🌐 Semua Proyek (${projs.length} Proyek)</option>`;
+            projs.forEach(p => {
+                optionsHtml += `<option value="${p.name}" ${p.name === currentProject ? 'selected' : ''}>📁 Proyek: ${p.name} ${p.nilai ? '[' + p.nilai + ']' : ''}</option>`;
+            });
+            switcher.innerHTML = optionsHtml;
+
+            updateDetailHeaderLabels();
+            document.getElementById('dashboard-view').classList.add('hidden'); document.getElementById('dashboard-view').classList.remove('flex');
+            document.getElementById('detail-view').classList.remove('hidden'); document.getElementById('detail-view').classList.add('flex');
+            
+            fetchMeetingsAndPhotos(); fetchDocuments();
+        }
+
+        function updateDetailHeaderLabels() {
+            document.getElementById('detail-header-title').innerText = currentCompanyName;
+            if (currentProject === '__ALL__') {
+                document.getElementById('detail-header-subtitle').innerText = "Mode Customer: Menampilkan Gabungan Semua Proyek";
+                document.getElementById('left-panel-title').innerText = "📝 Riwayat Semua Proyek";
+                document.getElementById('right-top-title').innerText = "🖼️ Foto Semua Proyek (Group by Proyek)";
+                document.getElementById('right-bottom-title').innerText = "📂 Dokumen Semua Proyek (Group by Proyek)";
+            } else {
+                document.getElementById('detail-header-subtitle').innerText = `Mode Fokus Proyek: ${currentProject}`;
+                document.getElementById('left-panel-title').innerText = `📝 Riwayat: ${currentProject}`;
+                document.getElementById('right-top-title').innerText = `🖼️ Foto Proyek: ${currentProject}`;
+                document.getElementById('right-bottom-title').innerText = `📂 Dokumen Proyek: ${currentProject}`;
+            }
+        }
+
+        function switchActiveProject(projName) {
+            currentProject = projName;
+            updateDetailHeaderLabels();
+            fetchMeetingsAndPhotos();
+            renderCustomerDocuments();
+        }
+
+        function closeDetailView() {
+            document.getElementById('detail-view').classList.add('hidden'); document.getElementById('detail-view').classList.remove('flex');
+            document.getElementById('dashboard-view').classList.remove('hidden'); document.getElementById('dashboard-view').classList.add('flex');
+            fetchCustomers();
+        }
+
+        async function fetchMeetingsAndPhotos() {
+            const list = document.getElementById('meeting-list'); const gallery = document.getElementById('photo-gallery');
+            list.innerHTML = '<p class="text-xs text-center">Memuat...</p>'; gallery.innerHTML = '';
+
+            try {
+                const res = await fetch(`/api/index.py?tipe=meeting&projek=${encodeURIComponent(currentProject)}&customer_id=${encodeURIComponent(currentCustomerId)}`);
+                meetingsData = await res.json();
+                const withPhotos = meetingsData.filter(m => m.foto_url);
+                projectImages = withPhotos.map(m => m.foto_url);
+
+                // RENDER GALERI FOTO (Group by Project jika mode __ALL__)
+                if (withPhotos.length === 0) {
+                    gallery.innerHTML = '<div class="text-center py-6 text-gray-400 text-xs">Belum ada foto.</div>';
+                } else if (currentProject === '__ALL__') {
+                    const groupedPhotos = {};
+                    withPhotos.forEach((m, idx) => {
+                        const pKey = m.nama_projek || 'Umum';
+                        if (!groupedPhotos[pKey]) groupedPhotos[pKey] = [];
+                        groupedPhotos[pKey].push({ m, idx });
+                    });
+                    gallery.innerHTML = Object.keys(groupedPhotos).map(pKey => `
+                        <div class="bg-white p-2.5 rounded-lg border border-gray-200">
+                            <p class="text-[11px] font-bold text-indigo-800 mb-2">📁 Proyek: ${pKey}</p>
+                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                                ${groupedPhotos[pKey].map(item => `
+                                    <div class="relative group cursor-pointer aspect-square" onclick="openLightbox(${item.idx})">
+                                        <img src="${item.m.foto_url}" class="w-full h-full object-cover rounded-lg border shadow-sm group-hover:scale-105 transition-all">
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    gallery.innerHTML = `<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5">` +
+                        projectImages.map((url, idx) => `
+                        <div class="relative group cursor-pointer aspect-square" onclick="openLightbox(${idx})">
+                            <img src="${url}" class="w-full h-full object-cover rounded-xl border border-gray-200 shadow-sm group-hover:scale-105 transition-all">
+                        </div>`).join('') + `</div>`;
+                }
+
+                // RENDER RIWAYAT MEETING
+                if (meetingsData.length === 0) { 
+                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl text-xs">Belum ada riwayat meeting.</div>'; return; 
+                }
+                
+                list.innerHTML = meetingsData.map((m, idx) => `
+                    <div class="border p-3 rounded-xl bg-white shadow-sm hover:border-blue-300 transition-colors">
+                        <div class="flex justify-between items-start mb-1">
+                            <div>
+                                ${currentProject === '__ALL__' ? `<span class="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded border border-indigo-200 inline-block mb-1">📁 ${m.nama_projek}</span>` : ''}
+                                <p class="font-bold text-gray-800 text-sm pr-2">${m.judul}</p>
+                            </div>
+                            <div class="text-right text-[11px] text-gray-500 shrink-0">
+                                <span class="bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded block mb-0.5">${m.tanggal || '-'}</span>
+                                🕒 ${m.jam || '-'}
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-600 mb-2 whitespace-pre-wrap">${m.mom || ''}</p>
+                        <div class="flex justify-between items-center border-t border-dashed pt-2">
+                            ${m.foto_url ? `<span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">📸 Ada Foto</span>` : `<span></span>`}
+                            <button onclick="openEditMeeting(${idx})" class="bg-gray-100 text-gray-700 text-[11px] px-3 py-1 rounded font-bold hover:bg-gray-200">✏️ Edit</button>
+                        </div>
+                    </div>`).join('');
+            } catch (e) { list.innerHTML = '<p class="text-red-500 text-xs">Error.</p>'; }
+        }
+
+        // --- MANAJEMEN DOKUMEN DI DETAIL PERUSAHAAN (LIST MEMANJANG & GROUP BY PROYEK) ---
+        async function fetchDocuments() {
+            const list = document.getElementById('document-list'); list.innerHTML = '<p class="text-xs text-center">Memuat dokumen...</p>';
+            try {
+                const res = await fetch('/api/index.py?tipe=dokumen&projek=Umum&customer_id=' + encodeURIComponent(currentCustomerId));
+                documentsData = await res.json();
+                renderCustomerDocuments();
+            } catch (e) { list.innerHTML = '<p class="text-red-500 text-xs">Error memuat dokumen.</p>'; }
+        }
+
+        function renderCustomerDocuments() {
+            const list = document.getElementById('document-list');
+            const cust = globalCustomers.find(c => String(c.id) === String(currentCustomerId));
+
+            if (documentsData.length === 0) {
+                list.innerHTML = '<div class="text-center p-4 text-gray-500 border rounded-lg border-dashed text-xs">Belum ada file dokumen.</div>';
+                return;
+            }
+
+            if (currentProject === '__ALL__') {
+                // Jika klik Customer: Tampilkan semua dokumen milik Customer ini, dikelompokkan per Proyek
+                const grouped = {};
+                documentsData.forEach((d, idx) => {
+                    const parsed = extractDocProjectAndCategory(d.kategori_file, cust);
+                    if (!grouped[parsed.project]) grouped[parsed.project] = [];
+                    grouped[parsed.project].push({ d, idx });
+                });
+
+                list.innerHTML = Object.keys(grouped).map(projName => `
+                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden mb-2.5">
+                        <div class="bg-indigo-50/70 px-3 py-1.5 border-b border-indigo-100 font-bold text-xs text-indigo-900">
+                            📁 Proyek: ${projName} (${grouped[projName].length} dokumen)
+                        </div>
+                        <div class="p-2 space-y-1.5">
+                            ${grouped[projName].map(item => buildDocumentRowHtml(item.d, item.idx, false, false)).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                // Jika klik Proyek spesifik: Filter hanya dokumen milik proyek tersebut
+                const filtered = documentsData
+                    .map((d, idx) => ({ d, idx, parsed: extractDocProjectAndCategory(d.kategori_file, cust) }))
+                    .filter(item => item.parsed.project.toLowerCase() === currentProject.toLowerCase());
+
+                if (filtered.length === 0) {
+                    list.innerHTML = `<div class="text-center p-4 text-gray-500 border rounded-lg border-dashed text-xs">Belum ada dokumen khusus di proyek <b>${currentProject}</b>.</div>`;
+                    return;
+                }
+                list.innerHTML = filtered.map(item => buildDocumentRowHtml(item.d, item.idx, false, false)).join('');
+            }
+        }
+
+        // ==========================================
+        // FORM CUSTOMER, PROGRESS, DOKUMEN & WORD STUDIO
+        // ==========================================
         function populateReferralDropdown(selectedVal = "") {
             const sel = document.getElementById('input-dibawa-oleh-select');
             const customInput = document.getElementById('input-dibawa-oleh-custom');
@@ -601,12 +1008,9 @@
             sel.innerHTML = options;
 
             if (selectedVal && !found) {
-                sel.value = "__custom__";
-                customInput.classList.remove('hidden');
-                customInput.value = selectedVal;
+                sel.value = "__custom__"; customInput.classList.remove('hidden'); customInput.value = selectedVal;
             } else {
-                customInput.classList.add('hidden');
-                customInput.value = "";
+                customInput.classList.add('hidden'); customInput.value = "";
             }
         }
 
@@ -670,10 +1074,7 @@
                 const n = row.querySelector('.proj-name').value.trim();
                 const s = row.querySelector('.proj-status').value.trim() || 'On Progress';
                 const v = row.querySelector('.proj-nilai').value.trim();
-                if (n) { 
-                    projNames.push(n); 
-                    projStatuses.push(v ? `${s}::${v}` : s); 
-                }
+                if (n) { projNames.push(n); projStatuses.push(v ? `${s}::${v}` : s); }
             });
 
             const selRef = document.getElementById('input-dibawa-oleh-select').value;
@@ -705,147 +1106,13 @@
             fetchCustomers();
         }
 
-        // ==========================================
-        // RENDER ITEM DOKUMEN (JUDUL JELAS, TOMBOL KECIL, SHARE WA)
-        // ==========================================
-        function buildDocumentCardHtml(d, idx, isGlobal) {
-            const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
-            const ptName = cust ? cust.perusahaan : 'Perusahaan';
-            const url = d.file_url || '';
-            const lower = url.toLowerCase();
-            
-            const isGDocs = lower.includes('docs.google.com') || lower.includes('drive.google.com');
-            const isPdf = lower.endsWith('.pdf');
-            const isWord = lower.endsWith('.html') || lower.endsWith('.docx') || lower.endsWith('.doc');
-            const icon = isPdf ? '📕' : (isGDocs ? '🌐' : '📄');
-
-            const safeUrl = url.replace(/'/g, "\\'");
-            const safeTitle = (d.nama_file || '').replace(/'/g, "\\'");
-            const safePt = (ptName || '').replace(/'/g, "\\'");
-
-            return `
-            <div class="border border-gray-200 p-3 rounded-xl bg-white shadow-sm flex flex-col justify-between gap-2 hover:border-purple-400 transition-all">
-                <div class="flex items-start gap-2.5">
-                    <div class="text-xl bg-purple-50 p-2 rounded-lg shrink-0">${icon}</div>
-                    <div class="min-w-0 flex-1">
-                        <p class="font-bold text-gray-900 text-xs leading-snug break-words line-clamp-2" title="${d.nama_file}">${d.nama_file}</p>
-                        <div class="flex flex-wrap items-center gap-1.5 mt-1">
-                            ${isGlobal ? `<span class="text-[10px] font-bold text-blue-600">🏢 ${ptName}</span>` : ''}
-                            <span class="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 font-medium">${d.kategori_file || 'Dokumen'}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center justify-end gap-1 pt-1.5 border-t border-gray-100">
-                    ${url ? `<button onclick="openPdfReader('${safeUrl}', '${safeTitle}')" class="bg-red-50 text-red-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-red-100 border border-red-200" title="Baca / Preview">👁️ Baca</button>` : ''}
-                    ${url ? `<button onclick="shareDocToWhatsApp('${safeTitle}', '${safePt}', '${safeUrl}')" class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-emerald-100 border border-emerald-200" title="Bagikan ke WhatsApp">📲 WA</button>` : ''}
-                    ${isGDocs ? `<a href="${url}" target="_blank" class="bg-green-50 text-green-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-green-100 border border-green-200">🌐 GDocs</a>` : ''}
-                    ${isWord ? `<button onclick="editDocInWordEditor(${idx}, ${isGlobal})" class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-indigo-100 border border-indigo-200" title="Edit di Word Studio">📝 Word</button>` : ''}
-                    ${url && !isGDocs ? `<a href="${url}" target="_blank" download class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-blue-100 border border-blue-200" title="Unduh File">📥 Unduh</a>` : ''}
-                    <button onclick="openEditDocument(${idx}, ${isGlobal})" class="bg-gray-50 text-gray-700 px-2 py-0.5 rounded font-bold text-[10px] hover:bg-gray-200 border" title="Ubah Nama / File">✏️ Edit</button>
-                </div>
-            </div>`;
-        }
-
-        // ==========================================
-        // MENU 2: SEMUA DOKUMEN GLOBAL + LIVE SEARCH
-        // ==========================================
-        async function fetchGlobalDocuments() {
-            const list = document.getElementById('global-document-list');
-            list.innerHTML = '<p class="text-xs text-gray-500">Memuat seluruh dokumen...</p>';
-            try {
-                if (globalCustomers.length === 0) {
-                    const cRes = await fetch('/api/index.py');
-                    globalCustomers = await cRes.json();
-                }
-                const res = await fetch('/api/index.py?tipe=all_dokumen');
-                globalDocsData = await res.json();
-                renderGlobalDocumentsList(globalDocsData);
-            } catch (e) { list.innerHTML = '<p class="text-red-500 text-xs">Gagal memuat dokumen.</p>'; }
-        }
-
-        function filterGlobalDocuments() {
-            const q = (document.getElementById('search-doc-input').value || '').toLowerCase();
-            const filtered = globalDocsData.filter(d => {
-                const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
-                const ptName = cust ? (cust.perusahaan || '').toLowerCase() : '';
-                return (d.nama_file && d.nama_file.toLowerCase().includes(q)) ||
-                       (d.kategori_file && d.kategori_file.toLowerCase().includes(q)) ||
-                       ptName.includes(q);
-            });
-            renderGlobalDocumentsList(filtered);
-        }
-
-        function renderGlobalDocumentsList(docsArray) {
-            const list = document.getElementById('global-document-list');
-            if (docsArray.length === 0) {
-                list.innerHTML = '<div class="col-span-2 text-center p-6 bg-white rounded-xl border border-dashed text-gray-500 text-xs">Tidak ada dokumen yang cocok.</div>';
-                return;
-            }
-            list.innerHTML = docsArray.map(d => {
-                const realIdx = globalDocsData.findIndex(item => item.id === d.id);
-                return buildDocumentCardHtml(d, realIdx, true);
-            }).join('');
-        }
-
-        // ==========================================
-        // MENU 3: SEMUA FOTO GLOBAL
-        // ==========================================
-        async function fetchGlobalPhotos() {
-            const gallery = document.getElementById('global-photo-gallery');
-            gallery.innerHTML = '<p class="text-xs text-gray-500">Memuat seluruh foto...</p>';
-            try {
-                const res = await fetch('/api/index.py?tipe=all_meetings');
-                const allMeetings = await res.json();
-                const withPhotos = allMeetings.filter(m => m.foto_url);
-                projectImages = withPhotos.map(m => m.foto_url);
-
-                if (withPhotos.length === 0) {
-                    gallery.innerHTML = '<div class="col-span-full text-center p-6 bg-white rounded-xl border border-dashed text-gray-500 text-xs">Belum ada foto yang diunggah.</div>';
-                    return;
-                }
-                gallery.innerHTML = withPhotos.map((m, idx) => `
-                    <div class="bg-white rounded-xl border shadow-sm overflow-hidden group cursor-pointer flex flex-col" onclick="openLightbox(${idx})">
-                        <div class="aspect-square overflow-hidden bg-gray-100">
-                            <img src="${m.foto_url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                        </div>
-                        <div class="p-2">
-                            <p class="font-bold text-[11px] text-blue-700 truncate">${m.nama_projek || '-'}</p>
-                            <p class="text-[11px] text-gray-800 font-medium truncate">${m.judul || 'Dokumentasi'}</p>
-                            <p class="text-[10px] text-gray-400 mt-0.5">📅 ${m.tanggal || '-'}</p>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) { gallery.innerHTML = '<p class="text-red-500 text-xs">Gagal memuat foto.</p>'; }
-        }
-
-        function openGlobalPhotoModal() {
-            isGlobalPhotoUpload = true;
-            const projs = getAllProjectsList();
-            if (projs.length === 0) { alert("Tambahkan Customer dan Proyek terlebih dahulu."); return; }
-            
-            document.getElementById('modal-progress-title').innerText = "Upload Foto Progress Baru";
-            document.getElementById('edit-id').value = "";
-            document.getElementById('edit-projek-Select-wrapper').classList.remove('hidden');
-            document.getElementById('edit-projek-dropdown').innerHTML = projs.map(p => `<option value="${p.project}">${p.company} — ${p.project}</option>`).join('');
-            document.getElementById('edit-tanggal').value = new Date().toISOString().split('T')[0];
-            document.getElementById('edit-jam').value = "10:00";
-            document.getElementById('edit-judul').value = "";
-            document.getElementById('edit-mom').value = "";
-            document.getElementById('edit-foto').value = "";
-            toggleModal(true, 'meeting-detail-modal');
-        }
-
-        // ==========================================
-        // PLUGIN EDITOR WORD STUDIO PRO (TINYMCE)
-        // ==========================================
-        function openWordEditor(preselectedCustomerId = "") {
+        // --- WORD STUDIO PRO ---
+        function openWordEditor(preselectedCustId = "", preselectedProj = "") {
             if (globalCustomers.length === 0) { alert("Tambahkan data Customer terlebih dahulu."); return; }
             document.getElementById('word-doc-id').value = "";
             document.getElementById('word-doc-title').value = "";
             setEditorHtml("<h2>Judul Dokumen / Surat</h2><p>Ketik isi dokumen, tabel, atau kontrak kerja di sini...</p>");
-            
-            const sel = document.getElementById('word-customer-select');
-            sel.innerHTML = globalCustomers.map(c => `<option value="${c.id}" ${String(c.id) === String(preselectedCustomerId) ? 'selected' : ''}>${c.perusahaan}</option>`).join('');
+            populateProjectSelect('word-project-select', preselectedCustId, preselectedProj);
             toggleModal(true, 'word-editor-modal');
         }
 
@@ -866,7 +1133,9 @@
 
         async function editDocInWordEditor(idx, fromGlobal = false) {
             const d = fromGlobal ? globalDocsData[idx] : documentsData[idx];
-            openWordEditor(d.customer_id);
+            const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
+            const parsed = extractDocProjectAndCategory(d.kategori_file, cust);
+            openWordEditor(d.customer_id, parsed.project);
             document.getElementById('word-doc-id').value = d.id;
             document.getElementById('word-doc-title').value = d.nama_file;
             setEditorHtml("<p><i>Memuat isi dokumen dari server...</i></p>");
@@ -904,7 +1173,7 @@
 
         async function saveWordToCloud(e) {
             const btn = e.target; btn.disabled = true; btn.innerText = "Menyimpan...";
-            const custId = document.getElementById('word-customer-select').value;
+            const [custId, projName] = document.getElementById('word-project-select').value.split('||');
             const title = document.getElementById('word-doc-title').value.trim() || 'Dokumen Word Baru';
             const docId = document.getElementById('word-doc-id').value;
             const htmlContent = getEditorHtml();
@@ -915,10 +1184,10 @@
             const formData = new FormData();
             formData.append('action', 'dokumen');
             formData.append('customer_id', custId);
-            formData.append('nama_projek', currentProject || 'Umum');
+            formData.append('nama_projek', projName || 'Umum');
             if (docId) formData.append('id', docId);
             formData.append('nama_file', title);
-            formData.append('kategori_file', 'Word Studio Doc');
+            formData.append('kategori_file', `[${projName || 'Umum'}] Word Studio Doc`);
             formData.append('file', file);
 
             try {
@@ -927,20 +1196,18 @@
                     toggleModal(false, 'word-editor-modal');
                     if (!document.getElementById('section-documents').classList.contains('hidden')) fetchGlobalDocuments();
                     if (!document.getElementById('detail-view').classList.contains('hidden')) fetchDocuments();
-                    alert("Dokumen berhasil disimpan ke Cloud CRM!");
+                    alert("Dokumen berhasil disimpan ke proyek " + projName + "!");
                 } else alert("Gagal menyimpan dokumen.");
             } catch (err) { alert("Error jaringan."); }
             btn.disabled = false; btn.innerText = "☁️ Simpan ke Cloud CRM";
         }
 
-        // ==========================================
-        // FITUR JADWAL & GOOGLE CALENDAR
-        // ==========================================
+        // --- JADWAL & PROGRESS ---
         function openScheduleModal() {
             const select = document.getElementById('sched-projek');
             const allProjs = getAllProjectsList();
             if (allProjs.length === 0) { alert("Belum ada proyek terdaftar."); return; }
-            select.innerHTML = allProjs.map(p => `<option value="${p.project}">${p.company} — ${p.project}</option>`).join('');
+            select.innerHTML = allProjs.map(p => `<option value="${p.project}">📁 ${p.project} — 🏢 ${p.company}</option>`).join('');
             document.getElementById('sched-tanggal').value = ''; document.getElementById('sched-jam').value = ''; document.getElementById('sched-judul').value = '';
             toggleModal(true, 'schedule-modal');
         }
@@ -975,87 +1242,6 @@
             btn.disabled = false;
         }
 
-        // ==========================================
-        // DETAIL VIEW PERUSAHAAN & MULTI-PROYEK SWITCHER
-        // ==========================================
-        function openDetailView(customerId, preferredProject = "") {
-            const c = globalCustomers.find(item => String(item.id) === String(customerId));
-            if (!c) return;
-            currentCustomerId = c.id;
-            currentCompanyName = c.perusahaan || 'Perusahaan';
-
-            const projs = parseProjects(c.nama_projek, c.status_projek);
-            const switcher = document.getElementById('detail-project-switcher');
-            
-            if (projs.length === 0) {
-                currentProject = "";
-                switcher.innerHTML = `<option value="">Belum ada proyek</option>`;
-            } else {
-                currentProject = preferredProject || projs[0].name;
-                switcher.innerHTML = projs.map(p => `<option value="${p.name}" ${p.name === currentProject ? 'selected' : ''}>${p.name} ${p.nilai ? '[' + p.nilai + ']' : ''} (${p.status})</option>`).join('');
-            }
-
-            document.getElementById('detail-header-title').innerText = currentCompanyName;
-            document.getElementById('dashboard-view').classList.add('hidden'); document.getElementById('dashboard-view').classList.remove('flex');
-            document.getElementById('detail-view').classList.remove('hidden'); document.getElementById('detail-view').classList.add('flex');
-            
-            fetchMeetingsAndPhotos(); fetchDocuments();
-        }
-
-        function switchActiveProject(projName) {
-            currentProject = projName;
-            fetchMeetingsAndPhotos();
-        }
-
-        function closeDetailView() {
-            document.getElementById('detail-view').classList.add('hidden'); document.getElementById('detail-view').classList.remove('flex');
-            document.getElementById('dashboard-view').classList.remove('hidden'); document.getElementById('dashboard-view').classList.add('flex');
-            fetchCustomers();
-        }
-
-        async function fetchMeetingsAndPhotos() {
-            const list = document.getElementById('meeting-list'); const gallery = document.getElementById('photo-gallery');
-            list.innerHTML = '<p class="text-xs text-center">Memuat...</p>'; gallery.innerHTML = '';
-
-            try {
-                if(!currentProject) {
-                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl text-xs">Belum ada proyek. Klik Edit pada perusahaan ini untuk menambah proyek.</div>'; return;
-                }
-                const res = await fetch('/api/index.py?tipe=meeting&projek=' + encodeURIComponent(currentProject));
-                meetingsData = await res.json();
-                projectImages = meetingsData.filter(m => m.foto_url).map(m => m.foto_url);
-
-                if(projectImages.length === 0) {
-                    gallery.innerHTML = '<div class="col-span-full text-center py-6 text-gray-400 text-xs">Belum ada foto di proyek ini.</div>';
-                } else {
-                    gallery.innerHTML = projectImages.map((url, idx) => `
-                        <div class="relative group cursor-pointer aspect-square" onclick="openLightbox(${idx})">
-                            <img src="${url}" class="w-full h-full object-cover rounded-xl border border-gray-200 shadow-sm group-hover:scale-105 transition-all">
-                        </div>`).join('');
-                }
-
-                if(meetingsData.length === 0) { 
-                    list.innerHTML = '<div class="text-center p-4 text-gray-500 border border-dashed rounded-xl text-xs">Belum ada progress di proyek ini.</div>'; return; 
-                }
-                
-                list.innerHTML = meetingsData.map((m, idx) => `
-                    <div class="border p-3 rounded-xl bg-white shadow-sm hover:border-blue-300 transition-colors">
-                        <div class="flex justify-between items-start mb-1.5">
-                            <span class="font-bold text-gray-800 text-sm pr-2">${m.judul}</span>
-                            <div class="text-right text-[11px] text-gray-500 shrink-0">
-                                <span class="bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded block mb-0.5">${m.tanggal || '-'}</span>
-                                🕒 ${m.jam || '-'}
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-600 mb-2 whitespace-pre-wrap">${m.mom || ''}</p>
-                        ${m.foto_url ? `<span class="inline-block text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold mb-2">📸 Ada Foto Lampiran</span>` : ''}
-                        <div class="flex justify-end border-t border-dashed pt-2">
-                            <button onclick="openEditMeeting(${idx})" class="bg-gray-100 text-gray-700 text-[11px] px-3 py-1 rounded font-bold hover:bg-gray-200">✏️ Edit</button>
-                        </div>
-                    </div>`).join('');
-            } catch (e) { list.innerHTML = '<p class="text-red-500 text-xs">Error.</p>'; }
-        }
-
         function openLightbox(index) { currentImageIndex = index; updateLightboxView(); toggleModal(true, 'lightbox-modal'); }
         function updateLightboxView() {
             document.getElementById('lightbox-img').src = projectImages[currentImageIndex];
@@ -1066,9 +1252,19 @@
 
         function openAddProgress() {
             isGlobalPhotoUpload = false;
-            document.getElementById('edit-projek-Select-wrapper').classList.add('hidden');
-            document.getElementById('modal-progress-title').innerText = `Tambah Progress (${currentProject})`;
-            document.getElementById('edit-id').value = ""; document.getElementById('edit-projek').value = currentProject;
+            const c = globalCustomers.find(item => String(item.id) === String(currentCustomerId));
+            const projs = c ? parseProjects(c.nama_projek, c.status_projek) : [];
+
+            if (currentProject === '__ALL__') {
+                document.getElementById('edit-projek-Select-wrapper').classList.remove('hidden');
+                document.getElementById('edit-projek-dropdown').innerHTML = projs.map(p => `<option value="${p.name}">📁 ${p.name}</option>`).join('');
+                document.getElementById('modal-progress-title').innerText = `Tambah Progress / Foto Baru`;
+            } else {
+                document.getElementById('edit-projek-Select-wrapper').classList.add('hidden');
+                document.getElementById('edit-projek').value = currentProject;
+                document.getElementById('modal-progress-title').innerText = `Tambah Progress (${currentProject})`;
+            }
+            document.getElementById('edit-id').value = "";
             document.getElementById('edit-tanggal').value = new Date().toISOString().split('T')[0];
             document.getElementById('edit-jam').value = "";
             document.getElementById('edit-judul').value = ""; document.getElementById('edit-mom').value = "";
@@ -1092,7 +1288,9 @@
             e.target.disabled = true; const formData = new FormData();
             formData.append('action', 'meeting');
             if (document.getElementById('edit-id').value) formData.append('id', document.getElementById('edit-id').value);
-            const targetProj = isGlobalPhotoUpload ? document.getElementById('edit-projek-dropdown').value : document.getElementById('edit-projek').value;
+            const useDropdown = isGlobalPhotoUpload || (currentProject === '__ALL__' && !document.getElementById('edit-id').value);
+            const targetProj = useDropdown ? document.getElementById('edit-projek-dropdown').value : document.getElementById('edit-projek').value;
+            
             formData.append('nama_projek', targetProj);
             formData.append('tanggal', document.getElementById('edit-tanggal').value);
             formData.append('jam', document.getElementById('edit-jam').value);
@@ -1108,56 +1306,46 @@
             e.target.disabled = false;
         }
 
-        // --- MANAJEMEN DOKUMEN PERUSAHAAN ---
-        async function fetchDocuments() {
-            const list = document.getElementById('document-list'); list.innerHTML = '<p class="text-xs text-center">Memuat dokumen...</p>';
-            try {
-                const res = await fetch('/api/index.py?tipe=dokumen&projek=' + encodeURIComponent(currentProject || 'Umum') + '&customer_id=' + encodeURIComponent(currentCustomerId));
-                documentsData = await res.json();
-                if(documentsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500 border rounded-lg border-dashed text-xs">Belum ada file dokumen.</div>'; return; }
-                list.innerHTML = documentsData.map((d, idx) => buildDocumentCardHtml(d, idx, false)).join('');
-            } catch (e) { list.innerHTML = '<p class="text-red-500 text-xs">Error memuat dokumen.</p>'; }
-        }
-
+        // --- MODAL UPLOAD / EDIT DOKUMEN ---
         function openDocModal(isGlobal = false) {
             isGlobalDocUpload = isGlobal;
-            document.getElementById('modal-doc-title').innerText = "Upload Dokumen / Link Google Docs";
+            document.getElementById('modal-doc-title').innerText = "Upload Dokumen ke Proyek";
             document.getElementById('doc-id').value = ""; document.getElementById('doc-url-lama').value = "";
             document.getElementById('doc-nama').value = ""; document.getElementById('doc-kategori').value = ""; 
             document.getElementById('doc-file').value = ""; 
             
-            const wrap = document.getElementById('doc-customer-wrapper');
-            if (isGlobal) {
-                wrap.classList.remove('hidden');
-                document.getElementById('doc-customer-select').innerHTML = globalCustomers.map(c => `<option value="${c.id}">${c.perusahaan}</option>`).join('');
-            } else {
-                wrap.classList.add('hidden');
-            }
+            populateProjectSelect('doc-project-select', isGlobal ? "" : currentCustomerId, currentProject === '__ALL__' ? "" : currentProject);
             toggleModal(true, 'document-detail-modal');
         }
 
         function openEditDocument(index, isGlobal = false) {
             isGlobalDocUpload = isGlobal;
             const d = isGlobal ? globalDocsData[index] : documentsData[index];
+            const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
+            const parsed = extractDocProjectAndCategory(d.kategori_file, cust);
+
             document.getElementById('modal-doc-title').innerText = "Edit Dokumen";
             document.getElementById('doc-id').value = d.id; document.getElementById('doc-url-lama').value = d.file_url || "";
-            document.getElementById('doc-nama').value = d.nama_file; document.getElementById('doc-kategori').value = d.kategori_file || ""; 
+            document.getElementById('doc-nama').value = d.nama_file; 
+            document.getElementById('doc-kategori').value = parsed.category; 
             document.getElementById('doc-file').value = "";
-            document.getElementById('doc-customer-wrapper').classList.add('hidden');
-            currentCustomerId = d.customer_id;
+            
+            populateProjectSelect('doc-project-select', d.customer_id, parsed.project);
             toggleModal(true, 'document-detail-modal');
         }
 
         async function saveDocument(e) {
             const btn = e.target; btn.disabled = true; btn.innerText = "Menyimpan...";
             const formData = new FormData();
-            const targetCustId = isGlobalDocUpload && !document.getElementById('doc-id').value 
-                ? document.getElementById('doc-customer-select').value 
-                : currentCustomerId;
+            const [targetCustId, targetProj] = document.getElementById('doc-project-select').value.split('||');
+            const rawCat = document.getElementById('doc-kategori').value.trim() || 'Dokumen';
 
-            formData.append('action', 'dokumen'); formData.append('customer_id', targetCustId); formData.append('nama_projek', currentProject || 'Umum'); 
+            formData.append('action', 'dokumen'); 
+            formData.append('customer_id', targetCustId); 
+            formData.append('nama_projek', targetProj || 'Umum'); 
             if (document.getElementById('doc-id').value) formData.append('id', document.getElementById('doc-id').value);
-            formData.append('nama_file', document.getElementById('doc-nama').value); formData.append('kategori_file', document.getElementById('doc-kategori').value);
+            formData.append('nama_file', document.getElementById('doc-nama').value); 
+            formData.append('kategori_file', `[${targetProj || 'Umum'}] ${rawCat}`);
             formData.append('file_url_lama', document.getElementById('doc-url-lama').value);
             const file = document.getElementById('doc-file').files[0]; if(file) formData.append('file', file);
 
