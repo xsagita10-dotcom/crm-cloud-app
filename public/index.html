@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud CRM & Document Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Plugin Editor Word (Quill.js & Mammoth.js untuk baca DOCX) -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <!-- Plugin Editor Word Advanced (TinyMCE) & Mammoth.js untuk baca DOCX -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 </head>
 <body class="bg-gray-100 font-sans text-gray-900">
@@ -41,7 +40,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h2 class="text-2xl font-bold text-gray-800">Daftar Pelanggan & Multi-Proyek</h2>
                 <div class="flex flex-wrap gap-2 w-full md:w-auto">
-                    <button onclick="openWordEditor()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 shadow-sm text-sm">📝 Buat Dokumen Word</button>
+                    <button onclick="openWordEditor()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 shadow-sm text-sm">📝 Word Studio Pro</button>
                     <button onclick="openScheduleModal()" class="bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-yellow-600 shadow-sm text-sm">📅 Buat Jadwal</button>
                     <button onclick="openAddCustomer()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 shadow-sm text-sm">+ Tambah Customer</button>
                 </div>
@@ -73,12 +72,12 @@
         <main id="section-documents" class="hidden flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800">📂 Pusat Semua Dokumen</h2>
-                    <p class="text-sm text-gray-500">Seluruh dokumen dari semua perusahaan yang bisa diunduh atau diedit langsung di web.</p>
+                    <h2 class="text-2xl font-bold text-gray-800">📂 Pusat Semua Dokumen & PDF Reader</h2>
+                    <p class="text-sm text-gray-500">Baca PDF langsung di web, edit dokumen dengan Word Studio Pro, atau tautkan Google Docs.</p>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="openWordEditor()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 shadow-sm text-sm">📝 Buat Word di Web</button>
-                    <button onclick="openDocModal(true)" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-700 shadow-sm text-sm">+ Upload Dokumen File</button>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="openWordEditor()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 shadow-sm text-sm">📝 Buat di Word Studio</button>
+                    <button onclick="openDocModal(true)" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-700 shadow-sm text-sm">+ Upload PDF / File / Link GDocs</button>
                 </div>
             </div>
             <div id="global-document-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
@@ -135,8 +134,8 @@
                     <div class="p-4 border-b bg-gray-50 flex justify-between items-center shadow-sm z-10">
                         <h2 class="font-bold text-lg text-gray-800">📂 Dokumen Perusahaan</h2>
                         <div class="flex gap-2">
-                            <button onclick="openWordEditor(currentCustomerId)" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold shadow hover:bg-indigo-700">📝 Buat Word</button>
-                            <button onclick="openDocModal(false)" class="bg-purple-600 text-white px-3 py-1.5 rounded text-xs font-bold shadow hover:bg-purple-700">+ Upload File</button>
+                            <button onclick="openWordEditor(currentCustomerId)" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold shadow hover:bg-indigo-700">📝 Word Studio</button>
+                            <button onclick="openDocModal(false)" class="bg-purple-600 text-white px-3 py-1.5 rounded text-xs font-bold shadow hover:bg-purple-700">+ Upload / Link GDocs</button>
                         </div>
                     </div>
                     <div id="document-list" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50"></div>
@@ -145,7 +144,71 @@
         </main>
     </div>
 
-    <!-- MODAL FORM TAMBAH / EDIT CUSTOMER (MULTI-PROYEK & DROPDOWN DIBAWA OLEH) -->
+    <!-- MODAL BUILT-IN PDF & DOCUMENT READER -->
+    <div id="pdf-reader-modal" class="hidden fixed inset-0 bg-black bg-opacity-85 flex items-center justify-center p-2 md:p-6 z-[95]">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[92vh] flex flex-col overflow-hidden border-t-8 border-red-600">
+            <div class="p-4 border-b flex flex-wrap justify-between items-center bg-gray-50 gap-2">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📕</span>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900" id="pdf-reader-title">PDF & Document Reader</h3>
+                        <p class="text-xs text-gray-500" id="pdf-reader-subtitle">Pratinjau Dokumen Langsung</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="pdf-switch-viewer-btn" onclick="switchPdfViewerEngine()" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300">🔄 Ganti Mode Penampil (Google Viewer)</button>
+                    <a id="pdf-download-btn" href="#" target="_blank" download class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700">📥 Buka Tab Baru / Unduh</a>
+                    <button onclick="closePdfReader()" class="text-gray-500 hover:text-red-600 font-bold text-3xl ml-2 leading-none">&times;</button>
+                </div>
+            </div>
+            <div class="flex-1 bg-gray-800 relative">
+                <iframe id="pdf-reader-frame" src="" class="w-full h-full border-0"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PLUGIN EDITOR WORD ADVANCED (TINYMCE STUDIO PRO) -->
+    <div id="word-editor-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-2 md:p-4 z-[80]">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[94vh] flex flex-col overflow-hidden border-t-8 border-indigo-600">
+            <div class="px-4 py-3 border-b flex justify-between items-center bg-gray-50">
+                <div>
+                    <h3 class="text-lg font-bold text-indigo-900 flex items-center gap-2">📝 Word Studio Pro (Advanced Document Editor)</h3>
+                    <p class="text-xs text-gray-500">Dilengkapi Tabel, Format Font Lengkap, Page Setup, Cetak PDF, & Ekspor MS Word.</p>
+                </div>
+                <button onclick="toggleModal(false, 'word-editor-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
+            </div>
+            <div class="p-3 bg-indigo-50 border-b grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input type="hidden" id="word-doc-id">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Perusahaan</label>
+                    <select id="word-customer-select" class="w-full border p-2 rounded bg-white text-sm font-bold"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Judul Dokumen</label>
+                    <input type="text" id="word-doc-title" placeholder="Contoh: Proposal Penawaran / MoM" class="w-full border p-2 rounded bg-white text-sm font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Impor File .DOCX dari Komputer (Opsional)</label>
+                    <input type="file" accept=".docx" onchange="importDocxToEditor(event)" class="w-full border p-1.5 rounded bg-white text-xs">
+                </div>
+            </div>
+            <div class="flex-1 overflow-hidden flex flex-col bg-gray-100">
+                <textarea id="tinymce-editor" class="w-full h-full"></textarea>
+            </div>
+            <div class="p-3 border-t bg-gray-50 flex flex-wrap justify-between items-center gap-2">
+                <div class="flex gap-2">
+                    <button onclick="downloadAsWord()" class="px-4 py-2 bg-gray-800 text-white rounded-lg font-bold text-xs md:text-sm hover:bg-black">📥 Download MS Word (.doc)</button>
+                    <button onclick="printEditorToPdf()" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold text-xs md:text-sm hover:bg-red-700">🖨️ Cetak / Simpan PDF</button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleModal(false, 'word-editor-modal')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-xs md:text-sm">Tutup</button>
+                    <button onclick="saveWordToCloud(event)" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-xs md:text-sm hover:bg-indigo-700 shadow-md">☁️ Simpan ke Cloud CRM</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM TAMBAH / EDIT CUSTOMER -->
     <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-xl p-6 my-8">
             <h3 class="text-xl font-bold mb-4 border-b pb-2" id="customer-modal-title">Data Pelanggan</h3>
@@ -193,41 +256,6 @@
             <div class="mt-6 flex justify-end space-x-3 pt-4 border-t">
                 <button onclick="toggleModal(false, 'add-modal')" class="px-4 py-2 bg-gray-100 rounded text-gray-600 font-bold">Batal</button>
                 <button onclick="saveCustomer(event)" class="px-4 py-2 bg-blue-600 text-white rounded font-bold">Simpan Data</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL PLUGIN EDITOR WORD DI WEBSITE -->
-    <div id="word-editor-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-[80]">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden border-t-8 border-indigo-600">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="text-lg font-bold text-indigo-900 flex items-center gap-2">📝 Plugin Editor Dokumen Word</h3>
-                <button onclick="toggleModal(false, 'word-editor-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
-            </div>
-            <div class="p-4 bg-indigo-50 border-b grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input type="hidden" id="word-doc-id">
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Perusahaan</label>
-                    <select id="word-customer-select" class="w-full border p-2 rounded bg-white text-sm font-bold"></select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Judul Dokumen</label>
-                    <input type="text" id="word-doc-title" placeholder="Contoh: Draft Kontrak Kerja" class="w-full border p-2 rounded bg-white text-sm font-bold">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Buka dari File .DOCX Komputer (Opsional)</label>
-                    <input type="file" accept=".docx" onchange="importDocxToEditor(event)" class="w-full border p-1.5 rounded bg-white text-xs">
-                </div>
-            </div>
-            <div class="flex-1 overflow-y-auto flex flex-col bg-white">
-                <div id="quill-editor" class="flex-1 text-base"></div>
-            </div>
-            <div class="p-4 border-t bg-gray-50 flex flex-wrap justify-between items-center gap-2">
-                <button onclick="downloadAsWord()" class="px-4 py-2 bg-gray-800 text-white rounded-lg font-bold text-sm hover:bg-black">📥 Download ke Ms. Word (.doc)</button>
-                <div class="flex gap-2">
-                    <button onclick="toggleModal(false, 'word-editor-modal')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm">Tutup</button>
-                    <button onclick="saveWordToCloud(event)" class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 shadow-md">☁️ Simpan ke Cloud CRM</button>
-                </div>
             </div>
         </div>
     </div>
@@ -287,34 +315,38 @@
         </div>
     </div>
 
-    <!-- MODAL FORM UPLOAD FILE DOKUMEN -->
+    <!-- MODAL FORM UPLOAD FILE DOKUMEN / LINK GOOGLE DOCS -->
     <div id="document-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border-t-8 border-purple-500">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="text-xl font-bold text-gray-800" id="modal-doc-title">Upload File Dokumen</h3>
+                <h3 class="text-xl font-bold text-gray-800" id="modal-doc-title">Upload Dokumen / Link Google Docs</h3>
                 <button onclick="toggleModal(false, 'document-detail-modal')" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
             <div class="p-6 space-y-4">
-                <input type="hidden" id="doc-id"><input type="hidden" id="doc-url-lama">
+                <input type="hidden" id="doc-id">
                 <div id="doc-customer-wrapper" class="hidden">
                     <label class="block text-xs font-bold text-gray-600 mb-1">Pilih Perusahaan Pemilik Dokumen</label>
                     <select id="doc-customer-select" class="w-full border p-2 rounded bg-white font-bold text-sm"></select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Nama Dokumen / File</label>
-                    <input type="text" id="doc-nama" placeholder="Cth: Kontrak SPK" class="w-full border p-2 rounded font-bold text-purple-700">
+                    <input type="text" id="doc-nama" placeholder="Cth: Kontrak SPK / RAB" class="w-full border p-2 rounded font-bold text-purple-700">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600 mb-1">Kategori File</label>
-                    <input type="text" id="doc-kategori" placeholder="Cth: Invoice, Perjanjian, RAB" class="w-full border p-2 rounded">
+                    <input type="text" id="doc-kategori" placeholder="Cth: PDF, Google Docs, Invoice" class="w-full border p-2 rounded">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Pilih File Baru</label>
-                    <input type="file" id="doc-file" class="w-full border p-2 rounded bg-gray-50 text-sm">
+                <div class="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                    <label class="block text-xs font-bold text-purple-900 mb-1">Opsi 1: Pilih File dari Perangkat (PDF, Word, Excel)</label>
+                    <input type="file" id="doc-file" class="w-full border p-1.5 rounded bg-white text-xs">
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <label class="block text-xs font-bold text-blue-900 mb-1">Opsi 2: Atau Tempel Link Google Docs / Sheets / Drive</label>
+                    <input type="url" id="doc-url-lama" placeholder="https://docs.google.com/document/d/..." class="w-full border p-2 rounded bg-white text-xs">
                 </div>
             </div>
             <div class="p-5 border-t bg-gray-50 flex justify-end">
-                <button onclick="saveDocument(event)" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 shadow-md">Simpan File</button>
+                <button onclick="saveDocument(event)" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 shadow-md">Simpan Dokumen</button>
             </div>
         </div>
     </div>
@@ -341,24 +373,22 @@
         let globalDocsData = [];
         let projectImages = [];
         let currentImageIndex = 0;
-        let quill = null;
         let isGlobalDocUpload = false;
         let isGlobalPhotoUpload = false;
+        let currentPdfUrl = "";
+        let useGoogleViewerEngine = false;
 
         window.onload = function() {
-            quill = new Quill('#quill-editor', {
-                theme: 'snow',
-                placeholder: 'Ketik isi dokumen di sini atau impor file .docx dari atas...',
-                modules: {
-                    toolbar: [
-                        [{ 'header': [1, 2, 3, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'color': [] }, { 'background': [] }],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        [{ 'align': [] }],
-                        ['clean']
-                    ]
-                }
+            // Inisialisasi TinyMCE (Editor Sekelas MS Word / Google Docs)
+            tinymce.init({
+                selector: '#tinymce-editor',
+                height: '100%',
+                menubar: 'file edit view insert format tools table',
+                plugins: 'lists link image table code help wordcount searchreplace fullscreen preview pagebreak nonbreaking',
+                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table link pagebreak | fullscreen preview print',
+                content_style: 'body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.6; max-width: 800px; margin: 20px auto; padding: 30px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }',
+                branding: false,
+                promotion: false
             });
 
             if (sessionStorage.getItem('app_pin')) {
@@ -369,6 +399,17 @@
             }
         };
 
+        function setEditorHtml(html) {
+            const ed = tinymce.get('tinymce-editor');
+            if (ed) ed.setContent(html);
+            else document.getElementById('tinymce-editor').value = html;
+        }
+
+        function getEditorHtml() {
+            const ed = tinymce.get('tinymce-editor');
+            return ed ? ed.getContent() : document.getElementById('tinymce-editor').value;
+        }
+
         function handleLogin() {
             const pin = document.getElementById('pin-input').value;
             if (pin.length >= 4) { sessionStorage.setItem('app_pin', pin); location.reload(); }
@@ -378,7 +419,53 @@
         function toggleModal(show, modalId) { document.getElementById(modalId).classList.toggle('hidden', !show); }
 
         // ==========================================
-        // HELPER MULTI-PROYEK (Format: "Proyek A||Proyek B")
+        // BUILT-IN PDF & DOCUMENT READER
+        // ==========================================
+        function openPdfReader(url, title) {
+            currentPdfUrl = url;
+            useGoogleViewerEngine = false;
+            document.getElementById('pdf-reader-title').innerText = title || 'Pratinjau Dokumen';
+            document.getElementById('pdf-download-btn').href = url;
+            
+            const lower = url.toLowerCase();
+            // Jika link Google Docs/Drive, langsung tampilkan
+            if (lower.includes('docs.google.com') || lower.includes('drive.google.com')) {
+                const previewUrl = url.replace(/\/edit.*$/, '/preview').replace(/\/view.*$/, '/preview');
+                document.getElementById('pdf-reader-frame').src = previewUrl;
+                document.getElementById('pdf-reader-subtitle').innerText = "Mode: Google Docs Live View";
+            } else if (lower.endsWith('.pdf')) {
+                // Gunakan Native PDF Reader Browser
+                document.getElementById('pdf-reader-frame').src = url;
+                document.getElementById('pdf-reader-subtitle').innerText = "Mode: Built-in PDF Reader (Klik 'Ganti Mode' jika layar kosong di HP)";
+            } else {
+                // Untuk DOCX / XLSX / PPTX gunakan Google Docs Embedded Viewer
+                useGoogleViewerEngine = true;
+                document.getElementById('pdf-reader-frame').src = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+                document.getElementById('pdf-reader-subtitle').innerText = "Mode: Google Document Viewer";
+            }
+            toggleModal(true, 'pdf-reader-modal');
+        }
+
+        function switchPdfViewerEngine() {
+            if (!currentPdfUrl) return;
+            useGoogleViewerEngine = !useGoogleViewerEngine;
+            const frame = document.getElementById('pdf-reader-frame');
+            if (useGoogleViewerEngine) {
+                frame.src = `https://docs.google.com/gview?url=${encodeURIComponent(currentPdfUrl)}&embedded=true`;
+                document.getElementById('pdf-reader-subtitle').innerText = "Mode: Google Document Viewer";
+            } else {
+                frame.src = currentPdfUrl;
+                document.getElementById('pdf-reader-subtitle').innerText = "Mode: Native Browser PDF Reader";
+            }
+        }
+
+        function closePdfReader() {
+            document.getElementById('pdf-reader-frame').src = "";
+            toggleModal(false, 'pdf-reader-modal');
+        }
+
+        // ==========================================
+        // HELPER MULTI-PROYEK
         // ==========================================
         function parseProjects(namaProjekStr, statusProjekStr) {
             if (!namaProjekStr || !namaProjekStr.trim()) return [];
@@ -475,7 +562,6 @@
             }).join('');
         }
 
-        // --- FORM DYNAMIC MULTI-PROYEK & DROPDOWN REFERRAL ---
         function populateReferralDropdown(selectedVal = "") {
             const sel = document.getElementById('input-dibawa-oleh-select');
             const customInput = document.getElementById('input-dibawa-oleh-custom');
@@ -505,8 +591,7 @@
         }
 
         function toggleCustomReferral(val) {
-            const customInput = document.getElementById('input-dibawa-oleh-custom');
-            customInput.classList.toggle('hidden', val !== '__custom__');
+            document.getElementById('input-dibawa-oleh-custom').classList.toggle('hidden', val !== '__custom__');
         }
 
         function addProjectRow(name = "", status = "On Progress") {
@@ -557,9 +642,7 @@
 
         async function saveCustomer(e) {
             e.target.disabled = true; e.target.innerText = "Menyimpan...";
-            
-            const projNames = [];
-            const projStatuses = [];
+            const projNames = []; const projStatuses = [];
             document.querySelectorAll('#multi-project-container .project-row').forEach(row => {
                 const n = row.querySelector('.proj-name').value.trim();
                 const s = row.querySelector('.proj-status').value.trim() || 'On Progress';
@@ -596,8 +679,39 @@
         }
 
         // ==========================================
-        // MENU 2: SEMUA DOKUMEN GLOBAL
+        // RENDER ITEM DOKUMEN (DENGAN TOMBOL PDF READER & WORD PRO)
         // ==========================================
+        function buildDocumentCardHtml(d, idx, isGlobal) {
+            const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
+            const ptName = cust ? cust.perusahaan : 'Perusahaan';
+            const url = d.file_url || '';
+            const lower = url.toLowerCase();
+            
+            const isGDocs = lower.includes('docs.google.com') || lower.includes('drive.google.com');
+            const isPdf = lower.endsWith('.pdf');
+            const isWord = lower.endsWith('.html') || lower.endsWith('.docx') || lower.endsWith('.doc');
+            const icon = isPdf ? '📕' : (isGDocs ? '🌐' : '📄');
+
+            return `
+            <div class="border border-gray-200 p-4 rounded-xl bg-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-purple-400 transition-all">
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="text-3xl bg-purple-50 p-3 rounded-xl shrink-0">${icon}</div>
+                    <div class="truncate">
+                        <p class="font-bold text-gray-900 truncate">${d.nama_file}</p>
+                        ${isGlobal ? `<p class="text-xs font-bold text-blue-600 mt-0.5">🏢 ${ptName}</p>` : ''}
+                        <span class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600 mt-1 inline-block">${d.kategori_file || 'Dokumen'}</span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-1.5 shrink-0">
+                    ${url ? `<button onclick="openPdfReader('${url.replace(/'/g, "\\'")}', '${(d.nama_file || '').replace(/'/g, "\\'")}')" class="bg-red-50 text-red-700 px-2.5 py-1.5 rounded font-bold text-xs hover:bg-red-100 border border-red-200">👁️ Baca PDF / Preview</button>` : ''}
+                    ${isGDocs ? `<a href="${url}" target="_blank" class="bg-green-50 text-green-700 px-2.5 py-1.5 rounded font-bold text-xs hover:bg-green-100 border border-green-200">🌐 Edit di Google Docs</a>` : ''}
+                    ${isWord ? `<button onclick="editDocInWordEditor(${idx}, ${isGlobal})" class="bg-indigo-50 text-indigo-700 px-2.5 py-1.5 rounded font-bold text-xs hover:bg-indigo-100 border border-indigo-200">📝 Edit di Word Studio</button>` : ''}
+                    ${url && !isGDocs ? `<a href="${url}" target="_blank" download class="bg-blue-50 text-blue-700 px-2.5 py-1.5 rounded font-bold text-xs hover:bg-blue-100 border border-blue-200">📥 Unduh</a>` : ''}
+                    <button onclick="openEditDocument(${idx}, ${isGlobal})" class="bg-gray-50 text-gray-700 px-2.5 py-1.5 rounded font-bold text-xs hover:bg-gray-200 border">✏️</button>
+                </div>
+            </div>`;
+        }
+
         async function fetchGlobalDocuments() {
             const list = document.getElementById('global-document-list');
             list.innerHTML = '<p class="text-sm text-gray-500">Memuat seluruh dokumen...</p>';
@@ -612,27 +726,7 @@
                     list.innerHTML = '<div class="col-span-2 text-center p-8 bg-white rounded-xl border border-dashed text-gray-500">Belum ada dokumen di sistem.</div>';
                     return;
                 }
-                list.innerHTML = globalDocsData.map((d, idx) => {
-                    const cust = globalCustomers.find(c => String(c.id) === String(d.customer_id));
-                    const ptName = cust ? cust.perusahaan : 'Perusahaan Umum';
-                    const isEditable = d.file_url && (d.file_url.endsWith('.html') || d.file_url.endsWith('.docx') || d.file_url.endsWith('.doc'));
-                    return `
-                    <div class="border border-gray-200 p-4 rounded-xl bg-white shadow-sm flex items-center justify-between hover:border-purple-400 transition-all">
-                        <div class="flex items-center gap-3 overflow-hidden">
-                            <div class="text-3xl bg-purple-50 p-3 rounded-xl text-purple-600">📄</div>
-                            <div class="truncate">
-                                <p class="font-bold text-gray-900 truncate">${d.nama_file}</p>
-                                <p class="text-xs font-bold text-blue-600 mt-0.5">🏢 ${ptName}</p>
-                                <span class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600 mt-1 inline-block">${d.kategori_file || 'Umum'}</span>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5 shrink-0 ml-2">
-                            ${isEditable ? `<button onclick="editDocInWordEditor(${idx}, true)" class="bg-indigo-50 text-indigo-700 px-2.5 py-1.5 rounded font-bold text-xs hover:bg-indigo-100 border border-indigo-200">📝 Edit di Web</button>` : ''}
-                            ${d.file_url ? `<a href="${d.file_url}" target="_blank" download class="bg-blue-50 text-blue-700 px-2.5 py-1.5 rounded font-bold text-xs hover:bg-blue-100 border border-blue-200">📥 Unduh</a>` : ''}
-                            <button onclick="openEditDocument(${idx}, true)" class="bg-gray-50 text-gray-700 px-2.5 py-1.5 rounded font-bold text-xs hover:bg-gray-200 border">✏️</button>
-                        </div>
-                    </div>`;
-                }).join('');
+                list.innerHTML = globalDocsData.map((d, idx) => buildDocumentCardHtml(d, idx, true)).join('');
             } catch (e) { list.innerHTML = '<p class="text-red-500">Gagal memuat dokumen.</p>'; }
         }
 
@@ -685,13 +779,13 @@
         }
 
         // ==========================================
-        // PLUGIN EDITOR WORD DI WEBSITE
+        // PLUGIN EDITOR WORD STUDIO PRO (TINYMCE)
         // ==========================================
         function openWordEditor(preselectedCustomerId = "") {
             if (globalCustomers.length === 0) { alert("Tambahkan data Customer terlebih dahulu."); return; }
             document.getElementById('word-doc-id').value = "";
             document.getElementById('word-doc-title').value = "";
-            quill.root.innerHTML = "<p>Ketik isi surat, MoM, atau kontrak kerja di sini...</p>";
+            setEditorHtml("<h2>Judul Dokumen / Surat</h2><p>Ketik isi dokumen, tabel, atau kontrak kerja di sini...</p>");
             
             const sel = document.getElementById('word-customer-select');
             sel.innerHTML = globalCustomers.map(c => `<option value="${c.id}" ${String(c.id) === String(preselectedCustomerId) ? 'selected' : ''}>${c.perusahaan}</option>`).join('');
@@ -707,7 +801,7 @@
             const reader = new FileReader();
             reader.onload = function(loadEvent) {
                 mammoth.convertToHtml({ arrayBuffer: loadEvent.target.result })
-                    .then(result => { quill.root.innerHTML = result.value; })
+                    .then(result => { setEditorHtml(result.value); })
                     .catch(() => alert("Gagal membaca file Word."));
             };
             reader.readAsArrayBuffer(file);
@@ -718,26 +812,26 @@
             openWordEditor(d.customer_id);
             document.getElementById('word-doc-id').value = d.id;
             document.getElementById('word-doc-title').value = d.nama_file;
-            quill.root.innerHTML = "<p><i>Memuat isi dokumen dari server...</i></p>";
+            setEditorHtml("<p><i>Memuat isi dokumen dari server...</i></p>");
 
             try {
                 const res = await fetch(d.file_url);
-                if (d.file_url.endsWith('.docx')) {
+                if (d.file_url.toLowerCase().endsWith('.docx')) {
                     const buf = await res.arrayBuffer();
                     const result = await mammoth.convertToHtml({ arrayBuffer: buf });
-                    quill.root.innerHTML = result.value;
+                    setEditorHtml(result.value);
                 } else {
                     const text = await res.text();
-                    quill.root.innerHTML = text;
+                    setEditorHtml(text);
                 }
             } catch (e) {
-                quill.root.innerHTML = "<p>Gagal memuat isi file lama. Silakan ketik ulang atau impor dari komputer.</p>";
+                setEditorHtml("<p>Gagal memuat isi file lama. Silakan ketik ulang atau impor dari komputer.</p>");
             }
         }
 
         function downloadAsWord() {
             const title = document.getElementById('word-doc-title').value || 'Dokumen_CRM';
-            const content = quill.root.innerHTML;
+            const content = getEditorHtml();
             const fullHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${title}</title></head><body>${content}</body></html>`;
             const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
@@ -746,12 +840,17 @@
             a.click();
         }
 
+        function printEditorToPdf() {
+            const ed = tinymce.get('tinymce-editor');
+            if (ed) ed.execCommand('mcePrint');
+        }
+
         async function saveWordToCloud(e) {
             const btn = e.target; btn.disabled = true; btn.innerText = "Menyimpan...";
             const custId = document.getElementById('word-customer-select').value;
             const title = document.getElementById('word-doc-title').value.trim() || 'Dokumen Word Baru';
             const docId = document.getElementById('word-doc-id').value;
-            const htmlContent = quill.root.innerHTML;
+            const htmlContent = getEditorHtml();
 
             const blob = new Blob([htmlContent], { type: 'text/html' });
             const file = new File([blob], `${title.replace(/\s+/g, '_')}.doc`, { type: 'application/msword' });
@@ -762,7 +861,7 @@
             formData.append('nama_projek', currentProject || 'Umum');
             if (docId) formData.append('id', docId);
             formData.append('nama_file', title);
-            formData.append('kategori_file', 'Word Web Doc');
+            formData.append('kategori_file', 'Word Studio Doc');
             formData.append('file', file);
 
             try {
@@ -771,7 +870,7 @@
                     toggleModal(false, 'word-editor-modal');
                     if (!document.getElementById('section-documents').classList.contains('hidden')) fetchGlobalDocuments();
                     if (!document.getElementById('detail-view').classList.contains('hidden')) fetchDocuments();
-                    alert("Dokumen Word berhasil disimpan ke Cloud CRM!");
+                    alert("Dokumen berhasil disimpan ke Cloud CRM!");
                 } else alert("Gagal menyimpan dokumen.");
             } catch (err) { alert("Error jaringan."); }
             btn.disabled = false; btn.innerText = "☁️ Simpan ke Cloud CRM";
@@ -822,7 +921,7 @@
         // ==========================================
         // DETAIL VIEW PERUSAHAAN & MULTI-PROYEK SWITCHER
         // ==========================================
-        function openDetailView(customerId,preferredProject = "") {
+        function openDetailView(customerId, preferredProject = "") {
             const c = globalCustomers.find(item => String(item.id) === String(customerId));
             if (!c) return;
             currentCustomerId = c.id;
@@ -952,38 +1051,20 @@
             e.target.disabled = false;
         }
 
-        // --- MANAJEMEN DOKUMEN PERUSAHAAN & GLOBAL ---
+        // --- MANAJEMEN DOKUMEN PERUSAHAAN ---
         async function fetchDocuments() {
             const list = document.getElementById('document-list'); list.innerHTML = '<p class="text-sm text-center">Memuat dokumen...</p>';
             try {
                 const res = await fetch('/api/index.py?tipe=dokumen&projek=' + encodeURIComponent(currentProject || 'Umum') + '&customer_id=' + encodeURIComponent(currentCustomerId));
                 documentsData = await res.json();
                 if(documentsData.length === 0) { list.innerHTML = '<div class="text-center p-4 text-gray-500 border rounded-lg border-dashed">Belum ada file dokumen.</div>'; return; }
-                
-                list.innerHTML = documentsData.map((d, idx) => {
-                    const isEditable = d.file_url && (d.file_url.endsWith('.html') || d.file_url.endsWith('.docx') || d.file_url.endsWith('.doc'));
-                    return `
-                    <div class="border border-gray-200 p-3 rounded-xl bg-white shadow-sm flex items-center justify-between hover:border-purple-300 transition-colors">
-                        <div class="flex items-center gap-3 overflow-hidden">
-                            <div class="text-2xl bg-purple-50 p-2 rounded-lg text-purple-600 shrink-0">📄</div>
-                            <div class="truncate">
-                                <p class="font-bold text-gray-800 text-sm truncate">${d.nama_file}</p>
-                                <span class="text-xs bg-gray-100 px-2 py-0.5 rounded font-medium text-gray-500 mt-1 inline-block">${d.kategori_file || 'Umum'}</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-1.5 shrink-0 ml-2">
-                            ${isEditable ? `<button onclick="editDocInWordEditor(${idx}, false)" class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-bold text-xs border border-indigo-200">📝 Edit Web</button>` : ''}
-                            ${d.file_url ? `<a href="${d.file_url}" target="_blank" download class="bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold text-xs border border-blue-200">📥</a>` : ''}
-                            <button onclick="openEditDocument(${idx}, false)" class="bg-gray-50 text-gray-700 px-2 py-1 rounded font-bold text-xs border border-gray-200">✏️</button>
-                        </div>
-                    </div>`;
-                }).join('');
+                list.innerHTML = documentsData.map((d, idx) => buildDocumentCardHtml(d, idx, false)).join('');
             } catch (e) { list.innerHTML = '<p class="text-red-500">Error memuat dokumen.</p>'; }
         }
 
         function openDocModal(isGlobal = false) {
             isGlobalDocUpload = isGlobal;
-            document.getElementById('modal-doc-title').innerText = "Upload Dokumen Baru";
+            document.getElementById('modal-doc-title').innerText = "Upload Dokumen / Link Google Docs";
             document.getElementById('doc-id').value = ""; document.getElementById('doc-url-lama').value = "";
             document.getElementById('doc-nama').value = ""; document.getElementById('doc-kategori').value = ""; 
             document.getElementById('doc-file').value = ""; 
@@ -1011,7 +1092,7 @@
         }
 
         async function saveDocument(e) {
-            const btn = e.target; btn.disabled = true; btn.innerText = "Mengunggah...";
+            const btn = e.target; btn.disabled = true; btn.innerText = "Menyimpan...";
             const formData = new FormData();
             const targetCustId = isGlobalDocUpload && !document.getElementById('doc-id').value 
                 ? document.getElementById('doc-customer-select').value 
@@ -1031,7 +1112,7 @@
                     else fetchDocuments(); 
                 }
             } catch (err) {}
-            btn.disabled = false; btn.innerText = "Simpan File";
+            btn.disabled = false; btn.innerText = "Simpan Dokumen";
         }
     </script>
 </body>
