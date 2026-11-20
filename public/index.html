@@ -312,7 +312,7 @@
                 <input type="text" id="edit-judul" placeholder="Judul / Agenda Foto" class="w-full border p-2 rounded text-sm font-bold text-blue-700">
                 <textarea id="edit-mom" placeholder="Ketik hasil meeting atau keterangan foto (MoM)..." class="w-full border p-2.5 rounded text-xs h-24"></textarea>
                 <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                    <label class="block text-xs font-bold text-blue-800 mb-1">Unggah Lampiran Foto</label>
+                    <label class="block text-xs font-bold text-blue-800 mb-1">Unggah Lampiran Foto (Max 50 MB)</label>
                     <input type="file" id="edit-foto" accept="image/*" class="w-full border p-1.5 rounded bg-white text-xs">
                 </div>
             </div>
@@ -344,7 +344,7 @@
                     <input type="text" id="doc-kategori" placeholder="Cth: Legalitas, NPWP, PDF, Invoice" class="w-full border p-2 rounded text-sm">
                 </div>
                 <div class="bg-purple-50 p-2.5 rounded-lg border border-purple-200">
-                    <label class="block text-[11px] font-bold text-purple-900 mb-1">Opsi 1: Pilih File dari Perangkat (PDF, Word, Excel)</label>
+                    <label class="block text-[11px] font-bold text-purple-900 mb-1">Opsi 1: Pilih File dari Perangkat (Direct Upload, Max 50 MB)</label>
                     <input type="file" id="doc-file" class="w-full border p-1 rounded bg-white text-xs">
                 </div>
                 <div class="bg-blue-50 p-2.5 rounded-lg border border-blue-200">
@@ -425,7 +425,44 @@
         function toggleModal(show, modalId) { document.getElementById(modalId).classList.toggle('hidden', !show); }
 
         // ==========================================
-        // HELPER PARSE PROYEK & KATEGORI DOKUMEN (MENDUKUNG TANPA PROYEK / UMUM)
+        // DIRECT UPLOAD KE SUPABASE (BYPASS VERCEL, MAX 50MB)
+        // ==========================================
+        async function uploadDirectToSupabase(file, prefix) {
+            const fileSizeMB = file.size / (1024 * 1024);
+            if (fileSizeMB > 50) {
+                alert(`⚠️ Ukuran file terlalu besar (${fileSizeMB.toFixed(1)} MB)!\n\nBatas maksimal Supabase Storage Free Tier adalah 50 MB per file.\nSilakan kompres file atau gunakan Opsi 2 (Link Google Drive).`);
+                throw new Error("FILE_TOO_LARGE");
+            }
+
+            const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const uniqueFileName = `${prefix}_${Date.now()}_${cleanName}`;
+
+            // 1. Minta tiket Signed Upload URL dari server
+            const ticketRes = await fetch('/api/index.py', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_upload_url', file_name: uniqueFileName })
+            });
+            const ticketData = await ticketRes.json();
+            if (!ticketRes.ok || !ticketData.signed_url) {
+                throw new Error(ticketData.error || "Gagal mendapatkan tiket upload dari Supabase.");
+            }
+
+            // 2. Kirim file langsung dari browser ke Supabase Storage
+            const uploadRes = await fetch(ticketData.signed_url, {
+                method: 'PUT',
+                headers: { 'Content-Type': file.type || 'application/octet-stream' },
+                body: file
+            });
+            if (!uploadRes.ok) {
+                throw new Error("Gagal upload langsung ke Supabase (Status: " + uploadRes.status + ").");
+            }
+
+            return ticketData.public_url;
+        }
+
+        // ==========================================
+        // HELPER PARSE PROYEK & KATEGORI DOKUMEN
         // ==========================================
         function parseProjects(namaProjekStr, statusProjekStr) {
             if (!namaProjekStr || !namaProjekStr.trim()) return [];
@@ -465,7 +502,6 @@
             return list;
         }
 
-        // Dropdown yang mengizinkan simpan langsung ke Customer (Umum) ATAU ke Proyek spesifik
         function populateProjectSelect(selectId, filterCustId = "", selectedProj = "Umum") {
             const sel = document.getElementById(selectId);
             const targetCustomers = filterCustId 
@@ -552,7 +588,7 @@
         }
 
         // ==========================================
-        // MENU 1: CUSTOMER & PROYEK (DENGAN TOMBOL UPLOAD DOKUMEN LANGSUNG)
+        // MENU 1: CUSTOMER & PROYEK
         // ==========================================
         function filterCustomers() {
             const query = document.getElementById('search-input').value.toLowerCase();
@@ -1331,28 +1367,45 @@
         }
 
         async function updateMeetingData(e) {
-            e.target.disabled = true; const formData = new FormData();
-            formData.append('action', 'meeting');
-            if (document.getElementById('edit-id').value) formData.append('id', document.getElementById('edit-id').value);
-            const useDropdown = isGlobalPhotoUpload || ((currentProject === '__ALL__' || currentProject === 'Umum') && !document.getElementById('edit-id').value);
-            const targetProj = useDropdown ? document.getElementById('edit-projek-dropdown').value : document.getElementById('edit-projek').value;
-            
-            formData.append('nama_projek', targetProj);
-            formData.append('tanggal', document.getElementById('edit-tanggal').value);
-            formData.append('jam', document.getElementById('edit-jam').value);
-            formData.append('judul', document.getElementById('edit-judul').value || 'Dokumentasi Proyek');
-            formData.append('mom', document.getElementById('edit-mom').value);
-            const foto = document.getElementById('edit-foto').files[0];
-            if(foto) formData.append('foto', foto);
-            
-            await fetch('/api/index.py', { method: 'POST', body: formData });
-            toggleModal(false, 'meeting-detail-modal'); 
-            if (isGlobalPhotoUpload) fetchGlobalPhotos();
-            else fetchMeetingsAndPhotos(); 
-            e.target.disabled = false;
+            const btn = e.target; btn.disabled = true; btn.innerText = "Menyimpan...";
+            try {
+                const useDropdown = isGlobalPhotoUpload || ((currentProject === '__ALL__' || currentProject === 'Umum') && !document.getElementById('edit-id').value);
+                const targetProj = useDropdown ? document.getElementById('edit-projek-dropdown').value : document.getElementById('edit-projek').value;
+                
+                let uploadedFotoUrl = "";
+                const foto = document.getElementById('edit-foto').files[0];
+                if (foto) {
+                    btn.innerText = "Mengunggah foto...";
+                    uploadedFotoUrl = await uploadDirectToSupabase(foto, targetProj.replace(/[^a-zA-Z0-9]/g, '_'));
+                }
+
+                const formData = new FormData();
+                formData.append('action', 'meeting');
+                if (document.getElementById('edit-id').value) formData.append('id', document.getElementById('edit-id').value);
+                formData.append('nama_projek', targetProj);
+                formData.append('tanggal', document.getElementById('edit-tanggal').value);
+                formData.append('jam', document.getElementById('edit-jam').value);
+                formData.append('judul', document.getElementById('edit-judul').value || 'Dokumentasi Proyek');
+                formData.append('mom', document.getElementById('edit-mom').value);
+                if (uploadedFotoUrl) formData.append('foto_url_direct', uploadedFotoUrl);
+                
+                const res = await fetch('/api/index.py', { method: 'POST', body: formData });
+                if (res.ok) {
+                    toggleModal(false, 'meeting-detail-modal'); 
+                    if (isGlobalPhotoUpload) fetchGlobalPhotos();
+                    else fetchMeetingsAndPhotos(); 
+                } else {
+                    alert("Gagal menyimpan progress.");
+                }
+            } catch (err) {
+                if (err.message !== "FILE_TOO_LARGE") {
+                    alert("Gagal mengunggah foto: " + err.message);
+                }
+            }
+            btn.disabled = false; btn.innerText = "Simpan Progress";
         }
 
-        // --- MODAL UPLOAD / EDIT DOKUMEN (BISA LANGSUNG KE CUSTOMER ATAU PROYEK) ---
+        // --- MODAL UPLOAD / EDIT DOKUMEN (DIRECT UPLOAD SUPABASE) ---
         function openDocModal(isGlobal = false, preselectedCustId = "", preselectedProj = "Umum") {
             if (globalCustomers.length === 0) { alert("Tambahkan data Customer terlebih dahulu."); return; }
             isGlobalDocUpload = isGlobal;
@@ -1383,29 +1436,43 @@
         }
 
         async function saveDocument(e) {
-            const btn = e.target; btn.disabled = true; btn.innerText = "Menyimpan...";
-            const formData = new FormData();
-            const [targetCustId, targetProj] = document.getElementById('doc-project-select').value.split('||');
-            const rawCat = document.getElementById('doc-kategori').value.trim() || 'Dokumen';
-
-            formData.append('action', 'dokumen'); 
-            formData.append('customer_id', targetCustId); 
-            formData.append('nama_projek', targetProj || 'Umum'); 
-            if (document.getElementById('doc-id').value) formData.append('id', document.getElementById('doc-id').value);
-            formData.append('nama_file', document.getElementById('doc-nama').value); 
-            formData.append('kategori_file', `[${targetProj || 'Umum'}] ${rawCat}`);
-            formData.append('file_url_lama', document.getElementById('doc-url-lama').value);
-            const file = document.getElementById('doc-file').files[0]; if(file) formData.append('file', file);
-
+            const btn = e.target; btn.disabled = true; btn.innerText = "Memproses...";
             try {
+                const [targetCustId, targetProj] = document.getElementById('doc-project-select').value.split('||');
+                const rawCat = document.getElementById('doc-kategori').value.trim() || 'Dokumen';
+                let finalUrl = document.getElementById('doc-url-lama').value.trim();
+
+                const file = document.getElementById('doc-file').files[0];
+                if (file) {
+                    btn.innerText = "Mengunggah ke Supabase...";
+                    finalUrl = await uploadDirectToSupabase(file, `doc_${targetCustId}`);
+                }
+
+                btn.innerText = "Menyimpan data...";
+                const formData = new FormData();
+                formData.append('action', 'dokumen'); 
+                formData.append('customer_id', targetCustId); 
+                formData.append('nama_projek', targetProj || 'Umum'); 
+                if (document.getElementById('doc-id').value) formData.append('id', document.getElementById('doc-id').value);
+                formData.append('nama_file', document.getElementById('doc-nama').value); 
+                formData.append('kategori_file', `[${targetProj || 'Umum'}] ${rawCat}`);
+                formData.append('file_url_lama', finalUrl);
+
                 const res = await fetch('/api/index.py', { method: 'POST', body: formData });
                 if (res.ok) { 
                     toggleModal(false, 'document-detail-modal'); 
                     if (!document.getElementById('section-documents').classList.contains('hidden')) fetchGlobalDocuments();
                     if (!document.getElementById('detail-view').classList.contains('hidden')) fetchDocuments();
                     if (!document.getElementById('section-customers').classList.contains('hidden')) alert("Dokumen berhasil disimpan!");
+                } else {
+                    const err = await res.json();
+                    alert("Gagal simpan ke database: " + (err.error || "Terjadi kesalahan."));
                 }
-            } catch (err) {}
+            } catch (err) {
+                if (err.message !== "FILE_TOO_LARGE") {
+                    alert("Gagal mengunggah: " + err.message);
+                }
+            }
             btn.disabled = false; btn.innerText = "Simpan Dokumen";
         }
     </script>
