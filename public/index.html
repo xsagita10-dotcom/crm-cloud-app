@@ -35,11 +35,11 @@
         </header>
 
         <!-- MENU 1: DATA CUSTOMER & PROYEK (COMPACT MODE) -->
-        <main id="section-customers" class="flex-1 p-3 md:p-5 max-w-full mx-auto w-full">
+        <main id="section-customers" class="flex-1 p-3 md:p-4 max-w-full mx-auto w-full">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-2">
                 <div class="flex items-center gap-3 w-full md:w-auto">
                     <h2 class="text-lg font-bold text-gray-800 shrink-0">Daftar Pelanggan</h2>
-                    <input type="text" id="search-input" onkeyup="filterCustomers()" placeholder="🔍 Cari PT, PIC, atau projek..." class="w-full md:w-72 px-3 py-1.5 text-xs border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-700 font-medium bg-white">
+                    <input type="text" id="search-input" onkeyup="filterCustomers()" placeholder="🔍 Cari PT, PIC, projek, beneficiary, funder, mediator..." class="w-full md:w-80 px-3 py-1.5 text-xs border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-700 font-medium bg-white">
                 </div>
                 <div class="flex flex-wrap gap-1.5 w-full md:w-auto">
                     <button onclick="openWordEditor()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-700 shadow-sm text-xs">📝 Word Studio</button>
@@ -54,11 +54,13 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-100 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-600">
-                                <th class="px-3 py-2 font-bold w-1/4">Perusahaan (Klik = Semua Dokumen & Proyek)</th>
-                                <th class="px-3 py-2 font-bold w-1/5">Kontak & Telepon</th>
-                                <th class="px-3 py-2 font-bold w-1/3">Projek (Klik = Khusus Proyek), Nilai & Status</th>
-                                <th class="px-3 py-2 font-bold">Dibawa Oleh</th>
-                                <th class="px-3 py-2 font-bold text-center w-36">Aksi</th>
+                                <th class="px-2.5 py-2 font-bold">Perusahaan</th>
+                                <th class="px-2.5 py-2 font-bold">Kontak & Telepon</th>
+                                <th class="px-2.5 py-2 font-bold">Projek, Nilai & Status</th>
+                                <th class="px-2.5 py-2 font-bold">Beneficiary</th>
+                                <th class="px-2.5 py-2 font-bold">Funder</th>
+                                <th class="px-2.5 py-2 font-bold">Mediator</th>
+                                <th class="px-2.5 py-2 font-bold text-center w-36">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="customer-table-body" class="divide-y divide-gray-100 text-xs"></tbody>
@@ -216,7 +218,7 @@
         </div>
     </div>
 
-    <!-- MODAL FORM TAMBAH / EDIT CUSTOMER -->
+    <!-- MODAL FORM TAMBAH / EDIT CUSTOMER (BENEFICIARY, FUNDER, MEDIATOR) -->
     <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl p-5 my-8">
             <h3 class="text-lg font-bold mb-3 border-b pb-2" id="customer-modal-title">Data Pelanggan</h3>
@@ -242,9 +244,19 @@
                         <input type="text" id="input-telepon" placeholder="0812..." class="w-full border p-2 rounded text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Dibawa Oleh (Pilih Customer)</label>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Mediator (Pilih Customer / Ketik)</label>
                         <select id="input-dibawa-oleh-select" onchange="toggleCustomReferral(this.value)" class="w-full border p-2 rounded bg-white text-sm"></select>
-                        <input type="text" id="input-dibawa-oleh-custom" placeholder="Ketik nama referral..." class="hidden w-full border p-2 rounded mt-2 text-sm">
+                        <input type="text" id="input-dibawa-oleh-custom" placeholder="Ketik nama mediator..." class="hidden w-full border p-2 rounded mt-2 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Beneficiary</label>
+                        <input type="text" id="input-beneficiary" placeholder="Nama Beneficiary..." class="w-full border p-2 rounded text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Funder</label>
+                        <input type="text" id="input-funder" placeholder="Nama Funder..." class="w-full border p-2 rounded text-sm">
                     </div>
                 </div>
                 <div>
@@ -449,6 +461,32 @@
         function toggleModal(show, modalId) { document.getElementById(modalId).classList.toggle('hidden', !show); }
 
         // ==========================================
+        // HELPER PARSE & ENCODE MEDIATOR, BENEFICIARY, FUNDER
+        // Disimpan rapi dalam kolom dibawa_oleh tanpa ubah skema DB
+        // ==========================================
+        function parseCustomerRoles(rawStr) {
+            if (!rawStr) return { mediator: '', beneficiary: '', funder: '' };
+            const parts = rawStr.split('||');
+            let mediator = '';
+            let beneficiary = '';
+            let funder = '';
+            parts.forEach(p => {
+                if (p.startsWith('BEN:')) beneficiary = p.slice(4).trim();
+                else if (p.startsWith('FUN:')) funder = p.slice(4).trim();
+                else if (!mediator) mediator = p.trim();
+            });
+            return { mediator, beneficiary, funder };
+        }
+
+        function encodeCustomerRoles(mediator, beneficiary, funder) {
+            const parts = [];
+            if (mediator && mediator.trim()) parts.push(mediator.trim());
+            if (beneficiary && beneficiary.trim()) parts.push('BEN:' + beneficiary.trim());
+            if (funder && funder.trim()) parts.push('FUN:' + funder.trim());
+            return parts.join('||');
+        }
+
+        // ==========================================
         // HELPER PROGRESS BAR & STATUS BOX
         // ==========================================
         function resetUploadUI(prefix) {
@@ -496,7 +534,6 @@
                     const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
                     const uniqueFileName = `${filePrefix}_${Date.now()}_${cleanName}`;
 
-                    // 1. Minta tiket Signed Upload URL dari server (hanya kirim teks, bebas limit 4.5MB Vercel)
                     const ticketRes = await fetch('/api/index.py', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -508,7 +545,6 @@
                         return;
                     }
 
-                    // 2. Upload langsung dari browser ke Supabase Storage dengan pelacakan persentase (%)
                     const xhr = new XMLHttpRequest();
                     xhr.open('PUT', ticketData.signed_url, true);
                     xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
@@ -678,30 +714,32 @@
                 (c.perusahaan && c.perusahaan.toLowerCase().includes(query)) ||
                 (c.nama_customer && c.nama_customer.toLowerCase().includes(query)) ||
                 (c.nama_projek && c.nama_projek.toLowerCase().includes(query)) ||
-                (c.status_projek && c.status_projek.toLowerCase().includes(query))
+                (c.status_projek && c.status_projek.toLowerCase().includes(query)) ||
+                (c.dibawa_oleh && c.dibawa_oleh.toLowerCase().includes(query))
             );
             renderTable(filtered);
         }
 
         async function fetchCustomers() {
             const tbody = document.getElementById('customer-table-body');
-            tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-xs">Memuat...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-xs">Memuat...</td></tr>';
             try {
                 const res = await fetch('/api/index.py');
                 globalCustomers = await res.json();
                 renderTable(globalCustomers);
-            } catch (err) { tbody.innerHTML = '<tr><td colspan="5" class="text-red-500 text-center p-3 text-xs">Error Jaringan</td></tr>'; }
+            } catch (err) { tbody.innerHTML = '<tr><td colspan="7" class="text-red-500 text-center p-3 text-xs">Error Jaringan</td></tr>'; }
         }
 
         function renderTable(dataArray) {
             const tbody = document.getElementById('customer-table-body');
             if (dataArray.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-gray-500 text-xs">Tidak ada data ditemukan.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-gray-500 text-xs">Tidak ada data ditemukan.</td></tr>';
                 return;
             }
             tbody.innerHTML = dataArray.map((c) => {
                 const realIdx = globalCustomers.findIndex(item => item.id === c.id);
                 const projects = parseProjects(c.nama_projek, c.status_projek);
+                const roles = parseCustomerRoles(c.dibawa_oleh);
                 const projectsHtml = projects.length > 0 
                     ? projects.map(p => `
                         <div class="mb-1 flex flex-wrap items-center gap-1 leading-tight">
@@ -709,23 +747,25 @@
                             ${p.nilai ? `<span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold rounded px-1.5 py-0.2 border border-emerald-200">${p.nilai}</span>` : ''}
                             <span class="text-[10px] bg-blue-50 text-blue-700 rounded px-1.5 py-0.2">${p.status}</span>
                         </div>`).join('')
-                    : '<span class="text-gray-400 text-[11px] italic">Belum ada proyek (Klik PT untuk dokumen umum)</span>';
+                    : '<span class="text-gray-400 text-[11px] italic">Belum ada proyek</span>';
 
                 return `
                 <tr class="hover:bg-blue-50/60 border-b border-gray-100 transition-colors">
-                    <td class="px-3 py-2 align-top">
+                    <td class="px-2.5 py-2 align-top max-w-[200px]">
                         <button onclick="openDetailView('${c.id}', '__ALL__')" class="font-bold text-xs text-blue-600 hover:text-blue-800 hover:underline text-left leading-tight" title="Klik untuk melihat semua dokumen & proyek ${c.perusahaan}">🏢 ${c.perusahaan || '-'}</button>
-                        <span class="text-[11px] text-gray-500 block leading-tight mt-0.5 line-clamp-1" title="${c.alamat || ''}">${c.alamat || '-'}</span>
+                        <span class="text-[10px] text-gray-500 block leading-tight mt-0.5 line-clamp-1" title="${c.alamat || ''}">${c.alamat || '-'}</span>
                     </td>
-                    <td class="px-3 py-2 align-top leading-tight">
+                    <td class="px-2.5 py-2 align-top leading-tight whitespace-nowrap">
                         <span class="font-bold text-gray-800 text-xs">${c.nama_customer || '-'}</span>
                         ${c.posisi ? `<span class="text-[10px] text-gray-500"> (${c.posisi})</span>` : ''}
                         <br>
                         <span class="text-[11px] font-medium text-gray-600 inline-block mt-0.5">📞 ${c.no_telepon || '-'}</span>
                     </td>
-                    <td class="px-3 py-2 align-top">${projectsHtml}</td>
-                    <td class="px-3 py-2 align-top text-[11px] font-medium text-gray-700">${c.dibawa_oleh || '-'}</td>
-                    <td class="px-3 py-2 align-top text-center whitespace-nowrap">
+                    <td class="px-2.5 py-2 align-top">${projectsHtml}</td>
+                    <td class="px-2.5 py-2 align-top text-[11px] font-medium text-gray-700">${roles.beneficiary || '-'}</td>
+                    <td class="px-2.5 py-2 align-top text-[11px] font-medium text-gray-700">${roles.funder || '-'}</td>
+                    <td class="px-2.5 py-2 align-top text-[11px] font-medium text-gray-700">${roles.mediator || '-'}</td>
+                    <td class="px-2.5 py-2 align-top text-center whitespace-nowrap">
                         <button onclick="openDocModal(true, '${c.id}', 'Umum')" class="text-purple-600 hover:text-purple-800 text-[11px] font-bold bg-purple-50 px-2 py-0.5 rounded mr-1 border border-purple-200" title="Upload Dokumen ke ${c.perusahaan}">📄 Upload</button>
                         <button onclick="openEditCustomer(${realIdx})" class="text-blue-600 hover:text-blue-800 text-[11px] font-bold bg-blue-50 px-2 py-0.5 rounded mr-1 border border-blue-100">Edit</button>
                         <button onclick="deleteCustomer('${c.id}', '${(c.perusahaan || '').replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-800 text-[11px] font-bold bg-red-50 px-2 py-0.5 rounded border border-red-100">Hapus</button>
@@ -1167,7 +1207,7 @@
                     options += `<option value="${label}">${label}</option>`;
                 }
             });
-            options += `<option value="__custom__">+ Ketik Nama Lainnya...</option>`;
+            options += `<option value="__custom__">+ Ketik Nama Mediator Lainnya...</option>`;
             sel.innerHTML = options;
 
             if (selectedVal && !found) {
@@ -1203,6 +1243,8 @@
             document.getElementById('input-nama').value = "";
             document.getElementById('input-posisi').value = "";
             document.getElementById('input-telepon').value = "";
+            document.getElementById('input-beneficiary').value = "";
+            document.getElementById('input-funder').value = "";
             document.getElementById('input-alamat').value = "";
             populateReferralDropdown("");
             document.getElementById('multi-project-container').innerHTML = "";
@@ -1212,14 +1254,17 @@
 
         function openEditCustomer(idx) {
             const c = globalCustomers[idx];
+            const roles = parseCustomerRoles(c.dibawa_oleh);
             document.getElementById('customer-modal-title').innerText = "Edit Pelanggan & Proyek";
             document.getElementById('input-customer-id').value = c.id;
             document.getElementById('input-perusahaan').value = c.perusahaan || '';
             document.getElementById('input-nama').value = c.nama_customer || '';
             document.getElementById('input-posisi').value = c.posisi || '';
             document.getElementById('input-telepon').value = c.no_telepon || '';
+            document.getElementById('input-beneficiary').value = roles.beneficiary || '';
+            document.getElementById('input-funder').value = roles.funder || '';
             document.getElementById('input-alamat').value = c.alamat || '';
-            populateReferralDropdown(c.dibawa_oleh || '');
+            populateReferralDropdown(roles.mediator || '');
 
             const container = document.getElementById('multi-project-container');
             container.innerHTML = "";
@@ -1241,7 +1286,9 @@
             });
 
             const selRef = document.getElementById('input-dibawa-oleh-select').value;
-            const referral = selRef === '__custom__' ? document.getElementById('input-dibawa-oleh-custom').value : selRef;
+            const mediator = selRef === '__custom__' ? document.getElementById('input-dibawa-oleh-custom').value : selRef;
+            const beneficiary = document.getElementById('input-beneficiary').value;
+            const funder = document.getElementById('input-funder').value;
 
             const payload = {
                 id: document.getElementById('input-customer-id').value,
@@ -1252,7 +1299,7 @@
                 alamat: document.getElementById('input-alamat').value, 
                 nama_projek: projNames.join('||'),
                 status_projek: projStatuses.join('||'), 
-                dibawa_oleh: referral
+                dibawa_oleh: encodeCustomerRoles(mediator, beneficiary, funder)
             };
             
             try {
