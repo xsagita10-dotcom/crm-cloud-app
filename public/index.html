@@ -218,7 +218,7 @@
         </div>
     </div>
 
-    <!-- MODAL FORM TAMBAH / EDIT CUSTOMER (BENEFICIARY, FUNDER, MEDIATOR) -->
+    <!-- MODAL FORM TAMBAH / EDIT CUSTOMER (BENEFICIARY, FUNDER, MEDIATOR DROPDOWN) -->
     <div id="add-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl p-5 my-8">
             <h3 class="text-lg font-bold mb-3 border-b pb-2" id="customer-modal-title">Data Pelanggan</h3>
@@ -245,18 +245,20 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">Mediator (Pilih Customer / Ketik)</label>
-                        <select id="input-dibawa-oleh-select" onchange="toggleCustomReferral(this.value)" class="w-full border p-2 rounded bg-white text-sm"></select>
+                        <select id="input-dibawa-oleh-select" onchange="toggleCustomInput(this.value, 'input-dibawa-oleh-custom')" class="w-full border p-2 rounded bg-white text-sm"></select>
                         <input type="text" id="input-dibawa-oleh-custom" placeholder="Ketik nama mediator..." class="hidden w-full border p-2 rounded mt-2 text-sm">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Beneficiary</label>
-                        <input type="text" id="input-beneficiary" placeholder="Nama Beneficiary..." class="w-full border p-2 rounded text-sm">
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Beneficiary (Pilih Customer / Ketik)</label>
+                        <select id="input-beneficiary-select" onchange="toggleCustomInput(this.value, 'input-beneficiary-custom')" class="w-full border p-2 rounded bg-white text-sm"></select>
+                        <input type="text" id="input-beneficiary-custom" placeholder="Ketik nama beneficiary..." class="hidden w-full border p-2 rounded mt-2 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Funder</label>
-                        <input type="text" id="input-funder" placeholder="Nama Funder..." class="w-full border p-2 rounded text-sm">
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Funder (Pilih Customer / Ketik)</label>
+                        <select id="input-funder-select" onchange="toggleCustomInput(this.value, 'input-funder-custom')" class="w-full border p-2 rounded bg-white text-sm"></select>
+                        <input type="text" id="input-funder-custom" placeholder="Ketik nama funder..." class="hidden w-full border p-2 rounded mt-2 text-sm">
                     </div>
                 </div>
                 <div>
@@ -462,7 +464,6 @@
 
         // ==========================================
         // HELPER PARSE & ENCODE MEDIATOR, BENEFICIARY, FUNDER
-        // Disimpan rapi dalam kolom dibawa_oleh tanpa ubah skema DB
         // ==========================================
         function parseCustomerRoles(rawStr) {
             if (!rawStr) return { mediator: '', beneficiary: '', funder: '' };
@@ -1190,35 +1191,43 @@
         }
 
         // ==========================================
-        // FORM CUSTOMER, PROGRESS, DOKUMEN & WORD STUDIO
+        // FORM CUSTOMER (DROPDOWN MEDIATOR, BENEFICIARY, FUNDER)
         // ==========================================
-        function populateReferralDropdown(selectedVal = "") {
-            const sel = document.getElementById('input-dibawa-oleh-select');
-            const customInput = document.getElementById('input-dibawa-oleh-custom');
-            let options = `<option value="">-- Tidak Ada / Langsung --</option>`;
+        function populateRoleDropdown(selectId, customInputId, selectedVal = "", roleName = "") {
+            const sel = document.getElementById(selectId);
+            const customInput = document.getElementById(customInputId);
+            let options = `<option value="">-- Tidak Ada --</option>`;
             let found = false;
 
             globalCustomers.forEach(c => {
                 const label = `${c.perusahaan} (${c.nama_customer || 'PIC'})`;
-                if (selectedVal === label || selectedVal === c.perusahaan) {
+                if (selectedVal && (selectedVal === label || selectedVal === c.perusahaan)) {
                     options += `<option value="${label}" selected>${label}</option>`;
                     found = true;
                 } else {
                     options += `<option value="${label}">${label}</option>`;
                 }
             });
-            options += `<option value="__custom__">+ Ketik Nama Mediator Lainnya...</option>`;
+            options += `<option value="__custom__">+ Ketik Nama ${roleName} Lainnya...</option>`;
             sel.innerHTML = options;
 
             if (selectedVal && !found) {
-                sel.value = "__custom__"; customInput.classList.remove('hidden'); customInput.value = selectedVal;
+                sel.value = "__custom__";
+                customInput.classList.remove('hidden');
+                customInput.value = selectedVal;
             } else {
-                customInput.classList.add('hidden'); customInput.value = "";
+                customInput.classList.add('hidden');
+                customInput.value = "";
             }
         }
 
-        function toggleCustomReferral(val) {
-            document.getElementById('input-dibawa-oleh-custom').classList.toggle('hidden', val !== '__custom__');
+        function toggleCustomInput(val, customInputId) {
+            document.getElementById(customInputId).classList.toggle('hidden', val !== '__custom__');
+        }
+
+        function getRoleValue(selectId, customInputId) {
+            const val = document.getElementById(selectId).value;
+            return val === '__custom__' ? document.getElementById(customInputId).value.trim() : val;
         }
 
         function addProjectRow(name = "", status = "On Progress", nilai = "") {
@@ -1243,10 +1252,10 @@
             document.getElementById('input-nama').value = "";
             document.getElementById('input-posisi').value = "";
             document.getElementById('input-telepon').value = "";
-            document.getElementById('input-beneficiary').value = "";
-            document.getElementById('input-funder').value = "";
             document.getElementById('input-alamat').value = "";
-            populateReferralDropdown("");
+            populateRoleDropdown('input-dibawa-oleh-select', 'input-dibawa-oleh-custom', '', 'Mediator');
+            populateRoleDropdown('input-beneficiary-select', 'input-beneficiary-custom', '', 'Beneficiary');
+            populateRoleDropdown('input-funder-select', 'input-funder-custom', '', 'Funder');
             document.getElementById('multi-project-container').innerHTML = "";
             addProjectRow("", "On Progress", "");
             toggleModal(true, 'add-modal');
@@ -1261,10 +1270,10 @@
             document.getElementById('input-nama').value = c.nama_customer || '';
             document.getElementById('input-posisi').value = c.posisi || '';
             document.getElementById('input-telepon').value = c.no_telepon || '';
-            document.getElementById('input-beneficiary').value = roles.beneficiary || '';
-            document.getElementById('input-funder').value = roles.funder || '';
             document.getElementById('input-alamat').value = c.alamat || '';
-            populateReferralDropdown(roles.mediator || '');
+            populateRoleDropdown('input-dibawa-oleh-select', 'input-dibawa-oleh-custom', roles.mediator || '', 'Mediator');
+            populateRoleDropdown('input-beneficiary-select', 'input-beneficiary-custom', roles.beneficiary || '', 'Beneficiary');
+            populateRoleDropdown('input-funder-select', 'input-funder-custom', roles.funder || '', 'Funder');
 
             const container = document.getElementById('multi-project-container');
             container.innerHTML = "";
@@ -1285,10 +1294,9 @@
                 if (n) { projNames.push(n); projStatuses.push(v ? `${s}::${v}` : s); }
             });
 
-            const selRef = document.getElementById('input-dibawa-oleh-select').value;
-            const mediator = selRef === '__custom__' ? document.getElementById('input-dibawa-oleh-custom').value : selRef;
-            const beneficiary = document.getElementById('input-beneficiary').value;
-            const funder = document.getElementById('input-funder').value;
+            const mediator = getRoleValue('input-dibawa-oleh-select', 'input-dibawa-oleh-custom');
+            const beneficiary = getRoleValue('input-beneficiary-select', 'input-beneficiary-custom');
+            const funder = getRoleValue('input-funder-select', 'input-funder-custom');
 
             const payload = {
                 id: document.getElementById('input-customer-id').value,
