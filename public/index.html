@@ -291,7 +291,7 @@
         </div>
     </div>
 
-    <!-- MODAL FORM PROGRESS / UPLOAD FOTO -->
+    <!-- MODAL FORM PROGRESS / UPLOAD FOTO (DENGAN PROGRESS BAR) -->
     <div id="meeting-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[95vh] flex flex-col overflow-hidden border-t-8 border-blue-500">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50">
@@ -312,9 +312,21 @@
                 <input type="text" id="edit-judul" placeholder="Judul / Agenda Foto" class="w-full border p-2 rounded text-sm font-bold text-blue-700">
                 <textarea id="edit-mom" placeholder="Ketik hasil meeting atau keterangan foto (MoM)..." class="w-full border p-2.5 rounded text-xs h-24"></textarea>
                 <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                    <label class="block text-xs font-bold text-blue-800 mb-1">Unggah Lampiran Foto (Max 50 MB)</label>
+                    <label class="block text-xs font-bold text-blue-800 mb-1">Unggah Lampiran Foto (Direct Upload, Max 50 MB)</label>
                     <input type="file" id="edit-foto" accept="image/*" class="w-full border p-1.5 rounded bg-white text-xs">
                 </div>
+
+                <!-- PROGRESS BAR & PESAN STATUS FOTO -->
+                <div id="meet-progress-box" class="hidden space-y-1.5 pt-1">
+                    <div class="flex justify-between text-[11px] font-bold text-blue-800">
+                        <span id="meet-progress-text">Menyiapkan upload...</span>
+                        <span id="meet-progress-pct">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                        <div id="meet-progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-150" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div id="meet-status-msg" class="hidden text-xs p-2.5 rounded-lg font-medium"></div>
             </div>
             <div class="p-4 border-t bg-gray-50 flex justify-end">
                 <button onclick="updateMeetingData(event)" class="px-5 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md text-xs">Simpan Progress</button>
@@ -322,7 +334,7 @@
         </div>
     </div>
 
-    <!-- MODAL FORM UPLOAD FILE DOKUMEN (BISA KE CUSTOMER LANGSUNG ATAU KE PROYEK) -->
+    <!-- MODAL FORM UPLOAD FILE DOKUMEN (DENGAN PROGRESS BAR & STATUS) -->
     <div id="document-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border-t-8 border-purple-500">
             <div class="p-4 border-b flex justify-between items-center bg-gray-50">
@@ -351,6 +363,18 @@
                     <label class="block text-[11px] font-bold text-blue-900 mb-1">Opsi 2: Atau Tempel Link Google Docs / Sheets / Drive</label>
                     <input type="url" id="doc-url-lama" placeholder="https://docs.google.com/document/d/..." class="w-full border p-1.5 rounded bg-white text-xs">
                 </div>
+
+                <!-- PROGRESS BAR & PESAN STATUS DOKUMEN -->
+                <div id="doc-progress-box" class="hidden space-y-1.5 pt-1">
+                    <div class="flex justify-between text-[11px] font-bold text-purple-800">
+                        <span id="doc-progress-text">Menyiapkan upload...</span>
+                        <span id="doc-progress-pct">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                        <div id="doc-progress-bar" class="bg-purple-600 h-2.5 rounded-full transition-all duration-150" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div id="doc-status-msg" class="hidden text-xs p-2.5 rounded-lg font-medium"></div>
             </div>
             <div class="p-4 border-t bg-gray-50 flex justify-end">
                 <button onclick="saveDocument(event)" class="px-5 py-2 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 shadow-md text-xs">Simpan Dokumen</button>
@@ -425,40 +449,98 @@
         function toggleModal(show, modalId) { document.getElementById(modalId).classList.toggle('hidden', !show); }
 
         // ==========================================
-        // DIRECT UPLOAD KE SUPABASE (BYPASS VERCEL, MAX 50MB)
+        // HELPER PROGRESS BAR & STATUS BOX
         // ==========================================
-        async function uploadDirectToSupabase(file, prefix) {
-            const fileSizeMB = file.size / (1024 * 1024);
-            if (fileSizeMB > 50) {
-                alert(`⚠️ Ukuran file terlalu besar (${fileSizeMB.toFixed(1)} MB)!\n\nBatas maksimal Supabase Storage Free Tier adalah 50 MB per file.\nSilakan kompres file atau gunakan Opsi 2 (Link Google Drive).`);
-                throw new Error("FILE_TOO_LARGE");
+        function resetUploadUI(prefix) {
+            document.getElementById(`${prefix}-progress-box`).classList.add('hidden');
+            document.getElementById(`${prefix}-progress-bar`).style.width = '0%';
+            document.getElementById(`${prefix}-progress-pct`).innerText = '0%';
+            document.getElementById(`${prefix}-progress-text`).innerText = '';
+            const msgEl = document.getElementById(`${prefix}-status-msg`);
+            msgEl.classList.add('hidden');
+            msgEl.innerText = '';
+        }
+
+        function updateUploadProgress(prefix, pct, text) {
+            document.getElementById(`${prefix}-progress-box`).classList.remove('hidden');
+            document.getElementById(`${prefix}-progress-bar`).style.width = `${pct}%`;
+            document.getElementById(`${prefix}-progress-pct`).innerText = `${pct}%`;
+            document.getElementById(`${prefix}-progress-text`).innerText = text;
+        }
+
+        function showUploadStatus(prefix, message, isError = false) {
+            const msgEl = document.getElementById(`${prefix}-status-msg`);
+            msgEl.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border-red-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+            if (isError) {
+                msgEl.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+            } else {
+                msgEl.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-200');
             }
+            msgEl.innerText = message;
+        }
 
-            const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-            const uniqueFileName = `${prefix}_${Date.now()}_${cleanName}`;
+        // ==========================================
+        // DIRECT UPLOAD KE SUPABASE VIA XHR (BYPASS VERCEL + PROGRESS %)
+        // ==========================================
+        function uploadDirectToSupabase(file, filePrefix, uiPrefix) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const fileSizeMB = file.size / (1024 * 1024);
+                    if (fileSizeMB > 50) {
+                        reject(new Error(`⚠️ Ukuran file terlalu besar (${fileSizeMB.toFixed(1)} MB). Batas maksimal Supabase Storage Free Tier adalah 50 MB. Silakan kompres file atau tempel link Google Drive di Opsi 2.`));
+                        return;
+                    }
 
-            // 1. Minta tiket Signed Upload URL dari server
-            const ticketRes = await fetch('/api/index.py', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'get_upload_url', file_name: uniqueFileName })
+                    updateUploadProgress(uiPrefix, 0, `Meminta izin upload (${fileSizeMB.toFixed(1)} MB)...`);
+
+                    const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                    const uniqueFileName = `${filePrefix}_${Date.now()}_${cleanName}`;
+
+                    // 1. Minta tiket Signed Upload URL dari server (hanya kirim teks, bebas limit 4.5MB Vercel)
+                    const ticketRes = await fetch('/api/index.py', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'get_upload_url', file_name: uniqueFileName })
+                    });
+                    const ticketData = await ticketRes.json();
+                    if (!ticketRes.ok || !ticketData.signed_url) {
+                        reject(new Error(ticketData.error || "Gagal mendapatkan tiket upload dari server."));
+                        return;
+                    }
+
+                    // 2. Upload langsung dari browser ke Supabase Storage dengan pelacakan persentase (%)
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('PUT', ticketData.signed_url, true);
+                    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+                    xhr.upload.onprogress = function(ev) {
+                        if (ev.lengthComputable) {
+                            const percent = Math.round((ev.loaded / ev.total) * 100);
+                            const loadedMB = (ev.loaded / (1024 * 1024)).toFixed(1);
+                            updateUploadProgress(uiPrefix, percent, `Mengunggah (${loadedMB} / ${fileSizeMB.toFixed(1)} MB)...`);
+                        }
+                    };
+
+                    xhr.onload = function() {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            updateUploadProgress(uiPrefix, 100, "Upload selesai! Menyimpan ke database...");
+                            resolve(ticketData.public_url);
+                        } else if (xhr.status === 413) {
+                            reject(new Error("Ditolak Supabase (413): Ukuran file melebihi batas limit bucket 'documents' di dashboard Supabase Anda. Cek Storage → Settings di Supabase."));
+                        } else {
+                            reject(new Error(`Gagal upload ke Supabase (Status ${xhr.status}). Pastikan bucket 'documents' aktif dan publik.`));
+                        }
+                    };
+
+                    xhr.onerror = function() {
+                        reject(new Error("Koneksi terputus atau terblokir CORS saat mengunggah ke Supabase."));
+                    };
+
+                    xhr.send(file);
+                } catch (err) {
+                    reject(err);
+                }
             });
-            const ticketData = await ticketRes.json();
-            if (!ticketRes.ok || !ticketData.signed_url) {
-                throw new Error(ticketData.error || "Gagal mendapatkan tiket upload dari Supabase.");
-            }
-
-            // 2. Kirim file langsung dari browser ke Supabase Storage
-            const uploadRes = await fetch(ticketData.signed_url, {
-                method: 'PUT',
-                headers: { 'Content-Type': file.type || 'application/octet-stream' },
-                body: file
-            });
-            if (!uploadRes.ok) {
-                throw new Error("Gagal upload langsung ke Supabase (Status: " + uploadRes.status + ").");
-            }
-
-            return ticketData.public_url;
         }
 
         // ==========================================
@@ -868,6 +950,7 @@
             const projs = getAllProjectsList();
             if (projs.length === 0) { alert("Tambahkan Customer terlebih dahulu."); return; }
             
+            resetUploadUI('meet');
             document.getElementById('modal-progress-title').innerText = "Upload Foto Progress Baru";
             document.getElementById('edit-id').value = "";
             document.getElementById('edit-projek-Select-wrapper').classList.remove('hidden');
@@ -1331,6 +1414,7 @@
 
         function openAddProgress() {
             isGlobalPhotoUpload = false;
+            resetUploadUI('meet');
             const c = globalCustomers.find(item => String(item.id) === String(currentCustomerId));
             const projs = c ? parseProjects(c.nama_projek, c.status_projek) : [];
 
@@ -1356,6 +1440,7 @@
 
         function openEditMeeting(index) {
             isGlobalPhotoUpload = false;
+            resetUploadUI('meet');
             document.getElementById('edit-projek-Select-wrapper').classList.add('hidden');
             const m = meetingsData[index];
             document.getElementById('modal-progress-title').innerText = "Perbarui Progress";
@@ -1367,7 +1452,8 @@
         }
 
         async function updateMeetingData(e) {
-            const btn = e.target; btn.disabled = true; btn.innerText = "Menyimpan...";
+            const btn = e.target; btn.disabled = true; btn.innerText = "Memproses...";
+            resetUploadUI('meet');
             try {
                 const useDropdown = isGlobalPhotoUpload || ((currentProject === '__ALL__' || currentProject === 'Umum') && !document.getElementById('edit-id').value);
                 const targetProj = useDropdown ? document.getElementById('edit-projek-dropdown').value : document.getElementById('edit-projek').value;
@@ -1375,8 +1461,8 @@
                 let uploadedFotoUrl = "";
                 const foto = document.getElementById('edit-foto').files[0];
                 if (foto) {
-                    btn.innerText = "Mengunggah foto...";
-                    uploadedFotoUrl = await uploadDirectToSupabase(foto, targetProj.replace(/[^a-zA-Z0-9]/g, '_'));
+                    btn.innerText = "Mengunggah...";
+                    uploadedFotoUrl = await uploadDirectToSupabase(foto, targetProj.replace(/[^a-zA-Z0-9]/g, '_'), 'meet');
                 }
 
                 const formData = new FormData();
@@ -1391,24 +1477,27 @@
                 
                 const res = await fetch('/api/index.py', { method: 'POST', body: formData });
                 if (res.ok) {
-                    toggleModal(false, 'meeting-detail-modal'); 
-                    if (isGlobalPhotoUpload) fetchGlobalPhotos();
-                    else fetchMeetingsAndPhotos(); 
+                    showUploadStatus('meet', "✅ Progress & foto berhasil disimpan!", false);
+                    setTimeout(() => {
+                        toggleModal(false, 'meeting-detail-modal'); 
+                        if (isGlobalPhotoUpload) fetchGlobalPhotos();
+                        else fetchMeetingsAndPhotos();
+                    }, 500);
                 } else {
-                    alert("Gagal menyimpan progress.");
+                    const err = await res.json();
+                    showUploadStatus('meet', "❌ Gagal menyimpan progress: " + (err.error || "Terjadi kesalahan."), true);
                 }
             } catch (err) {
-                if (err.message !== "FILE_TOO_LARGE") {
-                    alert("Gagal mengunggah foto: " + err.message);
-                }
+                showUploadStatus('meet', "❌ " + err.message, true);
             }
             btn.disabled = false; btn.innerText = "Simpan Progress";
         }
 
-        // --- MODAL UPLOAD / EDIT DOKUMEN (DIRECT UPLOAD SUPABASE) ---
+        // --- MODAL UPLOAD / EDIT DOKUMEN (DIRECT UPLOAD + PROGRESS BAR) ---
         function openDocModal(isGlobal = false, preselectedCustId = "", preselectedProj = "Umum") {
             if (globalCustomers.length === 0) { alert("Tambahkan data Customer terlebih dahulu."); return; }
             isGlobalDocUpload = isGlobal;
+            resetUploadUI('doc');
             document.getElementById('modal-doc-title').innerText = "Upload Dokumen (Customer / Proyek)";
             document.getElementById('doc-id').value = ""; document.getElementById('doc-url-lama').value = "";
             document.getElementById('doc-nama').value = ""; document.getElementById('doc-kategori').value = ""; 
@@ -1422,6 +1511,7 @@
 
         function openEditDocument(index, isGlobal = false) {
             isGlobalDocUpload = isGlobal;
+            resetUploadUI('doc');
             const d = isGlobal ? globalDocsData[index] : documentsData[index];
             const parsed = extractDocProjectAndCategory(d.kategori_file);
 
@@ -1437,6 +1527,7 @@
 
         async function saveDocument(e) {
             const btn = e.target; btn.disabled = true; btn.innerText = "Memproses...";
+            resetUploadUI('doc');
             try {
                 const [targetCustId, targetProj] = document.getElementById('doc-project-select').value.split('||');
                 const rawCat = document.getElementById('doc-kategori').value.trim() || 'Dokumen';
@@ -1444,8 +1535,8 @@
 
                 const file = document.getElementById('doc-file').files[0];
                 if (file) {
-                    btn.innerText = "Mengunggah ke Supabase...";
-                    finalUrl = await uploadDirectToSupabase(file, `doc_${targetCustId}`);
+                    btn.innerText = "Mengunggah...";
+                    finalUrl = await uploadDirectToSupabase(file, `doc_${targetCustId}`, 'doc');
                 }
 
                 btn.innerText = "Menyimpan data...";
@@ -1454,24 +1545,24 @@
                 formData.append('customer_id', targetCustId); 
                 formData.append('nama_projek', targetProj || 'Umum'); 
                 if (document.getElementById('doc-id').value) formData.append('id', document.getElementById('doc-id').value);
-                formData.append('nama_file', document.getElementById('doc-nama').value); 
+                formData.append('nama_file', document.getElementById('doc-nama').value || (file ? file.name : 'Dokumen Baru')); 
                 formData.append('kategori_file', `[${targetProj || 'Umum'}] ${rawCat}`);
                 formData.append('file_url_lama', finalUrl);
 
                 const res = await fetch('/api/index.py', { method: 'POST', body: formData });
                 if (res.ok) { 
-                    toggleModal(false, 'document-detail-modal'); 
-                    if (!document.getElementById('section-documents').classList.contains('hidden')) fetchGlobalDocuments();
-                    if (!document.getElementById('detail-view').classList.contains('hidden')) fetchDocuments();
-                    if (!document.getElementById('section-customers').classList.contains('hidden')) alert("Dokumen berhasil disimpan!");
+                    showUploadStatus('doc', "✅ Dokumen berhasil diunggah dan disimpan!", false);
+                    setTimeout(() => {
+                        toggleModal(false, 'document-detail-modal'); 
+                        if (!document.getElementById('section-documents').classList.contains('hidden')) fetchGlobalDocuments();
+                        if (!document.getElementById('detail-view').classList.contains('hidden')) fetchDocuments();
+                    }, 600);
                 } else {
                     const err = await res.json();
-                    alert("Gagal simpan ke database: " + (err.error || "Terjadi kesalahan."));
+                    showUploadStatus('doc', "❌ Gagal simpan ke database: " + (err.error || "Terjadi kesalahan."), true);
                 }
             } catch (err) {
-                if (err.message !== "FILE_TOO_LARGE") {
-                    alert("Gagal mengunggah: " + err.message);
-                }
+                showUploadStatus('doc', "❌ " + err.message, true);
             }
             btn.disabled = false; btn.innerText = "Simpan Dokumen";
         }
