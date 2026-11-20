@@ -98,6 +98,21 @@ def master_route(path):
                     return jsonify({"message": "Dokumen dihapus"}), 200
                 except Exception as e: return jsonify({"error": str(e)}), 500
 
+            # --- MINTA TIKET DIRECT UPLOAD KE SUPABASE (BYPASS LIMIT VERCEL) ---
+            if action == 'get_upload_url':
+                file_name = data.get('file_name', '').strip()
+                if not file_name:
+                    return jsonify({"error": "Nama file kosong"}), 400
+                try:
+                    res = supabase.storage.from_('documents').create_signed_upload_url(file_name)
+                    signed_url = res.get('signed_url') or res.get('signedURL')
+                    if signed_url and signed_url.startswith('/'):
+                        signed_url = f"{SUPABASE_URL}/storage/v1{signed_url}"
+                    public_url = f"{SUPABASE_URL}/storage/v1/object/public/documents/{file_name}"
+                    return jsonify({"signed_url": signed_url, "public_url": public_url}), 200
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 500
+
             perusahaan = data.get("perusahaan", "").strip()
             if perusahaan:
                 existing = supabase.table('customers').select('id').ilike('perusahaan', perusahaan).execute()
@@ -160,7 +175,7 @@ def master_route(path):
                 judul = request.form.get('judul')
                 mom = request.form.get('mom')
                 foto = request.files.get('foto')
-                foto_url = None
+                foto_url = request.form.get('foto_url_direct') or None
                 
                 if foto and foto.filename:
                     safe_proj = projek.replace(' ', '_')
